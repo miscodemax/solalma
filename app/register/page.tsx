@@ -1,5 +1,5 @@
 // app/register/page.tsx
-
+'use client'
 
 import SignupForm from './signupform' // ⛔️ No SSR
 
