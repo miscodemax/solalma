@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '../../../lib/supabase'
 import Loader from '@/app/loading'
 
+export const dynamic = 'force-dynamic'
 export default function AuthCallback() {
   const router = useRouter()
   const supabase = createClient()
