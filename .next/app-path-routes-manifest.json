@@ -1,0 +1,13 @@
+{
+  "/favicon.ico/route": "/favicon.ico",
+  "/_not-found/page": "/_not-found",
+  "/about/page": "/about",
+  "/auth/callback/page": "/auth/callback",
+  "/dashboard/edit/[id]/page": "/dashboard/edit/[id]",
+  "/dashboard/products/page": "/dashboard/products",
+  "/page": "/",
+  "/product/[id]/page": "/product/[id]",
+  "/register/page": "/register",
+  "/signin/page": "/signin",
+  "/dashboard/add/page": "/dashboard/add"
+}
