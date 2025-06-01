@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '../../lib/supabase'
 import { Button } from '@/components/ui/button'
+export const dynamic = "force-dynamic";
 
 export default function SignupPage() {
     const supabase = createClient()
