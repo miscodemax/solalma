@@ -58,7 +58,11 @@ export default async function ProductDetailPage({ params }: any) {
         .limit(6)
 
     const whatsappClean = product.whatsapp_number?.replace(/\D/g, '')
-    const whatsappLink = whatsappClean ? `https://wa.me/${whatsappClean}` : null
+    const prefilledMessage = `Bonjour ! Je suis intéressé(e) par votre produit "${product.title}" à ${product.price.toLocaleString()} FCFA dans la catégorie ${product.category}. Est-il toujours disponible ?`
+    const whatsappLink = whatsappClean
+        ? `https://wa.me/${whatsappClean}?text=${encodeURIComponent(prefilledMessage)}`
+        : null
+
 
     return (
         <div className="max-w-6xl mx-auto px-4 py-10">
