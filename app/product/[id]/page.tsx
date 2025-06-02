@@ -1,151 +1,174 @@
-
 import { cookies } from "next/headers"
 import { createServerClient } from "@supabase/ssr"
 import { supabaseUrl, supabaseKey } from "../../../lib/supabase"
-//import { createClient } from '@/lib/supabase'
-import Image from 'next/image'
-import Link from 'next/link'
-import { notFound, redirect } from 'next/navigation'
-import dayjs from 'dayjs'
+import Image from "next/image"
+import Link from "next/link"
+import { notFound, redirect } from "next/navigation"
+import dayjs from "dayjs"
 
-
-/*type Props = {
+type Props = {
   params: {
     id: string
   }
-}*/
+}
 
-export default async function ProductDetailPage({ params }: any) {
+export default async function ProductDetailPage({ params }: Props) {
+  // 🔒 Vérifie si l'utilisateur est connecté
+  const cookieStore = await cookies()
+  const supabase = createServerClient(supabaseUrl, supabaseKey, {
+    cookies: {
+      get: (name) => cookieStore.get(name)?.value,
+    },
+  })
 
+  const { data: userData, error: userError } = await supabase.auth.getUser()
+  if (userError || !userData.user) {
+    redirect("/signin")
+  }
 
-    // 🔒 Vérifie si l'utilisateur est connecté
-    const cookieStore = await cookies()
-    const supabase = createServerClient(supabaseUrl, supabaseKey, {
-        cookies: {
-            get: (name) => cookieStore.get(name)?.value,
-        },
-    })
+  // 📦 Récupérer produit
+  const {
+    data: product,
+    error: productError,
+  } = await supabase
+    .from("product")
+    .select("*")
+    .eq("id", Number(params.id))
+    .single()
 
-    const { data: { user }, error } = await supabase.auth.getUser()
+  if (productError || !product) {
+    notFound()
+  }
 
-    if (error || !user) {
-        redirect("/signin")
-    }
+  // 🆕 Déterminer si le produit est une nouveauté
+  const isNew =
+    product.created_at &&
+    dayjs(product.created_at).isAfter(dayjs().subtract(7, "day"))
 
-    //const supabaseProduct = createClient()
-    // 📦 Récupérer produit
-    const { data: product } = await supabase
-        .from('product')
-        .select('*')
-        .eq('id', Number(params.id))
-        .single()
+  // 🔁 Récupérer produits similaires
+  const { data: similarProducts } = await supabase
+    .from("product")
+    .select("*")
+    .eq("category", product.category)
+    .neq("id", product.id)
+    .limit(6)
 
-    if (error || !product) {
-        notFound()
-    }
+  const whatsappClean = product.whatsapp_number?.replace(/\D/g, "")
+  const prefilledMessage = `Bonjour ! Je suis intéressé(e) par votre produit "${product.title}" à ${product.price.toLocaleString()} FCFA dans la catégorie ${product.category}. Est-il toujours disponible ?`
+  const whatsappLink = whatsappClean
+    ? `https://wa.me/${whatsappClean}?text=${encodeURIComponent(prefilledMessage)}`
+    : null
 
-    // 🆕 Déterminer si le produit est une nouveauté
-    const isNew =
-        product.created_at &&
-        dayjs(product.created_at).isAfter(dayjs().subtract(7, 'day'))
-
-    // 🔁 Récupérer produits similaires
-    const { data: similarProducts } = await supabase
-        .from('product')
-        .select('*')
-        .eq('category', product.category)
-        .neq('id', product.id)
-        .limit(6)
-
-    const whatsappClean = product.whatsapp_number?.replace(/\D/g, '')
-    const prefilledMessage = `Bonjour ! Je suis intéressé(e) par votre produit "${product.title}" à ${product.price.toLocaleString()} FCFA dans la catégorie ${product.category}. Est-il toujours disponible ?`
-    const whatsappLink = whatsappClean
-        ? `https://wa.me/${whatsappClean}?text=${encodeURIComponent(prefilledMessage)}`
-        : null
-
-
-    return (
-        <div className="max-w-6xl mx-auto px-4 py-10">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
-                {/* Image */}
-                <div className="relative w-full h-[520px] rounded-2xl overflow-hidden shadow border border-[#E6E3DF] group cursor-zoom-in">
-                    <Image
-                        src={product.image_url || '/placeholder.jpg'}
-                        alt={product.title}
-                        fill
-                        className="object-cover transition-transform duration-700 ease-in-out group-hover:scale-[1.15]"
-                        priority
-                    />
-                </div>
-
-                {/* Infos produit */}
-                <div className="space-y-5">
-                    <h1 className="text-4xl font-extrabold text-[#333]">{product.title}</h1>
-
-                    {isNew && (
-                        <span className="inline-block bg-[#D29587]/20 text-[#D29587] px-4 py-1 rounded-full text-sm font-medium">
-                            🆕 Nouveauté
-                        </span>
-                    )}
-
-                    <p className="text-md font-semibold text-[#D29587] uppercase tracking-wide">
-                        Catégorie : {product.category || 'Non spécifiée'}
-                    </p>
-
-
-
-                    <p className="text-3xl font-bold text-[#D29587]">
-                        {product.price.toLocaleString()} FCFA
-                    </p>
-
-                    {whatsappLink ? (
-                        <a
-                            href={whatsappLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-block mt-6 px-8 py-4 bg-green-500 text-white font-semibold rounded-xl hover:bg-green-600 transition"
-                        >
-                            <svg className="inline-block w-6 h-6 mr-2 -mt-1" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="..." />
-                            </svg>
-                            Contacter le vendeur
-                        </a>
-                    ) : (
-                        <p className="mt-6 text-red-500 font-semibold">Numéro WhatsApp non disponible</p>
-                    )}
-                </div>
-                <p className="text-lg text-[#555] leading-relaxed whitespace-pre-line">
-                    {product.description}
-                </p>
-            </div>
-
-            {/* Produits similaires */}
-            {similarProducts && similarProducts.length > 0 && (
-                <section className="mt-16">
-                    <h2 className="text-2xl font-bold text-[#333] mb-6">Produits similaires</h2>
-                    <div className="flex space-x-6 overflow-x-auto scrollbar-thin scrollbar-thumb-[#D29587]/70 scrollbar-track-transparent">
-                        {similarProducts.map((p) => (
-                            <Link
-                                key={p.id}
-                                href={`/product/${p.id}`}
-                                className="min-w-[220px] bg-white border border-[#E6E3DF] rounded-2xl shadow hover:shadow-md transition p-4 flex flex-col cursor-pointer"
-                            >
-                                <div className="relative w-full h-40 rounded-lg overflow-hidden mb-3">
-                                    <Image
-                                        src={p.image_url || '/placeholder.jpg'}
-                                        alt={p.title}
-                                        fill
-                                        className="object-cover"
-                                        sizes="(max-width: 640px) 100vw, 220px"
-                                    />
-                                </div>
-                                <h3 className="font-semibold text-[#333] truncate">{p.title}</h3>
-                                <p className="text-[#D29587] font-bold mt-auto">{p.price.toLocaleString()} FCFA</p>
-                            </Link>
-                        ))}
-                    </div>
-                </section>
-            )}
+  return (
+    <div className="max-w-6xl mx-auto px-4 py-10">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
+        {/* Image */}
+        <div className="relative w-full h-[520px] rounded-2xl overflow-hidden shadow border border-[#E6E3DF] group cursor-zoom-in">
+          <Image
+            src={product.image_url || "/placeholder.jpg"}
+            alt={product.title}
+            fill
+            className="object-cover transition-transform duration-700 ease-in-out group-hover:scale-[1.15]"
+            priority
+          />
         </div>
-    )
+
+        {/* Infos produit */}
+        <div className="space-y-5">
+          <h1 className="text-4xl font-extrabold text-[#333]">{product.title}</h1>
+
+          {isNew && (
+            <span className="inline-block bg-[#D29587]/20 text-[#D29587] px-4 py-1 rounded-full text-sm font-medium">
+              🆕 Nouveauté
+            </span>
+          )}
+
+          <p className="text-md font-semibold text-[#D29587] uppercase tracking-wide">
+            Catégorie : {product.category || "Non spécifiée"}
+          </p>
+
+          <p className="text-3xl font-bold text-[#D29587]">
+            {product.price.toLocaleString()} FCFA
+          </p>
+
+          <div className="flex flex-wrap items-center gap-4 mt-6">
+            {whatsappLink ? (
+              <a
+                href={whatsappLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center px-6 py-3 bg-green-500 text-white font-semibold rounded-xl hover:bg-green-600 transition"
+              >
+                {/* Logo WhatsApp SVG */}
+                <svg
+                  className="w-5 h-5 mr-2"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    fill="currentColor"
+                    d="M20.52 3.478A11.959 11.959 0 0012 0C5.373 0 0 5.373 0 12a11.94 11.94 0 001.611 6.072L0 24l5.977-1.559A11.958 11.958 0 0012 24c6.627 0 12-5.373 12-12 0-3.207-1.246-6.218-3.48-8.522zm-8.52 17.136a9.637 9.637 0 01-5.176-1.476l-.371-.224-3.548.925.947-3.464-.243-.364a9.675 9.675 0 0115.45-11.846 9.636 9.636 0 01-6.31 15.445zm5.414-7.333c-.298-.149-1.759-.868-2.031-.967-.273-.099-.472-.149-.672.15-.199.298-.768.967-.942 1.164-.173.198-.347.223-.645.075-.298-.149-1.257-.463-2.395-1.479-.885-.788-1.48-1.761-1.654-2.06-.173-.298-.018-.459.13-.607.134-.133.298-.347.447-.52.149-.173.198-.298.298-.497.099-.198.05-.372-.025-.52-.075-.149-.672-1.62-.92-2.213-.242-.58-.487-.5-.672-.51l-.572-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.872.118.571-.085 1.759-.718 2.006-1.412.248-.693.248-1.287.173-1.412-.074-.124-.273-.198-.571-.347z"
+                  />
+                </svg>
+                Contacter sur WhatsApp
+              </a>
+            ) : (
+              <p className="text-red-500 font-semibold">Numéro WhatsApp non disponible</p>
+            )}
+
+            {product.whatsapp_number && (
+              <a
+                href={`tel:${product.whatsapp_number}`}
+                className="inline-flex items-center px-6 py-3 bg-blue-500 text-white font-semibold rounded-xl hover:bg-blue-600 transition"
+              >
+                {/* Icône téléphone SVG */}
+                <svg
+                  className="w-5 h-5 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path d="M22 16.92v3a2 2 0 01-2.18 2 19.8 19.8 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.8 19.8 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.13 1.21.38 2.39.75 3.5a2 2 0 01-.45 2.11L9 10.92a16 16 0 006 6l1.59-1.59a2 2 0 012.11-.45c1.11.37 2.29.62 3.5.75a2 2 0 011.72 2z"></path>
+                </svg>
+                📞 Appeler le vendeur
+              </a>
+            )}
+          </div>
+
+          {/* Produits similaires */}
+          {similarProducts && similarProducts.length > 0 && (
+            <section className="mt-16">
+              <h2 className="text-2xl font-bold text-[#333] mb-6">Produits similaires</h2>
+              <div className="flex space-x-6 overflow-x-auto scrollbar-thin scrollbar-thumb-[#D29587]/70 scrollbar-track-transparent">
+                {similarProducts.map((p) => (
+                  <Link
+                    key={p.id}
+                    href={`/product/${p.id}`}
+                    className="min-w-[220px] bg-white border border-[#E6E3DF] rounded-2xl shadow hover:shadow-md transition p-4 flex flex-col cursor-pointer"
+                  >
+                    <div className="relative w-full h-40 rounded-lg overflow-hidden mb-3">
+                      <Image
+                        src={p.image_url || "/placeholder.jpg"}
+                        alt={p.title}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 640px) 100vw, 220px"
+                      />
+                    </div>
+                    <h3 className="font-semibold text-[#333] truncate">{p.title}</h3>
+                    <p className="text-[#D29587] font-bold mt-auto">{p.price.toLocaleString()} FCFA</p>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+        </div>
+      </div>
+    </div>
+  )
 }
