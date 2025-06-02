@@ -38,8 +38,10 @@ export default function AddProductForm({ userId }: Props) {
         setError('')
         setSuccess(false)
 
-        // Simple validation Whatsapp (optionnel)
-        if (!whatsappNumber.match(/^\+?\d{8,15}$/)) {
+        const fullNumber = '+221' + whatsappNumber.trim()
+
+        // Validation : suite numérique de 8 à 9 chiffres (après +221)
+        if (!/^\+221\d{8,9}$/.test(fullNumber)) {
             setLoading(false)
             setError('Veuillez entrer un numéro WhatsApp valide (ex: +221771234567)')
             return
@@ -51,7 +53,7 @@ export default function AddProductForm({ userId }: Props) {
             description,
             image_url: imageUrl,
             user_id: userId,
-            whatsapp_number: whatsappNumber,
+            whatsapp_number: fullNumber,
             category,
         })
 
@@ -126,28 +128,42 @@ export default function AddProductForm({ userId }: Props) {
                     />
 
                     <textarea
-                        placeholder="Description détaillée..."
+                        placeholder="Description détaillée... soyez le plus clair possible pour mettre l'acheteur en confiance !"
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
                         className="w-full px-4 py-3 border border-[#DAD5CD] rounded-xl h-32 resize-none focus:outline-none focus:ring-2 focus:ring-[#D29587] transition"
                         required
                     />
 
-                    <input
-                        type="text"
-                        placeholder="Numéro WhatsApp (ex: +221771234567)"
-                        value={whatsappNumber}
-                        onChange={(e) => setWhatsappNumber(e.target.value)}
-                        className="w-full px-4 py-3 border border-[#DAD5CD] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D29587] transition"
-                        required
-                    />
+                    {/* Wrapper input WhatsApp avec label fixe +221 */}
+                    <div className="flex items-center border border-[#DAD5CD] rounded-xl focus-within:ring-2 focus-within:ring-[#D29587] transition">
+                        <span className="px-4 py-3 bg-[#F7ECEA] text-[#D29587] font-semibold rounded-l-xl select-none">
+                            +221
+                        </span>
+                        <input
+                            type="tel"
+                            placeholder="771234567"
+                            value={whatsappNumber}
+                            onChange={(e) => {
+                                // On autorise uniquement les chiffres dans la suite
+                                const val = e.target.value.replace(/\D/g, '')
+                                setWhatsappNumber(val)
+                            }}
+                            className="flex-grow px-4 py-3 rounded-r-xl focus:outline-none"
+                            required
+                            maxLength={9}
+                            pattern="\d{8,9}"
+                            title="Entrez le numéro après +221, uniquement chiffres (8 à 9 chiffres)"
+                        />
+                    </div>
 
                     {/* --- Nouveau Select Stylisé --- */}
                     <div className="relative">
                         <label
                             htmlFor="category"
-                            className={`absolute left-4 top-3 text-sm text-[#A6A6A6] transition-all duration-200 ${category ? 'text-xs -top-2 bg-white px-1 text-[#D29587]' : ''
-                                }`}
+                            className={`absolute left-4 top-3 text-sm text-[#A6A6A6] transition-all duration-200 ${
+                                category ? 'text-xs -top-2 bg-white px-1 text-[#D29587]' : ''
+                            }`}
                         >
                             Catégorie
                         </label>
@@ -182,7 +198,6 @@ export default function AddProductForm({ userId }: Props) {
                             </svg>
                         </div>
                     </div>
-
                 </div>
 
                 <button
