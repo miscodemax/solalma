@@ -17,8 +17,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Sangsé",
-  description: "marketplace senegalaise de mode feminine",
+  title: "Sangse - Marketplace Mode Féminine abordable | Vêtements, Hijabs & Accessoires tendance",
+  description: "Découvrez Sangse, la marketplace dédiée à la mode féminine à prix abordable. Trouvez des vêtements stylés, hijabs colorés, maquillage et accessoires tendance, livrés rapidement.",
 };
 
 export default function RootLayout({
