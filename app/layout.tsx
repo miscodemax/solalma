@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Jayma",
+  title: "Sangsé",
   description: "marketplace senegalaise de mode feminine",
 };
 
