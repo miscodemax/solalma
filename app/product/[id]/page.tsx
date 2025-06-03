@@ -52,6 +52,17 @@ export default async function ProductDetailPage({ params }: Props) {
     .limit(6)
 
 
+  const { data: allRatings } = await supabase
+    .from('ratings_sellers')
+    .select('rating')
+    .eq('seller_id', Number(params.id))
+
+  const averageRating =
+    allRatings && allRatings.length > 0
+      ? allRatings.reduce((a, b) => a + b.rating, 0) / allRatings.length
+      : null
+
+  const ratingCount = allRatings?.length || 0
 
   const sellerId = product.user_id // ou product.profiles.id si join automatique
 
@@ -137,19 +148,23 @@ export default async function ProductDetailPage({ params }: Props) {
               </a>
             )}
           </div>
-           {sellerId && (
-          <>
-            <RatingSeller sellerId={sellerId} />
+          {sellerId && (
+            <>
+              <RatingSeller
+                sellerId={sellerId}
+                initialAverage={averageRating}
+                initialCount={ratingCount}
+              />
 
-            <Link
-              href={`/profile/${sellerId}`}
-              className="inline-flex items-center px-6 py-3 bg-[#D29587] text-white font-semibold rounded-xl hover:bg-[#bb6b5f] transition"
-              aria-label="Voir le profil du vendeur"
-            >
-              🛍️ Voir le profil du vendeur
-            </Link>
-          </>
-        )}
+              <Link
+                href={`/profile/${sellerId}`}
+                className="inline-flex items-center px-6 py-3 bg-[#D29587] text-white font-semibold rounded-xl hover:bg-[#bb6b5f] transition"
+                aria-label="Voir le profil du vendeur"
+              >
+                🛍️ Voir le profil du vendeur
+              </Link>
+            </>
+          )}
 
 
           {/* Produits similaires */}
