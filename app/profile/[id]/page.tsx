@@ -96,24 +96,29 @@ export default async function UserProfilePage({ params }: { params: { id: string
         {products && products.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {products.map((product) => (
-              <Link
-                key={product.id}
-                href={`/product/${product.id}`}
-                className="border rounded-lg p-3 hover:shadow-md transition bg-white"
-              >
-                <div className="w-full h-40 relative mb-2">
-                  <Image
-                    src={
-                      product.image_url ||
-                      "https://icons.veryicon.com/png/o/miscellaneous/standard/avatar-15.png"
-                    }
-                    alt={product.title}
-                    fill
-                    className="rounded-md object-cover"
-                  />
+              <Link key={product.id} href={`/product/${product.id}`} className="group block">
+                <div className="bg-white border border-[#E6E3DF] rounded-2xl overflow-hidden shadow-md hover:shadow-lg transition duration-300 w-full">
+                  <div className="relative w-full h-48 sm:h-56">
+                    <Image
+                      src={product.image_url || '/placeholder.jpg'}
+                      alt={product.title}
+                      fill
+                      className="object-cover transition-transform duration-500 group-hover:scale-105 group-hover:rotate-1"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                    />
+                  </div>
+                  <div className="p-3 sm:p-4 space-y-1">
+                    <h2 className="text-sm sm:text-base font-semibold text-[#333] truncate">
+                      {product.title}
+                    </h2>
+                    <p className="text-xs sm:text-sm text-[#777] line-clamp-2">
+                      {product.description}
+                    </p>
+                    <p className="mt-1 font-bold text-[#D29587] text-sm sm:text-base">
+                      {product.price} FCFA
+                    </p>
+                  </div>
                 </div>
-                <h3 className="font-semibold truncate">{product.title}</h3>
-                <p className="text-sm text-gray-500">{product.price} FCFA</p>
               </Link>
             ))}
           </div>
