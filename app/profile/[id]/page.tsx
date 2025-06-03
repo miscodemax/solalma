@@ -57,7 +57,7 @@ export default async function UserProfilePage({ params }) {
               >
                 <div className="w-full h-40 relative mb-2">
                   <Image
-                    src={product.image_url || '/placeholder.jpg'}
+                    src={product.image_url || 'https://icons.veryicon.com/png/o/miscellaneous/standard/avatar-15.png'}
                     alt={product.title}
                     fill
                     className="rounded-md object-cover"
