@@ -121,7 +121,7 @@ export default function Navbar() {
             <DropdownMenu>
               <DropdownMenuTrigger className="focus:outline-none">
                 <Image
-                  src={profile?.avatar_url || '/default-avatar.png'}
+                  src={profile?.avatar_url || 'https://icons.veryicon.com/png/o/miscellaneous/standard/avatar-15.png'}
                   alt="Profil"
                   width={36}
                   height={36}
