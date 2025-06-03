@@ -104,15 +104,42 @@ export default function FilteredProducts({ products }: { products: Product[] }) 
                 {/* Bouton pour ouvrir le modal */}
                 <div className="text-center">
                     <Dialog open={open} onOpenChange={setOpen}>
-                        <DialogTrigger asChild>
-                            <button
-                                type="button"
-                                className="px-6 py-3 bg-[#D29587] text-white rounded-xl font-semibold shadow-md hover:bg-[#bb7d72] transition"
-                            >
-                                Choisir son budget
-                            </button>
-                        </DialogTrigger>
+                        {/* Bouton pour ouvrir le modal avec emoji, icône et description */}
+                        <div className="text-center space-y-2">
+                            <p className="text-sm text-gray-600">
+                                💡 Filtre les produits selon ton budget préféré
+                            </p>
 
+                            <DialogTrigger asChild>
+                                <button
+                                    type="button"
+                                    className="px-6 py-3 bg-[#D29587] text-white rounded-xl font-semibold shadow-md hover:bg-[#bb7d72] transition flex items-center justify-center gap-2"
+                                    aria-label="Choisir une fourchette de prix pour filtrer les produits"
+                                >
+                                    💰 Choisir ton budget
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        className="h-5 w-5"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                        strokeWidth={2}
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            d="M12 8c-2.5 0-4 1.5-4 4s1.5 4 4 4 4-1.5 4-4-1.5-4-4-4z"
+                                        />
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            d="M12 2v2m0 16v2m10-10h-2M4 12H2m15.364-7.364l-1.414 1.414M6.05 17.95l-1.414 1.414m0-13.828l1.414 1.414m11.314 11.314l1.414 1.414"
+                                        />
+                                    </svg>
+                                </button>
+                            </DialogTrigger>
+
+                        </div>
                         <DialogContent className="max-w-lg rounded-3xl p-8">
                             <DialogHeader>
                                 <DialogTitle className="text-2xl font-bold mb-4 text-[#D29587] text-center">
