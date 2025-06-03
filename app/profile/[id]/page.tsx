@@ -34,6 +34,15 @@ export default async function UserProfilePage({ params }: { params: { id: string
     .order("created_at", { ascending: false })
 
 
+  // Récupération de la note moyenne du vendeur
+  const { data: ratingsData } = await supabase
+    .from("ratings_sellers")
+    .select("rating")
+    .eq("seller_id", id)
+
+  const ratings = ratingsData?.map((r) => r.rating) || []
+  const averageRating =
+    ratings.length > 0 ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1) : null
 
 
   if (!profile || profileError) {
@@ -59,6 +68,14 @@ export default async function UserProfilePage({ params }: { params: { id: string
         <div className="flex-1">
           <h1 className="text-2xl font-bold">{profile.username || "Utilisateur"}</h1>
           <p className="text-gray-600">{profile.bio || "Pas de biographie disponible."}</p>
+          {ratings.length > 0 ? (
+            <p className="text-sm text-yellow-600 mt-2">
+              ⭐ Note moyenne du vendeur : <span className="font-semibold">{averageRating} / 5</span>
+            </p>
+          ) : (
+            <p className="text-sm text-gray-400 mt-2">⭐ Aucun avis pour l’instant</p>
+          )}
+
 
           {/* Bouton modifier (si c'est mon profil) */}
           {user?.id === id && (
