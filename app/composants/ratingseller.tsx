@@ -17,9 +17,7 @@ export default async function RatingSeller({ sellerId }: { sellerId: string }) {
     return <p>Note indisponible</p>
   }
 
-  if (!data || data.length === 0) {
-    return <p>Pas encore de note</p>
-  }
+ 
 
   // Calcul de la moyenne
   const total = data.reduce((acc, cur) => acc + (cur.rating || 0), 0)
