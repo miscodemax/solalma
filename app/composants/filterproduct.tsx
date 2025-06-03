@@ -98,18 +98,7 @@ export default function FilteredProducts({ products }: { products: Product[] }) 
     return (
         <main className="w-full overflow-x-hidden bg-[#FAF6F4] min-h-screen py-10">
             <div className="max-w-7xl mx-auto px-6 sm:px-8 space-y-14">
-                <section className="bg-white border border-[#E6E3DF] rounded-3xl p-4 text-center shadow-md max-w-lg mx-auto">
-                    <h2 className="text-xl font-bold text-[#D29587] mb-2">
-                        Tu as des articles à vendre ? ne perds pas une seconde !
-                    </h2>
-                    <Link
-                        href="/dashboard/add"
-                        className="inline-block bg-[#D29587] text-white font-semibold px-4 py-2 rounded-xl shadow-md hover:bg-[#bb7d72] transition"
-                        aria-label="Commencer à vendre"
-                    >
-                        Commencer à vendre
-                    </Link>
-                </section>
+
 
 
                 {/* Bouton pour ouvrir le modal */}
