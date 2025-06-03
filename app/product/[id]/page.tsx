@@ -6,6 +6,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
 import dayjs from "dayjs"
+import RatingSeller from "@/app/composants/ratingseller"
 
 type Props = {
   params: {
@@ -136,7 +137,10 @@ export default async function ProductDetailPage({ params }: Props) {
               </a>
             )}
           </div>
-          {sellerId && (
+           {sellerId && (
+          <>
+            <RatingSeller sellerId={sellerId} />
+
             <Link
               href={`/profile/${sellerId}`}
               className="inline-flex items-center px-6 py-3 bg-[#D29587] text-white font-semibold rounded-xl hover:bg-[#bb6b5f] transition"
@@ -144,7 +148,8 @@ export default async function ProductDetailPage({ params }: Props) {
             >
               🛍️ Voir le profil du vendeur
             </Link>
-          )}
+          </>
+        )}
 
 
           {/* Produits similaires */}
