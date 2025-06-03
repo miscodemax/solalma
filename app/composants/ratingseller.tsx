@@ -2,8 +2,21 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel
+} from "@/components/ui/alert-dialog"
 
-export default function RatingSeller({ sellerId, initialAverage, initialCount }: {
+export default function RatingSeller({
+  sellerId,
+  initialAverage,
+  initialCount
+}: {
   sellerId: string
   initialAverage: number | null
   initialCount: number
@@ -13,7 +26,17 @@ export default function RatingSeller({ sellerId, initialAverage, initialCount }:
   const [average, setAverage] = useState<number | null>(initialAverage)
   const [count, setCount] = useState<number>(initialCount)
 
+  const [modalOpen, setModalOpen] = useState(false)
+  const [modalTitle, setModalTitle] = useState('')
+  const [modalMessage, setModalMessage] = useState('')
+
   const supabase = createClient()
+
+  const showModal = (title: string, message: string) => {
+    setModalTitle(title)
+    setModalMessage(message)
+    setModalOpen(true)
+  }
 
   useEffect(() => {
     const fetchAlreadyRated = async () => {
@@ -38,9 +61,9 @@ export default function RatingSeller({ sellerId, initialAverage, initialCount }:
 
   const handleVote = async (value: number) => {
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return alert("Vous devez être connecté pour noter.")
+    if (!user) return showModal("Connexion requise", "Vous devez être connecté pour noter ce vendeur.")
 
-    if (user.id === sellerId) return alert("Vous ne pouvez pas noter vous-même.")
+    if (user.id === sellerId) return showModal("Action impossible", "Vous ne pouvez pas noter vous-même.")
 
     const { error } = await supabase
       .from('ratings_sellers')
@@ -54,7 +77,6 @@ export default function RatingSeller({ sellerId, initialAverage, initialCount }:
       setHasRated(true)
       setRating(value)
 
-      // Re-fetch moyenne
       const { data, error } = await supabase
         .from('ratings_sellers')
         .select('rating')
@@ -66,7 +88,7 @@ export default function RatingSeller({ sellerId, initialAverage, initialCount }:
         setCount(ratings.length)
       }
     } else {
-      alert("Erreur lors de l'envoi de la note.")
+      showModal("Erreur", "Une erreur est survenue lors de l'envoi de votre note.")
       console.error(error)
     }
   }
@@ -83,16 +105,30 @@ export default function RatingSeller({ sellerId, initialAverage, initialCount }:
     ))
 
   return (
-    <div className="mt-4">
-      <div className="flex items-center space-x-2">
-        {renderStars(hasRated ? rating : undefined)}
-        <span className="text-sm text-gray-600">
-          ({average ? average.toFixed(1) : '0.0'} / 5, {count} vote{count > 1 ? 's' : ''})
-        </span>
+    <>
+      <div className="mt-4">
+        <div className="flex items-center space-x-2">
+          {renderStars(hasRated ? rating : undefined)}
+          <span className="text-sm text-gray-600">
+            ({average ? average.toFixed(1) : '0.0'} / 5, {count} vote{count > 1 ? 's' : ''})
+          </span>
+        </div>
+        {!hasRated && (
+          <p className="text-sm text-gray-500">Cliquez pour noter ce vendeur.</p>
+        )}
       </div>
-      {!hasRated && (
-        <p className="text-sm text-gray-500">Cliquez pour noter ce vendeur.</p>
-      )}
-    </div>
+
+      <AlertDialog open={modalOpen} onOpenChange={setModalOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{modalTitle}</AlertDialogTitle>
+            <AlertDialogDescription>{modalMessage}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Fermer</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   )
 }
