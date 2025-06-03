@@ -1,7 +1,19 @@
 "use client"
+
 import { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
+
+import { 
+  Dialog, 
+  DialogTrigger, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogFooter, 
+  DialogClose, 
+  DialogDescription 
+} from "@/components/ui/dialog"
 
 type Product = {
   id: number
@@ -13,8 +25,12 @@ type Product = {
 
 function PriceFilter({
   onChange,
+  selectedIndex,
+  onSelect,
 }: {
   onChange: (range: [number, number] | null) => void
+  selectedIndex: number
+  onSelect: (index: number) => void
 }) {
   const ranges: { label: string; range: [number, number] | null }[] = [
     { label: "Tous les prix", range: null },
@@ -26,16 +42,14 @@ function PriceFilter({
     { label: "Plus de 20 000 FCFA", range: [20001, Infinity] },
   ]
 
-  const [selectedIndex, setSelectedIndex] = useState(0)
-
   function handleSelect(index: number) {
-    setSelectedIndex(index)
+    onSelect(index)
     onChange(ranges[index].range)
   }
 
   return (
-    <div className="max-w-xl mx-auto mb-8 p-6 bg-white rounded-3xl shadow-lg">
-      <h3 className="text-xl font-semibold text-[#D29587] mb-2 text-center">
+    <div className="p-6 bg-white rounded-3xl shadow-lg max-w-md mx-auto">
+      <h3 className="text-xl font-semibold text-[#D29587] mb-4 text-center">
         Quel est ton budget ?
       </h3>
       <p className="text-center text-gray-600 mb-6 text-sm sm:text-base">
@@ -47,16 +61,13 @@ function PriceFilter({
             key={label}
             onClick={() => handleSelect(i)}
             type="button"
-            className={`
-              px-5 py-2 rounded-full font-medium text-sm sm:text-base
-              transition-shadow duration-300
+            className={`px-5 py-2 rounded-full font-medium text-sm sm:text-base transition-shadow duration-300
               ${
                 selectedIndex === i
                   ? "bg-[#D29587] text-white shadow-lg"
                   : "bg-[#F5F3F1] text-[#5A5A5A] hover:bg-[#D29587] hover:text-white"
               }
-              focus:outline-none focus:ring-4 focus:ring-[#D29587]/50
-            `}
+              focus:outline-none focus:ring-4 focus:ring-[#D29587]/50`}
             aria-pressed={selectedIndex === i}
             aria-label={`Filtrer par prix : ${label}`}
           >
@@ -70,10 +81,20 @@ function PriceFilter({
 
 export default function FilteredProducts({ products }: { products: Product[] }) {
   const [priceRange, setPriceRange] = useState<[number, number] | null>(null)
+  const [selectedIndex, setSelectedIndex] = useState(0)
+  const [open, setOpen] = useState(false)
 
   const filteredProducts = priceRange
     ? products.filter((p) => p.price >= priceRange[0] && p.price <= priceRange[1])
     : products
+
+  function handlePriceChange(range: [number, number] | null) {
+    setPriceRange(range)
+  }
+
+  function handleSelect(index: number) {
+    setSelectedIndex(index)
+  }
 
   return (
     <main className="w-full overflow-x-hidden bg-[#FAF6F4] min-h-screen py-10">
@@ -95,8 +116,55 @@ export default function FilteredProducts({ products }: { products: Product[] }) 
           </Link>
         </section>
 
-        {/* Filtre prix */}
-        <PriceFilter onChange={setPriceRange} />
+        {/* Bouton pour ouvrir le modal */}
+        <div className="text-center">
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <button
+                type="button"
+                className="px-6 py-3 bg-[#D29587] text-white rounded-xl font-semibold shadow-md hover:bg-[#bb7d72] transition"
+              >
+                Choisir son budget
+              </button>
+            </DialogTrigger>
+
+            <DialogContent className="max-w-lg rounded-3xl p-8">
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-bold mb-4 text-[#D29587] text-center">
+                  Choisis ta fourchette de prix
+                </DialogTitle>
+                <DialogDescription id="budget-description" className="sr-only">
+                  Sélectionne une fourchette de prix pour filtrer les produits
+                </DialogDescription>
+              </DialogHeader>
+
+              <PriceFilter
+                onChange={handlePriceChange}
+                selectedIndex={selectedIndex}
+                onSelect={handleSelect}
+              />
+
+              <DialogFooter className="mt-6 flex justify-center gap-4">
+                <DialogClose asChild>
+                  <button
+                    type="button"
+                    className="px-6 py-2 bg-[#D29587] text-white rounded-xl font-semibold hover:bg-[#bb7d72] transition"
+                  >
+                    Valider
+                  </button>
+                </DialogClose>
+                <DialogClose asChild>
+                  <button
+                    type="button"
+                    className="px-6 py-2 bg-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-400 transition"
+                  >
+                    Annuler
+                  </button>
+                </DialogClose>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
 
         {/* Produits filtrés */}
         <section>
