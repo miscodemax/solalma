@@ -9,7 +9,7 @@ import { ArrowRight } from 'lucide-react'
 type Props = {
   searchParams: { category?: string }
 }
-
+ 
 export default async function HomePage({ searchParams }: Props) {
   const cookieStore = await cookies()
   const supabase = createServerClient(supabaseUrl, supabaseKey, {

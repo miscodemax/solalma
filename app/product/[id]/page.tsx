@@ -50,6 +50,11 @@ export default async function ProductDetailPage({ params }: Props) {
     .neq("id", product.id)
     .limit(6)
 
+
+
+  const sellerId = product.user_id // ou product.profiles.id si join automatique
+
+
   const whatsappClean = product.whatsapp_number?.replace(/\D/g, "")
   const prefilledMessage = `Bonjour ! Je suis intéressé(e) par votre produit "${product.title}" à ${product.price.toLocaleString()} FCFA dans la catégorie ${product.category}. Est-il toujours disponible ?`
   const whatsappLink = whatsappClean
@@ -68,7 +73,7 @@ export default async function ProductDetailPage({ params }: Props) {
             className="object-cover transition-transform duration-700 ease-in-out group-hover:scale-[1.15]"
             priority
           />
-      
+
         </div>
 
         {/* Infos produit */}
@@ -131,9 +136,18 @@ export default async function ProductDetailPage({ params }: Props) {
               </a>
             )}
           </div>
+          {sellerId && (
+            <Link
+              href={`/profile/${sellerId}`}
+              className="inline-flex items-center px-6 py-3 bg-[#D29587] text-white font-semibold rounded-xl hover:bg-[#bb6b5f] transition"
+              aria-label="Voir le profil du vendeur"
+            >
+              🛍️ Voir le profil du vendeur
+            </Link>
+          )}
 
-         
-              {/* Produits similaires */}
+
+          {/* Produits similaires */}
           {similarProducts && similarProducts.length > 0 && (
             <section className="mt-10">
               <h2 className="text-4xl font-extrabold text-[#333] mb-4">Produits similaires</h2>
@@ -167,12 +181,12 @@ export default async function ProductDetailPage({ params }: Props) {
             </section>
           )}
         </div>
-         {/* Description */}
-          {product.description && (
-            <p className="text-gray-700 leading-relaxed whitespace-pre-line">
-              {product.description}
-            </p>
-          )}
+        {/* Description */}
+        {product.description && (
+          <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+            {product.description}
+          </p>
+        )}
       </div>
 
 
