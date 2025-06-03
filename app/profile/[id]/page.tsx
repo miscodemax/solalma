@@ -1,10 +1,10 @@
 import { createClient } from "@/lib/supabase"
 import Image from "next/image"
 import Link from "next/link"
-import { cookies } from "next/headers"
+
 
 export default async function UserProfilePage({ params }: { params: { id: string } }) {
-  const supabase = createClient(cookies())
+  const supabase = createClient()
   const { id } = params
 
   // Récupération du profil consulté
@@ -33,7 +33,7 @@ export default async function UserProfilePage({ params }: { params: { id: string
     return <p className="p-6 text-center text-red-500 font-semibold">Profil introuvable.</p>
   }
 
-    console.log('userid: ' + user.id + 'id: ' + id);
+  console.log('userid: ' + user.id + 'id: ' + id);
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-8">
@@ -52,7 +52,7 @@ export default async function UserProfilePage({ params }: { params: { id: string
           <p className="text-gray-600">{profile.bio || "Pas de biographie disponible."}</p>
 
           {/* Bouton modifier (si c'est mon profil) */}
-          {user?.id === id &&  (
+          {user?.id === id && (
             <Link
               href="/profile/update"
               className="inline-block mt-4 px-4 py-2 text-sm bg-[#D29587] text-white rounded hover:bg-[#bb7e70] transition"
