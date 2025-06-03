@@ -1,10 +1,17 @@
-import { createClient } from "@/lib/supabase"
+import { cookies } from "next/headers"
+import { createServerClient } from "@supabase/ssr"
+import { supabaseUrl, supabaseKey } from "@/lib/supabase"
 import Image from "next/image"
 import Link from "next/link"
 
 
 export default async function UserProfilePage({ params }: { params: { id: string } }) {
-  const supabase = createClient()
+  const cookieStore = await cookies()
+  const supabase = createServerClient(supabaseUrl, supabaseKey, {
+    cookies: {
+      get: (name) => cookieStore.get(name)?.value,
+    },
+  })
   const { id } = params
 
   // Récupération du profil consulté
