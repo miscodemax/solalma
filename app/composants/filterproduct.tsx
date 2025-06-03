@@ -1,7 +1,7 @@
 "use client"
 import { useState } from "react"
-import Image from 'next/image'
-import Link from 'next/link'
+import Image from "next/image"
+import Link from "next/link"
 
 type Product = {
   id: number
@@ -34,22 +34,36 @@ function PriceFilter({
   }
 
   return (
-    <div className="flex flex-wrap gap-2 mb-6 justify-center">
-      {ranges.map(({ label }, i) => (
-        <button
-          key={label}
-          className={`px-3 py-1 rounded-full border transition 
-            ${
-              selectedIndex === i
-                ? "bg-[#D29587] text-white border-[#D29587]"
-                : "border-gray-300 text-gray-700 hover:bg-gray-100"
-            }`}
-          onClick={() => handleSelect(i)}
-          type="button"
-        >
-          {label}
-        </button>
-      ))}
+    <div className="max-w-xl mx-auto mb-8 p-6 bg-white rounded-3xl shadow-lg">
+      <h3 className="text-xl font-semibold text-[#D29587] mb-2 text-center">
+        Quel est ton budget ?
+      </h3>
+      <p className="text-center text-gray-600 mb-6 text-sm sm:text-base">
+        Choisis une fourchette de prix pour filtrer les articles adaptés à ton budget.
+      </p>
+      <div className="flex flex-wrap justify-center gap-3">
+        {ranges.map(({ label }, i) => (
+          <button
+            key={label}
+            onClick={() => handleSelect(i)}
+            type="button"
+            className={`
+              px-5 py-2 rounded-full font-medium text-sm sm:text-base
+              transition-shadow duration-300
+              ${
+                selectedIndex === i
+                  ? "bg-[#D29587] text-white shadow-lg"
+                  : "bg-[#F5F3F1] text-[#5A5A5A] hover:bg-[#D29587] hover:text-white"
+              }
+              focus:outline-none focus:ring-4 focus:ring-[#D29587]/50
+            `}
+            aria-pressed={selectedIndex === i}
+            aria-label={`Filtrer par prix : ${label}`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
     </div>
   )
 }
@@ -62,19 +76,20 @@ export default function FilteredProducts({ products }: { products: Product[] }) 
     : products
 
   return (
-    <main className="w-full overflow-x-hidden">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-12">
+    <main className="w-full overflow-x-hidden bg-[#FAF6F4] min-h-screen py-10">
+      <div className="max-w-7xl mx-auto px-6 sm:px-8 space-y-14">
         {/* CTA Section */}
-        <section className="bg-[#FAF6F4] border border-[#E6E3DF] rounded-2xl p-4 sm:p-6 text-center shadow-sm mx-auto w-full max-w-md sm:max-w-xl">
-          <h2 className="text-lg sm:text-2xl font-bold text-[#D29587] mb-2 sm:mb-3">
+        <section className="bg-white border border-[#E6E3DF] rounded-3xl p-6 text-center shadow-md max-w-lg mx-auto">
+          <h2 className="text-2xl font-bold text-[#D29587] mb-3">
             Tu as des articles à vendre ?
           </h2>
-          <p className="text-gray-600 mb-4 text-sm sm:text-base">
+          <p className="text-gray-700 mb-5 text-base">
             Rejoins notre communauté et donne une seconde vie à tes vêtements, hijabs, produits skincare...
           </p>
           <Link
             href="/dashboard/add"
-            className="inline-flex items-center justify-center gap-2 bg-[#D29587] text-white font-semibold px-4 py-2 rounded-xl text-sm sm:text-base shadow hover:bg-[#bb7d72] transition"
+            className="inline-block bg-[#D29587] text-white font-semibold px-6 py-3 rounded-xl text-base shadow-md hover:bg-[#bb7d72] transition"
+            aria-label="Commencer à vendre"
           >
             Commencer à vendre
           </Link>
@@ -86,32 +101,34 @@ export default function FilteredProducts({ products }: { products: Product[] }) 
         {/* Produits filtrés */}
         <section>
           {filteredProducts.length === 0 ? (
-            <p className="text-center text-gray-500">Aucun produit trouvé dans cette fourchette de prix.</p>
+            <p className="text-center text-gray-500 text-lg">
+              Aucun produit trouvé dans cette fourchette de prix.
+            </p>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 sm:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-7">
               {filteredProducts.map((product) => (
-                <Link key={product.id} href={`/product/${product.id}`} className="group block">
-                  <div className="bg-white border border-[#E6E3DF] rounded-2xl overflow-hidden shadow-md hover:shadow-lg transition duration-300 w-full">
-                    <div className="relative w-full h-48 sm:h-56">
-                      <Image
-                        src={product.image_url || '/placeholder.jpg'}
-                        alt={product.title}
-                        fill
-                        className="object-cover transition-transform duration-500 group-hover:scale-105 group-hover:rotate-1"
-                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                      />
-                    </div>
-                    <div className="p-3 sm:p-4 space-y-1">
-                      <h2 className="text-sm sm:text-base font-semibold text-[#333] truncate">
-                        {product.title}
-                      </h2>
-                      <p className="text-xs sm:text-sm text-[#777] line-clamp-2">
-                        {product.description}
-                      </p>
-                      <p className="mt-1 font-bold text-[#D29587] text-sm sm:text-base">
-                        {product.price.toLocaleString()} FCFA
-                      </p>
-                    </div>
+                <Link
+                  key={product.id}
+                  href={`/product/${product.id}`}
+                  className="group block rounded-3xl overflow-hidden shadow-lg bg-white border border-[#E6E3DF] transition-transform transform hover:scale-[1.03] hover:shadow-2xl"
+                >
+                  <div className="relative w-full h-52 sm:h-60">
+                    <Image
+                      src={product.image_url || "/placeholder.jpg"}
+                      alt={product.title}
+                      fill
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                    />
+                  </div>
+                  <div className="p-5 space-y-2">
+                    <h2 className="text-lg font-semibold text-[#333] truncate">
+                      {product.title}
+                    </h2>
+                    <p className="text-sm text-[#555] line-clamp-2">{product.description}</p>
+                    <p className="mt-3 font-bold text-[#D29587] text-lg">
+                      {product.price.toLocaleString()} FCFA
+                    </p>
                   </div>
                 </Link>
               ))}
