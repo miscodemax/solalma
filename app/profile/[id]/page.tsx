@@ -28,7 +28,7 @@ export default async function UserProfilePage({ params }: { params: { id: string
 
   // Récupération des produits liés
   const { data: products } = await supabase
-    .from("products")
+    .from("product")
     .select("*")
     .eq("user_id", id)
     .order("created_at", { ascending: false })
@@ -41,6 +41,8 @@ export default async function UserProfilePage({ params }: { params: { id: string
   }
 
   console.log('userid: ' + user.id + 'id: ' + id);
+  console.log('Produits trouvés :', products);
+
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-8">

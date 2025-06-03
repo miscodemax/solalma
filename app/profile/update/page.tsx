@@ -4,13 +4,14 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
+import ImageUploader from '@/app/dashboard/add/imageuploader' // adapte le chemin si nécessaire
 
 export default function UpdateProfilePage() {
   const supabase = createClient()
   const router = useRouter()
+
   const [loading, setLoading] = useState(true)
   const [profile, setProfile] = useState({ username: '', bio: '', avatar_url: '' })
-  const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
@@ -30,6 +31,7 @@ export default function UpdateProfilePage() {
         console.error(error)
       } else {
         setProfile(data)
+        setPreviewUrl(data.avatar_url)
       }
 
       setLoading(false)
@@ -45,32 +47,13 @@ export default function UpdateProfilePage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
-    let avatar_url = profile.avatar_url
-
-    if (avatarFile) {
-      const fileExt = avatarFile.name.split('.').pop()
-      const fileName = `${user.id}.${fileExt}`
-      const { error: uploadError } = await supabase
-        .storage
-        .from('avatars')
-        .upload(`public/${fileName}`, avatarFile, { upsert: true })
-
-      if (uploadError) {
-        console.error(uploadError)
-        setSaving(false)
-        return
-      }
-
-      const {
-        data: { publicUrl }
-      } = supabase.storage.from('avatars').getPublicUrl(`public/${fileName}`)
-
-      avatar_url = publicUrl
-    }
-
     const { error } = await supabase
       .from('profiles')
-      .update({ username: profile.username, bio: profile.bio, avatar_url })
+      .update({
+        username: profile.username,
+        bio: profile.bio,
+        avatar_url: previewUrl || profile.avatar_url
+      })
       .eq('id', user.id)
 
     setSaving(false)
@@ -85,11 +68,8 @@ export default function UpdateProfilePage() {
     }
   }
 
-  const handleFileChange = (file: File | null) => {
-    if (file) {
-      setAvatarFile(file)
-      setPreviewUrl(URL.createObjectURL(file))
-    }
+  const handleImageUpload = (url: string) => {
+    setPreviewUrl(url)
   }
 
   if (loading) {
@@ -105,20 +85,15 @@ export default function UpdateProfilePage() {
       <h1 className="text-3xl font-bold mb-6 text-center">🔧 Modifier mon profil</h1>
 
       <form onSubmit={handleUpdate} className="space-y-6">
-        <div className="flex items-center space-x-4">
+        <div className="flex flex-col items-center space-y-4">
           <Image
-            src={previewUrl || profile.avatar_url || '/default-avatar.png'}
+            src={previewUrl || '/default-avatar.png'}
             alt="Avatar"
-            width={80}
-            height={80}
+            width={100}
+            height={100}
             className="rounded-full object-cover border"
           />
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => handleFileChange(e.target.files?.[0] || null)}
-            className="text-sm"
-          />
+          <ImageUploader onUpload={handleImageUpload} />
         </div>
 
         <div>
