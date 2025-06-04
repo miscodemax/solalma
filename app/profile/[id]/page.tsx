@@ -3,6 +3,7 @@ import { createServerClient } from "@supabase/ssr"
 import { supabaseUrl, supabaseKey } from "@/lib/supabase"
 import Image from "next/image"
 import Link from "next/link"
+import ShareButton from "@/app/composants/sharebutton"
 
 
 export default async function UserProfilePage({ params }: { params: { id: string } }) {
@@ -89,27 +90,12 @@ export default async function UserProfilePage({ params }: { params: { id: string
               📱 WhatsApp
             </a>
 
-            {/* Instagram */}
-            <button
-              onClick={() => {
-                navigator.clipboard.writeText(`https://sangse.shop/profile/${id}`)
-                alert("📎 Lien du profil copié pour Instagram !")
-              }}
-              className="bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded-xl text-sm flex items-center gap-2"
-            >
-              📸 Instagram
-            </button>
-
-            {/* TikTok */}
-            <button
-              onClick={() => {
-                navigator.clipboard.writeText(`https://sangse.shop/profile/${id}`)
-                alert("📎 Lien du profil copié pour TikTok !")
-              }}
-              className="bg-black hover:bg-gray-800 text-white px-4 py-2 rounded-xl text-sm flex items-center gap-2"
-            >
-              🎵 TikTok
-            </button>
+            <ShareButton id={id}>
+              Instagram
+            </ShareButton>
+            <ShareButton id={id}>
+              Instagram
+            </ShareButton>
           </div>
 
 
