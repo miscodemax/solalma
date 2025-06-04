@@ -27,7 +27,7 @@ const categories = ['Vetement', 'artisanat', 'maquillage', 'soins_et_astuces']
 const navLinks = [
   { href: '/', label: 'Accueil', icon: HomeIcon },
   { href: '/dashboard/add', label: 'Vendre', icon: ShoppingCart },
-  { href: '/dashboard/products', label: 'Mes produits', icon: User },
+  { href: '/dashboard/products', label: 'Mes produitse', icon: User },
   { href: '/about', label: 'À propos', icon: Info },
 ]
 
