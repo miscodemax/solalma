@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://www.sangse.shop
+
+# Sitemaps
+Sitemap: https://www.sangse.shop/sitemap.xml
