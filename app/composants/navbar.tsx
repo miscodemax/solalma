@@ -135,8 +135,8 @@ export default function Navbar() {
               key={cat}
               onClick={() => handleCategorySelect(cat)}
               className={`capitalize font-medium transition text-lg border-b-2 pb-1 ${isActive
-                  ? 'text-[#D29587] border-[#D29587]'
-                  : 'text-gray-600 border-transparent hover:border-gray-300 hover:text-[#D29587]'
+                ? 'text-[#D29587] border-[#D29587]'
+                : 'text-gray-600 border-transparent hover:border-gray-300 hover:text-[#D29587]'
                 }`}
             >
               {cat.replace('_', ' ')}
@@ -157,8 +157,8 @@ export default function Navbar() {
                   key={cat}
                   onClick={() => handleCategorySelect(cat)}
                   className={`text-left w-full transition font-medium ${selectedCategory === cat
-                      ? 'text-[#D29587] underline'
-                      : 'text-gray-700 hover:text-[#D29587]'
+                    ? 'text-[#D29587] underline'
+                    : 'text-gray-700 hover:text-[#D29587]'
                     }`}
                 >
                   {cat.replace('_', ' ')}
