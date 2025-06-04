@@ -75,6 +75,42 @@ export default async function UserProfilePage({ params }: { params: { id: string
           ) : (
             <p className="text-sm text-gray-400 mt-2">⭐ Aucun avis pour l’instant</p>
           )}
+          {/* Boutons de partage */}
+          <div className="mt-4 flex gap-3 flex-wrap items-center">
+            {/* WhatsApp */}
+            <a
+              href={`https://wa.me/?text=${encodeURIComponent(
+                `🔗 Découvre la boutique de ${profile.username} sur Sangse.shop : https://sangse.shop/profile/${id}`
+              )}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-xl text-sm flex items-center gap-2"
+            >
+              📱 WhatsApp
+            </a>
+
+            {/* Instagram */}
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(`https://sangse.shop/profile/${id}`)
+                alert("📎 Lien du profil copié pour Instagram !")
+              }}
+              className="bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded-xl text-sm flex items-center gap-2"
+            >
+              📸 Instagram
+            </button>
+
+            {/* TikTok */}
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(`https://sangse.shop/profile/${id}`)
+                alert("📎 Lien du profil copié pour TikTok !")
+              }}
+              className="bg-black hover:bg-gray-800 text-white px-4 py-2 rounded-xl text-sm flex items-center gap-2"
+            >
+              🎵 TikTok
+            </button>
+          </div>
 
 
           {/* Bouton modifier (si c'est mon profil) */}
