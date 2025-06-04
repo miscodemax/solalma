@@ -4,13 +4,6 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import {
-  ChevronDown,
   HomeIcon,
   ShoppingCart,
   User,
@@ -23,7 +16,7 @@ import TextLogo from './textLogo'
 import { createClient } from '@/lib/supabase'
 import Image from 'next/image'
 
-const categories = ['Vetement', 'artisanat', 'maquillage', 'soins_et_astuces']
+const categories = ['Vetement', 'Artisanat', 'Maquillage', 'Soins et astuces']
 
 const navLinks = [
   { href: '/', label: 'Accueil', icon: HomeIcon },
@@ -71,7 +64,7 @@ export default function Navbar() {
   return (
     <header className="bg-white shadow-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-        {/* Logo + Accueil */}
+        {/* Logo */}
         <Link href="/" className="flex items-center gap-2 text-2xl font-bold text-[#D29587] hover:opacity-80">
           🌸 <TextLogo />
         </Link>
@@ -86,25 +79,6 @@ export default function Navbar() {
 
         {/* Navigation Desktop */}
         <nav className="hidden md:flex items-center space-x-8">
-          {/* Dropdown catégories */}
-          <DropdownMenu>
-            <DropdownMenuTrigger className="flex items-center gap-1 text-gray-700 font-medium hover:text-[#D29587] transition cursor-pointer">
-              Catégories <ChevronDown size={16} />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              {categories.map((cat) => (
-                <DropdownMenuItem
-                  key={cat}
-                  onClick={() => handleCategorySelect(cat)}
-                  className="cursor-pointer"
-                >
-                  {cat}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {/* Liens dynamiques */}
           {navLinks.map(({ href, label, icon: Icon }) => (
             <Link
               key={href}
@@ -116,29 +90,33 @@ export default function Navbar() {
             </Link>
           ))}
 
-          {/* Icône de profil si connecté */}
+          {/* Profil utilisateur */}
           {sessionUser && (
-            <DropdownMenu>
-              <DropdownMenuTrigger className="focus:outline-none">
-                <Image
-                  src={profile?.avatar_url || 'https://icons.veryicon.com/png/o/miscellaneous/standard/avatar-15.png'}
-                  alt="Profil"
-                  width={36}
-                  height={36}
-                  className="rounded-full border border-gray-300"
-                />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => router.push(`/profile/${sessionUser.id}`)}>
-                  Voir mon profil
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleLogout} className="text-red-600">
-                  <LogOut className="mr-2" size={16} /> Déconnexion
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div className="relative">
+              <Image
+                src={profile?.avatar_url || 'https://icons.veryicon.com/png/o/miscellaneous/standard/avatar-15.png'}
+                alt="Profil"
+                width={36}
+                height={36}
+                className="rounded-full border border-gray-300 cursor-pointer"
+                onClick={() => router.push(`/profile/${sessionUser.id}`)}
+              />
+            </div>
           )}
         </nav>
+      </div>
+
+      {/* Catégories Desktop visibles */}
+      <div className="hidden md:flex justify-center space-x-4 py-2 border-t border-gray-100 bg-[#FDF7F5]">
+        {categories.map((cat) => (
+          <button
+            key={cat}
+            onClick={() => handleCategorySelect(cat)}
+            className="text-sm text-gray-700 hover:text-[#D29587] font-medium transition"
+          >
+            {cat}
+          </button>
+        ))}
       </div>
 
       {/* Menu mobile */}
@@ -159,7 +137,7 @@ export default function Navbar() {
               ))}
             </div>
 
-            {/* Liens dynamiques */}
+            {/* Navigation */}
             <div>
               <p className="text-sm font-semibold text-gray-600 mb-2">Navigation</p>
               {navLinks.map(({ href, label, icon: Icon }) => (
@@ -175,7 +153,7 @@ export default function Navbar() {
               ))}
             </div>
 
-            {/* Menu profil mobile */}
+            {/* Profil mobile */}
             {sessionUser && (
               <div className="border-t pt-4">
                 <Link
