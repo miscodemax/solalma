@@ -1,10 +1,13 @@
+// /app/profile/[id]/page.tsx
+
+
 import { cookies } from "next/headers"
 import { createServerClient } from "@supabase/ssr"
 import { supabaseUrl, supabaseKey } from "@/lib/supabase"
 import Image from "next/image"
 import Link from "next/link"
 import CopyButton from "@/app/composants/sharebutton"
-
+import { FaWhatsapp } from "react-icons/fa"
 
 export default async function UserProfilePage({ params }: { params: { id: string } }) {
   const cookieStore = await cookies()
@@ -15,27 +18,22 @@ export default async function UserProfilePage({ params }: { params: { id: string
   })
   const { id } = params
 
-  // Récupération du profil consulté
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select("username, avatar_url, bio")
     .eq("id", id)
     .single()
 
-  // Récupération de l'utilisateur connecté
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Récupération des produits liés
   const { data: products } = await supabase
     .from("product")
     .select("*")
     .eq("user_id", id)
     .order("created_at", { ascending: false })
 
-
-  // Récupération de la note moyenne du vendeur
   const { data: ratingsData } = await supabase
     .from("ratings_sellers")
     .select("rating")
@@ -45,17 +43,12 @@ export default async function UserProfilePage({ params }: { params: { id: string
   const averageRating =
     ratings.length > 0 ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1) : null
 
-
   if (!profile || profileError) {
     return <p className="p-6 text-center text-red-500 font-semibold">Profil introuvable.</p>
   }
 
-  console.log('userid: ' + user.id + 'id: ' + id);
-  console.log('Produits trouvés :', products);
-
-
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-8">
+    <div className="max-w-4xl mx-auto p-6 space-y-10">
       {/* Section Profil */}
       <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
         <div className="w-24 h-24 relative">
@@ -66,7 +59,7 @@ export default async function UserProfilePage({ params }: { params: { id: string
             className="rounded-full object-cover border"
           />
         </div>
-        <div className="flex-1">
+        <div className="flex-1 w-full">
           <h1 className="text-2xl font-bold">{profile.username || "Utilisateur"}</h1>
           <p className="text-gray-600">{profile.bio || "Pas de biographie disponible."}</p>
           {ratings.length > 0 ? (
@@ -76,38 +69,43 @@ export default async function UserProfilePage({ params }: { params: { id: string
           ) : (
             <p className="text-sm text-gray-400 mt-2">⭐ Aucun avis pour l’instant</p>
           )}
-          {/* Boutons de partage */}
-          <div className="mt-4 flex gap-3 flex-wrap items-center">
-            {/* WhatsApp */}
-            <a
-              href={`https://wa.me/?text=${encodeURIComponent(
-                `🔗 Découvre la boutique de ${profile.username} sur Sangse.shop : https://sangse.shop/profile/${id}`
-              )}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-xl text-sm flex items-center gap-2"
-            >
-              📱 WhatsApp
-            </a>
 
-            <CopyButton
-              text={`https://sangse.shop/profile/${id}`}
-              platform="Instagram"
-            />
+          {/* Section de partage */}
+          <div className="mt-6">
+            <h2 className="text-sm font-semibold text-gray-600 mb-2">📤 Partager cette boutique</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-md">
+              {/* WhatsApp */}
+              <a
+                href={`https://wa.me/?text=${encodeURIComponent(
+                  `🔗 Découvre la boutique de ${profile.username} sur Sangse.shop : https://sangse.shop/profile/${id}`
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-xl text-sm flex items-center justify-center gap-2 transition"
+              >
+                <FaWhatsapp className="w-4 h-4" />
+                WhatsApp
+              </a>
 
-            {/* TikTok */}
-            <CopyButton
-              text={`https://sangse.shop/profile/${id}`}
-              platform="TikTok"
-            />
+              {/* Instagram */}
+              <CopyButton
+                text={`https://sangse.shop/profile/${id}`}
+                platform="Instagram"
+              />
+
+              {/* TikTok */}
+              <CopyButton
+                text={`https://sangse.shop/profile/${id}`}
+                platform="TikTok"
+              />
+            </div>
           </div>
 
-
-          {/* Bouton modifier (si c'est mon profil) */}
+          {/* Modifier profil (si c’est l'utilisateur connecté) */}
           {user?.id === id && (
             <Link
               href="/profile/update"
-              className="inline-block mt-4 px-4 py-2 text-sm bg-[#D29587] text-white rounded hover:bg-[#bb7e70] transition"
+              className="inline-block mt-6 px-4 py-2 text-sm bg-[#D29587] text-white rounded-xl hover:bg-[#bb7e70] transition"
             >
               ✏️ Modifier mon profil
             </Link>
@@ -117,7 +115,7 @@ export default async function UserProfilePage({ params }: { params: { id: string
 
       {/* Section Produits */}
       <div>
-        <h2 className="text-xl font-semibold mb-4">Produits en vente</h2>
+        <h2 className="text-xl font-semibold mb-4">🛍️ Produits en vente</h2>
 
         {products && products.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
