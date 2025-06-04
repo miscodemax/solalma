@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Footer from "./composants/footer";
 import Navbar from "./composants/navbar";
+import { Toaster } from "@/components/ui/sonner"
 //import { SessionContextProvider } from "@supabase/auth-helpers-react";
 //import { createClient } from "./lib/supabase"
 
@@ -36,6 +37,7 @@ export default function RootLayout({
         <Navbar />
         <main className="flex-grow">
           {children}
+          <Toaster />
         </main>
         <Footer />
       </body>

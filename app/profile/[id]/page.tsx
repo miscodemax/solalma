@@ -3,7 +3,7 @@ import { createServerClient } from "@supabase/ssr"
 import { supabaseUrl, supabaseKey } from "@/lib/supabase"
 import Image from "next/image"
 import Link from "next/link"
-import ShareButton from "@/app/composants/sharebutton"
+import CopyButton from "@/app/composants/sharebutton"
 
 
 export default async function UserProfilePage({ params }: { params: { id: string } }) {
@@ -90,12 +90,16 @@ export default async function UserProfilePage({ params }: { params: { id: string
               📱 WhatsApp
             </a>
 
-            <ShareButton id={id}>
-              Instagram
-            </ShareButton>
-            <ShareButton id={id}>
-              Instagram
-            </ShareButton>
+            <CopyButton
+              text={`https://sangse.shop/profile/${id}`}
+              platform="Instagram"
+            />
+
+            {/* TikTok */}
+            <CopyButton
+              text={`https://sangse.shop/profile/${id}`}
+              platform="TikTok"
+            />
           </div>
 
 
