@@ -167,7 +167,7 @@ export default async function ProductDetailPage({ params }: Props) {
             </>
           )}
 
-<div className="mt-6">
+          <div className="mt-6">
             <h2 className="text-sm font-semibold text-gray-600 mb-2">📤 Partager ce produit !</h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-md">
               {/* WhatsApp */}
@@ -189,7 +189,7 @@ export default async function ProductDetailPage({ params }: Props) {
                 platform="Tiktok/Instagram"
               />
 
-              
+
             </div>
           </div>
           {/* Produits similaires */}

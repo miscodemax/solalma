@@ -71,7 +71,7 @@ export default function Navbar() {
   }
 
   return (
-    <header className="bg-white shadow-md sticky top-0 z-50">
+    <nav className="bg-white shadow-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
         {/* Logo + Accueil */}
         <Link href="/" className="flex items-center gap-2 text-2xl font-bold text-[#D29587] hover:opacity-80">
@@ -100,7 +100,6 @@ export default function Navbar() {
             </Link>
           ))}
 
-          {/* Icône de profil si connecté */}
           {/* Icône de profil si connecté */}
           {sessionUser && (
             <DropdownMenu>
@@ -204,6 +203,6 @@ export default function Navbar() {
           </div>
         </div>
       )}
-    </header>
+    </nav>
   )
 }
