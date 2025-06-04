@@ -33,7 +33,7 @@ const navLinks = [
 
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [sessionUser, setSessionUser] = useState<any>(null)
+  const [sessionUser, setSessionUser] = useState(null)
   const [profile, setProfile] = useState<{ avatar_url: string } | null>(null)
 
   const router = useRouter()
