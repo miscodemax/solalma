@@ -173,7 +173,7 @@ export default async function ProductDetailPage({ params }: Props) {
               {/* WhatsApp */}
               <a
                 href={`https://wa.me/?text=${encodeURIComponent(
-                  `🔗 Découvre la boutique de ${product.title} sur Sangse.shop : https://sangse.shop/product/${product.id}`
+                  `🔗 Découvre ce ${product.title} à seulement ${product.price} sur Sangse.shop : https://sangse.shop/product/${product.id}`
                 )}`}
                 target="_blank"
                 rel="noopener noreferrer"
