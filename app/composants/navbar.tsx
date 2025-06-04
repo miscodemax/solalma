@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useRouter, usePathname } from 'next/navigation'
+import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import {
   HomeIcon,
   ShoppingCart,
@@ -16,7 +16,7 @@ import TextLogo from './textLogo'
 import { createClient } from '@/lib/supabase'
 import Image from 'next/image'
 
-const categories = ['Vetement', 'Artisanat', 'Maquillage', 'Soins et astuces']
+const categories = ['Vetement', 'artisanat', 'maquillage', 'soins_et_astuces']
 
 const navLinks = [
   { href: '/', label: 'Accueil', icon: HomeIcon },
@@ -32,6 +32,9 @@ export default function Navbar() {
 
   const router = useRouter()
   const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const selectedCategory = searchParams.get('category')
+
   const supabase = createClient()
 
   useEffect(() => {
@@ -64,7 +67,7 @@ export default function Navbar() {
   return (
     <header className="bg-white shadow-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-        {/* Logo */}
+        {/* Logo + Accueil */}
         <Link href="/" className="flex items-center gap-2 text-2xl font-bold text-[#D29587] hover:opacity-80">
           🌸 <TextLogo />
         </Link>
@@ -79,6 +82,7 @@ export default function Navbar() {
 
         {/* Navigation Desktop */}
         <nav className="hidden md:flex items-center space-x-8">
+          {/* Liens dynamiques */}
           {navLinks.map(({ href, label, icon: Icon }) => (
             <Link
               key={href}
@@ -90,33 +94,48 @@ export default function Navbar() {
             </Link>
           ))}
 
-          {/* Profil utilisateur */}
+          {/* Icône de profil si connecté */}
           {sessionUser && (
-            <div className="relative">
-              <Image
-                src={profile?.avatar_url || 'https://icons.veryicon.com/png/o/miscellaneous/standard/avatar-15.png'}
-                alt="Profil"
-                width={36}
-                height={36}
-                className="rounded-full border border-gray-300 cursor-pointer"
-                onClick={() => router.push(`/profile/${sessionUser.id}`)}
-              />
+            <div className="ml-4 relative">
+              <button className="focus:outline-none">
+                <Image
+                  src={profile?.avatar_url || 'https://icons.veryicon.com/png/o/miscellaneous/standard/avatar-15.png'}
+                  alt="Profil"
+                  width={36}
+                  height={36}
+                  className="rounded-full border border-gray-300"
+                  onClick={() => router.push(`/profile/${sessionUser.id}`)}
+                />
+              </button>
+              <button
+                onClick={handleLogout}
+                className="absolute top-full mt-2 text-sm text-red-600 hover:underline hidden group-hover:block"
+              >
+                Déconnexion
+              </button>
             </div>
           )}
         </nav>
       </div>
 
-      {/* Catégories Desktop visibles */}
-      <div className="hidden md:flex justify-center space-x-4 py-2 border-t border-gray-100 bg-[#FDF7F5]">
-        {categories.map((cat) => (
-          <button
-            key={cat}
-            onClick={() => handleCategorySelect(cat)}
-            className="text-sm text-gray-700 hover:text-[#D29587] font-medium transition"
-          >
-            {cat}
-          </button>
-        ))}
+      {/* Catégories visibles sur desktop */}
+      <div className="hidden md:flex justify-center gap-6 pb-2">
+        {categories.map((cat) => {
+          const isActive = selectedCategory === cat
+          return (
+            <button
+              key={cat}
+              onClick={() => handleCategorySelect(cat)}
+              className={`capitalize font-medium transition border-b-2 pb-1 ${
+                isActive
+                  ? 'text-[#D29587] border-[#D29587]'
+                  : 'text-gray-600 border-transparent hover:border-gray-300 hover:text-[#D29587]'
+              }`}
+            >
+              {cat.replace('_', ' ')}
+            </button>
+          )
+        })}
       </div>
 
       {/* Menu mobile */}
@@ -130,14 +149,18 @@ export default function Navbar() {
                 <button
                   key={cat}
                   onClick={() => handleCategorySelect(cat)}
-                  className="text-left w-full text-gray-700 hover:text-[#D29587] transition"
+                  className={`text-left w-full transition font-medium ${
+                    selectedCategory === cat
+                      ? 'text-[#D29587] underline'
+                      : 'text-gray-700 hover:text-[#D29587]'
+                  }`}
                 >
-                  {cat}
+                  {cat.replace('_', ' ')}
                 </button>
               ))}
             </div>
 
-            {/* Navigation */}
+            {/* Liens dynamiques */}
             <div>
               <p className="text-sm font-semibold text-gray-600 mb-2">Navigation</p>
               {navLinks.map(({ href, label, icon: Icon }) => (
@@ -145,7 +168,9 @@ export default function Navbar() {
                   key={href}
                   href={href}
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className={`flex items-center gap-2 text-gray-700 hover:text-[#D29587] transition ${pathname === href ? 'text-[#D29587] font-semibold' : ''}`}
+                  className={`flex items-center gap-2 transition ${
+                    pathname === href ? 'text-[#D29587] font-semibold' : 'text-gray-700 hover:text-[#D29587]'
+                  }`}
                 >
                   <Icon size={18} />
                   {label}
@@ -153,7 +178,7 @@ export default function Navbar() {
               ))}
             </div>
 
-            {/* Profil mobile */}
+            {/* Menu profil mobile */}
             {sessionUser && (
               <div className="border-t pt-4">
                 <Link
