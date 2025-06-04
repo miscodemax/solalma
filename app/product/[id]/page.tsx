@@ -168,7 +168,7 @@ export default async function ProductDetailPage({ params }: Props) {
           )}
 
 <div className="mt-6">
-            <h2 className="text-sm font-semibold text-gray-600 mb-2">📤 Partager cette boutique</h2>
+            <h2 className="text-sm font-semibold text-gray-600 mb-2">📤 Partager cet produit !</h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-md">
               {/* WhatsApp */}
               <a
