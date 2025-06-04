@@ -84,7 +84,7 @@ export default async function UserProfilePage({ params }: { params: { id: string
                 className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-xl text-sm flex items-center justify-center gap-2 transition"
               >
                 <FaWhatsapp className="w-4 h-4" />
-                WhatsApp
+                Partager
               </a>
 
               {/* Instagram */}

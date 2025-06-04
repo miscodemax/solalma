@@ -7,7 +7,8 @@ import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
 import dayjs from "dayjs"
 import RatingSeller from "@/app/composants/ratingseller"
-
+import CopyButton from "@/app/composants/sharebutton"
+import { FaWhatsapp } from "react-icons/fa"
 type Props = {
   params: {
     id: string
@@ -166,7 +167,35 @@ export default async function ProductDetailPage({ params }: Props) {
             </>
           )}
 
+<div className="mt-6">
+            <h2 className="text-sm font-semibold text-gray-600 mb-2">📤 Partager cette boutique</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-md">
+              {/* WhatsApp */}
+              <a
+                href={`https://wa.me/?text=${encodeURIComponent(
+                  `🔗 Découvre la boutique de ${product.title} sur Sangse.shop : https://sangse.shop/product/${product.id}`
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-xl text-sm flex items-center justify-center gap-2 transition"
+              >
+                <FaWhatsapp className="w-4 h-4" />
+                Partager
+              </a>
 
+              {/* Instagram */}
+              <CopyButton
+                text={`https://sangse.shop/product/${product.id}`}
+                platform="Instagram"
+              />
+
+              {/* TikTok */}
+              <CopyButton
+                text={`https://sangse.shop/product/${product.id}`}
+                platform="TikTok"
+              />
+            </div>
+          </div>
           {/* Produits similaires */}
           {similarProducts && similarProducts.length > 0 && (
             <section className="mt-10">
