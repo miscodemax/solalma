@@ -186,14 +186,10 @@ export default async function ProductDetailPage({ params }: Props) {
               {/* Instagram */}
               <CopyButton
                 text={`https://sangse.shop/product/${product.id}`}
-                platform="Instagram"
+                platform="Tiktok/Instagram"
               />
 
-              {/* TikTok */}
-              <CopyButton
-                text={`https://sangse.shop/product/${product.id}`}
-                platform="TikTok"
-              />
+              
             </div>
           </div>
           {/* Produits similaires */}

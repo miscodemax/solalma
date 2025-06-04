@@ -90,14 +90,10 @@ export default async function UserProfilePage({ params }: { params: { id: string
               {/* Instagram */}
               <CopyButton
                 text={`https://sangse.shop/profile/${id}`}
-                platform="Instagram"
+                platform="Tiktok/Instagram"
               />
 
-              {/* TikTok */}
-              <CopyButton
-                text={`https://sangse.shop/profile/${id}`}
-                platform="TikTok"
-              />
+              
             </div>
           </div>
 
