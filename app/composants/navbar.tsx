@@ -119,14 +119,14 @@ export default function Navbar() {
       </div>
 
       {/* Catégories visibles sur desktop */}
-      <div className="hidden md:flex justify-center gap-6 pb-2">
+      <div className="hidden md:flex justify-center gap-10 pb-2">
         {categories.map((cat) => {
           const isActive = selectedCategory === cat
           return (
             <button
               key={cat}
               onClick={() => handleCategorySelect(cat)}
-              className={`capitalize font-medium transition border-b-2 pb-1 ${
+              className={`capitalize font-medium transition text-lg border-b-2 pb-1 ${
                 isActive
                   ? 'text-[#D29587] border-[#D29587]'
                   : 'text-gray-600 border-transparent hover:border-gray-300 hover:text-[#D29587]'
