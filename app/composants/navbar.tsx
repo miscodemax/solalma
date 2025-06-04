@@ -4,6 +4,12 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
   HomeIcon,
   ShoppingCart,
   User,
@@ -95,25 +101,27 @@ export default function Navbar() {
           ))}
 
           {/* Icône de profil si connecté */}
+          {/* Icône de profil si connecté */}
           {sessionUser && (
-            <div className="ml-4 relative">
-              <button className="focus:outline-none">
+            <DropdownMenu>
+              <DropdownMenuTrigger className="focus:outline-none">
                 <Image
                   src={profile?.avatar_url || 'https://icons.veryicon.com/png/o/miscellaneous/standard/avatar-15.png'}
                   alt="Profil"
                   width={36}
                   height={36}
                   className="rounded-full border border-gray-300"
-                  onClick={() => router.push(`/profile/${sessionUser.id}`)}
                 />
-              </button>
-              <button
-                onClick={handleLogout}
-                className="absolute top-full mt-2 text-sm text-red-600 hover:underline hidden group-hover:block"
-              >
-                Déconnexion
-              </button>
-            </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => router.push(`/profile/${sessionUser.id}`)}>
+                  Voir mon profil
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleLogout} className="text-red-600">
+                  <LogOut className="mr-2" size={16} /> Déconnexion
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
         </nav>
       </div>
@@ -126,11 +134,10 @@ export default function Navbar() {
             <button
               key={cat}
               onClick={() => handleCategorySelect(cat)}
-              className={`capitalize font-medium transition text-lg border-b-2 pb-1 ${
-                isActive
+              className={`capitalize font-medium transition text-lg border-b-2 pb-1 ${isActive
                   ? 'text-[#D29587] border-[#D29587]'
                   : 'text-gray-600 border-transparent hover:border-gray-300 hover:text-[#D29587]'
-              }`}
+                }`}
             >
               {cat.replace('_', ' ')}
             </button>
@@ -149,11 +156,10 @@ export default function Navbar() {
                 <button
                   key={cat}
                   onClick={() => handleCategorySelect(cat)}
-                  className={`text-left w-full transition font-medium ${
-                    selectedCategory === cat
+                  className={`text-left w-full transition font-medium ${selectedCategory === cat
                       ? 'text-[#D29587] underline'
                       : 'text-gray-700 hover:text-[#D29587]'
-                  }`}
+                    }`}
                 >
                   {cat.replace('_', ' ')}
                 </button>
@@ -168,9 +174,8 @@ export default function Navbar() {
                   key={href}
                   href={href}
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className={`flex items-center gap-2 transition ${
-                    pathname === href ? 'text-[#D29587] font-semibold' : 'text-gray-700 hover:text-[#D29587]'
-                  }`}
+                  className={`flex items-center gap-2 transition ${pathname === href ? 'text-[#D29587] font-semibold' : 'text-gray-700 hover:text-[#D29587]'
+                    }`}
                 >
                   <Icon size={18} />
                   {label}
