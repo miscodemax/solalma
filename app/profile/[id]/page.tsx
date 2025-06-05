@@ -9,6 +9,60 @@ import Link from "next/link"
 import CopyButton from "@/app/composants/sharebutton"
 import { FaWhatsapp } from "react-icons/fa"
 
+import { Metadata } from "next"
+
+
+export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+  const cookieStore = await cookies()
+  const supabase = createServerClient(supabaseUrl, supabaseKey, {
+    cookies: {
+      get: (name) => cookieStore.get(name)?.value,
+    },
+  })
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("username, avatar_url, bio")
+    .eq("id", params.id)
+    .single()
+
+  const title = profile?.username
+    ? `Découvre la boutique de ${profile.username} sur Sangse.shop`
+    : "Profil vendeur - Sangse.shop"
+
+  const description = profile?.bio || "Découvre les produits proposés par ce vendeur."
+
+  const image = profile?.avatar_url || "https://sangse.shop/default-avatar.png"
+  const url = `https://sangse.shop/profile/${params.id}`
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url,
+      siteName: "Sangse.shop",
+      images: [
+        {
+          url: image,
+          width: 600,
+          height: 600,
+          alt: profile?.username || "Avatar vendeur",
+        },
+      ],
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [image],
+    },
+  }
+}
+
+
 export default async function UserProfilePage({ params }: { params: { id: string } }) {
   const cookieStore = await cookies()
   const supabase = createServerClient(supabaseUrl, supabaseKey, {
@@ -93,7 +147,7 @@ export default async function UserProfilePage({ params }: { params: { id: string
                 platform="Tiktok/Instagram"
               />
 
-              
+
             </div>
           </div>
 
