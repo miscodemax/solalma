@@ -84,6 +84,8 @@ export default function FilteredProducts({ products, search }: { products: Produ
   const [open, setOpen] = useState(false)
 
   const searchLower = search.toLowerCase()
+  console.log(searchLower);
+  
 
   const filteredProducts = products
     .filter(p =>

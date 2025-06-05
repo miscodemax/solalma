@@ -74,9 +74,9 @@ export default function Navbar() {
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    const query = searchQuery.trim()
-    if (query) {
-      router.push(`/?search=${encodeURIComponent(query)}`)
+    const q = searchQuery.trim()
+    if (q) {
+      router.push(`/?search=${encodeURIComponent(q)}`)
       setSearchQuery('')
       setIsMobileMenuOpen(false)
     }

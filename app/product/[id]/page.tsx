@@ -9,6 +9,48 @@ import dayjs from "dayjs"
 import RatingSeller from "@/app/composants/ratingseller"
 import CopyButton from "@/app/composants/sharebutton"
 import { FaWhatsapp } from "react-icons/fa"
+// app/product/[id]/page.tsx
+import type { Metadata } from "next"
+
+// en haut de ton fichier, après les imports
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const res = await fetch(`${supabaseUrl}/rest/v1/product?id=eq.${params.id}`, {
+    headers: {
+      apikey: supabaseKey,
+      Authorization: `Bearer ${supabaseKey}`,
+    },
+    cache: "no-store",
+  })
+
+  const [product] = await res.json()
+
+  if (!product) return {}
+
+  return {
+    title: product.title,
+    description: `Achetez ${product.title} pour seulement ${product.price} FCFA !`,
+    openGraph: {
+      title: product.title,
+      description: `Achetez ${product.title} pour seulement ${product.price} FCFA !`,
+      url: `https://sangse.shop/product/${product.id}`,
+      images: [
+        {
+          url: product.image_url || "https://sangse.shop/placeholder.jpg",
+          width: 1200,
+          height: 630,
+          alt: product.title,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: product.title,
+      description: `Achetez ${product.title} pour seulement ${product.price} FCFA !`,
+      images: [product.image_url || "https://sangse.shop/placeholder.jpg"],
+    },
+  }
+}
+
 type Props = {
   params: {
     id: string

@@ -19,7 +19,8 @@ export default async function HomePage({ searchParams }: Props) {
   })
 
   const category = searchParams.category || ''
-  const q = searchParams.q?.trim() || ''  // <-- récupération du terme de recherche
+  const q = searchParams.q || ''  // <-- récupération du terme de recherche
+  console.log(q);
 
   // Récupérer les produits
   let query = supabase.from('product').select('*')
