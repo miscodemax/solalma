@@ -247,7 +247,7 @@ export default async function ProductDetailPage({ params }: Props) {
                     aria-label={`Voir le produit ${p.title}`}
                   >
                     {/* Image avec zoom fluide */}
-                    <div className="relative w-full h-40 rounded-xl overflow-hidden mb-3">
+                    <div className="relative w-full h-40 rounded-xl overflow-hidden dark:bg-black mb-3">
                       <Image
                         src={p.image_url || "/placeholder.jpg"}
                         alt={p.title}
