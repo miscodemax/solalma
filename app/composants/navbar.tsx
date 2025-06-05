@@ -71,7 +71,6 @@ export default function Navbar() {
     router.refresh()
   }
 
-
   return (
     <nav className="bg-white dark:bg-black shadow-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
@@ -79,7 +78,6 @@ export default function Navbar() {
         <Link href="/" className="flex items-center gap-2 text-2xl font-bold text-[#D29587] hover:opacity-80">
           🌸 <TextLogo />
         </Link>
-
 
         {/* Menu hamburger mobile */}
         <button
@@ -95,17 +93,19 @@ export default function Navbar() {
             <Link
               key={href}
               href={href}
-              className={`flex items-center gap-1 text-gray-700 dark:text-gray-200 hover:text-[#D29587] font-medium transition ${pathname === href ? 'text-[#D29587] font-semibold' : ''}`}
+              className={`flex items-center gap-1 font-medium transition duration-300 ${
+                pathname === href
+                  ? 'text-[#D29587] font-semibold'
+                  : 'text-gray-700 dark:text-gray-200 hover:text-[#D29587]'
+              }`}
             >
               <Icon size={18} />
               {label}
             </Link>
           ))}
 
-          {/* Sélecteur de thème */}
           <ThemeToggle />
 
-          {/* Menu Profil */}
           {sessionUser && (
             <DropdownMenu>
               <DropdownMenuTrigger className="focus:outline-none">
@@ -128,21 +128,21 @@ export default function Navbar() {
             </DropdownMenu>
           )}
         </nav>
-
       </div>
 
       {/* Catégories Desktop */}
-      <div className="hidden md:flex justify-center gap-8">
+      <div className="hidden md:flex justify-center gap-8 py-2 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-black">
         {categories.map((cat) => {
           const isActive = selectedCategory === cat
           return (
             <button
               key={cat}
               onClick={() => handleCategorySelect(cat)}
-              className={`capitalize font-medium transition text-lg border-b-2 pb-1 ${isActive
-                ? 'text-[#D29587] border-[#D29587]'
-                : 'text-gray-600 border-transparent hover:border-gray-300 hover:text-[#D29587]'
-                }`}
+              className={`capitalize font-medium text-lg pb-1 transition-all duration-300 ease-in-out transform hover:scale-[1.05] active:scale-[0.95] border-b-[3px] ${
+                isActive
+                  ? 'text-[#D29587] border-[#D29587]'
+                  : 'text-gray-600 border-transparent hover:border-gray-300 hover:text-[#D29587]'
+              }`}
             >
               {cat.replace('_', ' ')}
             </button>
@@ -153,33 +153,27 @@ export default function Navbar() {
       {/* Menu mobile */}
       {isMobileMenuOpen && (
         <div className="md:hidden px-4 pb-4">
-          {/* Barre de recherche mobile */}
-
-
           <div className="flex flex-col space-y-4">
-            {/* Catégories */}
             <div>
               <p className="text-sm font-semibold text-gray-600 mb-2">Catégories</p>
               {categories.map((cat) => (
                 <button
                   key={cat}
                   onClick={() => handleCategorySelect(cat)}
-                  className={`text-left w-full transition font-medium ${selectedCategory === cat
-                    ? 'text-[#D29587] underline'
-                    : 'text-gray-700 hover:text-[#D29587]'
-                    }`}
+                  className={`text-left w-full transition font-medium ${
+                    selectedCategory === cat
+                      ? 'text-[#D29587] underline'
+                      : 'text-gray-700 hover:text-[#D29587]'
+                  }`}
                 >
                   {cat.replace('_', ' ')}
                 </button>
               ))}
-              {/* Thème mobile */}
               <div className="mt-4">
                 <ThemeToggle />
               </div>
-
             </div>
 
-            {/* Liens dynamiques */}
             <div>
               <p className="text-sm font-semibold text-gray-600 mb-2">Navigation</p>
               {navLinks.map(({ href, label, icon: Icon }) => (
@@ -187,8 +181,11 @@ export default function Navbar() {
                   key={href}
                   href={href}
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className={`flex items-center gap-2 transition ${pathname === href ? 'text-[#D29587] font-semibold' : 'text-gray-700 hover:text-[#D29587]'
-                    }`}
+                  className={`flex items-center gap-2 transition ${
+                    pathname === href
+                      ? 'text-[#D29587] font-semibold'
+                      : 'text-gray-700 hover:text-[#D29587]'
+                  }`}
                 >
                   <Icon size={18} />
                   {label}
@@ -196,7 +193,6 @@ export default function Navbar() {
               ))}
             </div>
 
-            {/* Profil mobile */}
             {sessionUser && (
               <div className="border-t pt-4">
                 <Link
