@@ -3,79 +3,78 @@
 import { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
-
 import {
-    Dialog,
-    DialogTrigger,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogFooter,
-    DialogClose,
-    DialogDescription
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose,
+  DialogDescription,
 } from "@/components/ui/dialog"
 
 type Product = {
-    id: number
-    title: string
-    description: string
-    price: number
-    image_url: string | null
+  id: number
+  title: string
+  description: string
+  price: number
+  image_url: string | null
 }
 
 function PriceFilter({
-    onChange,
-    selectedIndex,
-    onSelect,
+  onChange,
+  selectedIndex,
+  onSelect,
 }: {
-    onChange: (range: [number, number] | null) => void
-    selectedIndex: number
-    onSelect: (index: number) => void
+  onChange: (range: [number, number] | null) => void
+  selectedIndex: number
+  onSelect: (index: number) => void
 }) {
-    const ranges: { label: string; range: [number, number] | null }[] = [
-        { label: "Tous les prix", range: null },
-        { label: "500 - 3 000 FCFA", range: [500, 3000] },
-        { label: "3 000 - 7 000 FCFA", range: [3000, 7000] },
-        { label: "7 000 - 10 000 FCFA", range: [7000, 10000] },
-        { label: "10 000 - 15 000 FCFA", range: [10000, 15000] },
-        { label: "15 000 - 20 000 FCFA", range: [15000, 20000] },
-        { label: "Plus de 20 000 FCFA", range: [20001, Infinity] },
-    ]
+  const ranges = [
+    { label: "Tous les prix", range: null },
+    { label: "500 - 3 000 FCFA", range: [500, 3000] },
+    { label: "3 000 - 7 000 FCFA", range: [3000, 7000] },
+    { label: "7 000 - 10 000 FCFA", range: [7000, 10000] },
+    { label: "10 000 - 15 000 FCFA", range: [10000, 15000] },
+    { label: "15 000 - 20 000 FCFA", range: [15000, 20000] },
+    { label: "Plus de 20 000 FCFA", range: [20001, Infinity] },
+  ]
 
-    function handleSelect(index: number) {
-        onSelect(index)
-        onChange(ranges[index].range)
-    }
+  function handleSelect(index: number) {
+    onSelect(index)
+    onChange(ranges[index].range)
+  }
 
-    return (
-        <div className="p-6 bg-white rounded-3xl shadow-lg max-w-md mx-auto">
-            <h3 className="text-xl font-semibold text-[#D29587] mb-4 text-center">
-                Quel est ton budget ?
-            </h3>
-            <p className="text-center text-gray-600 mb-6 text-sm sm:text-base">
-                Choisis une fourchette de prix pour filtrer les articles adaptés à ton budget.
-            </p>
-            <div className="flex flex-wrap justify-center gap-3">
-                {ranges.map(({ label }, i) => (
-                    <button
-                        key={label}
-                        onClick={() => handleSelect(i)}
-                        type="button"
-                        className={`px-5 py-2 rounded-full font-medium text-sm sm:text-base transition-shadow duration-300
+  return (
+    <div className="p-6 bg-white dark:bg-[#121212] rounded-3xl shadow-lg max-w-md mx-auto">
+      <h3 className="text-xl font-semibold text-[#D29587] dark:text-[#FBCFC2] mb-4 text-center">
+        Quel est ton budget ?
+      </h3>
+      <p className="text-center text-gray-600 dark:text-gray-300 mb-6 text-sm sm:text-base">
+        Choisis une fourchette de prix pour filtrer les articles adaptés à ton budget.
+      </p>
+      <div className="flex flex-wrap justify-center gap-3">
+        {ranges.map(({ label }, i) => (
+          <button
+            key={label}
+            onClick={() => handleSelect(i)}
+            type="button"
+            className={`px-5 py-2 rounded-full font-medium text-sm sm:text-base transition-shadow duration-300
               ${selectedIndex === i
-                                ? "bg-[#D29587] text-white shadow-lg"
-                                : "bg-[#F5F3F1] text-[#5A5A5A] hover:bg-[#D29587] hover:text-white"
-                            }
+                ? "bg-[#D29587] text-white shadow-lg"
+                : "bg-[#F5F3F1] text-[#5A5A5A] hover:bg-[#D29587] hover:text-white dark:bg-[#2c2c2c] dark:text-gray-300 dark:hover:bg-[#D29587] dark:hover:text-white"
+              }
               focus:outline-none focus:ring-4 focus:ring-[#D29587]/50`}
-                        aria-pressed={selectedIndex === i}
-                        aria-label={`Filtrer par prix : ${label}`}
-                    >
-                        {label}
-                    </button>
-                ))}
-            </div>
-        </div>
-    )
+            aria-pressed={selectedIndex === i}
+            aria-label={`Filtrer par prix : ${label}`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
 }
 
 export default function FilteredProducts({ products, search }: { products: Product[], search: string }) {
@@ -84,39 +83,28 @@ export default function FilteredProducts({ products, search }: { products: Produ
   const [open, setOpen] = useState(false)
 
   const searchLower = search.toLowerCase()
-  console.log(searchLower);
-  
 
-  const filteredProducts = products
-    .filter(p =>
-      (!search || p.title.toLowerCase().includes(searchLower) || p.description.toLowerCase().includes(searchLower)) &&
-      (!priceRange || (p.price >= priceRange[0] && p.price <= priceRange[1]))
-    )
-
-  function handlePriceChange(range: [number, number] | null) {
-    setPriceRange(range)
-  }
-
-  function handleSelect(index: number) {
-    setSelectedIndex(index)
-  }
+  const filteredProducts = products.filter(p =>
+    (!search || p.title.toLowerCase().includes(searchLower) || p.description.toLowerCase().includes(searchLower)) &&
+    (!priceRange || (p.price >= priceRange[0] && p.price <= priceRange[1]))
+  )
 
   return (
     <main className="w-full overflow-x-hidden bg-[#FAF6F4] dark:bg-black min-h-screen py-10">
       <div className="max-w-7xl mx-auto px-6 sm:px-8 space-y-14">
 
-        {/* Bouton pour ouvrir le modal */}
+        {/* Bouton de filtre */}
         <div className="text-center">
           <Dialog open={open} onOpenChange={setOpen}>
             <div className="text-center space-y-2">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-300">
                 💡 Filtre les produits selon ton budget préféré
               </p>
 
               <DialogTrigger asChild>
                 <button
                   type="button"
-                  className="px-6 py-3 bg-[#D29587] dark:bg-black text-white rounded-xl font-semibold shadow-md hover:bg-[#bb7d72] transition flex items-center justify-center gap-2"
+                  className="px-6 py-3 bg-[#D29587] dark:bg-[#FBCFC2] text-white dark:text-black rounded-xl font-semibold shadow-md hover:bg-[#bb7d72] dark:hover:bg-[#f3b9a9] transition flex items-center justify-center gap-2"
                 >
                   💰 Choisir ton budget
                   <svg
@@ -134,9 +122,9 @@ export default function FilteredProducts({ products, search }: { products: Produ
               </DialogTrigger>
             </div>
 
-            <DialogContent className="max-w-lg rounded-3xl p-8">
+            <DialogContent className="max-w-lg rounded-3xl p-8 dark:bg-[#1b1b1b] dark:text-white">
               <DialogHeader>
-                <DialogTitle className="text-2xl font-bold mb-4 text-[#D29587] text-center">
+                <DialogTitle className="text-2xl font-bold mb-4 text-[#D29587] dark:text-[#FBCFC2] text-center">
                   Choisis ta fourchette de prix
                 </DialogTitle>
                 <DialogDescription className="sr-only">
@@ -145,16 +133,16 @@ export default function FilteredProducts({ products, search }: { products: Produ
               </DialogHeader>
 
               <PriceFilter
-                onChange={handlePriceChange}
+                onChange={setPriceRange}
                 selectedIndex={selectedIndex}
-                onSelect={handleSelect}
+                onSelect={setSelectedIndex}
               />
 
               <DialogFooter className="mt-6 flex justify-center gap-4">
                 <DialogClose asChild>
                   <button
                     type="button"
-                    className="px-6 py-2 bg-[#D29587] dark:bg-black text-white rounded-xl font-semibold hover:bg-[#bb7d72] transition"
+                    className="px-6 py-2 bg-[#D29587] dark:bg-[#FBCFC2] text-white dark:text-black rounded-xl font-semibold hover:bg-[#bb7d72] dark:hover:bg-[#f3b9a9] transition"
                   >
                     Valider
                   </button>
@@ -162,7 +150,7 @@ export default function FilteredProducts({ products, search }: { products: Produ
                 <DialogClose asChild>
                   <button
                     type="button"
-                    className="px-6 py-2 bg-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-400 transition"
+                    className="px-6 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-white rounded-xl font-semibold hover:bg-gray-400 dark:hover:bg-gray-500 transition"
                   >
                     Annuler
                   </button>
@@ -172,10 +160,10 @@ export default function FilteredProducts({ products, search }: { products: Produ
           </Dialog>
         </div>
 
-        {/* Produits filtrés */}
+        {/* Affichage des produits */}
         <section>
           {filteredProducts.length === 0 ? (
-            <p className="text-center text-gray-500 text-lg">
+            <p className="text-center text-gray-500 dark:text-gray-300 text-lg">
               Aucun produit trouvé pour ta recherche.
             </p>
           ) : (
@@ -184,7 +172,7 @@ export default function FilteredProducts({ products, search }: { products: Produ
                 <Link
                   key={product.id}
                   href={`/product/${product.id}`}
-                  className="group block rounded-3xl overflow-hidden shadow-lg bg-white dark:bg-black border border-[#E6E3DF] transition-transform transform hover:scale-[1.03] hover:shadow-2xl"
+                  className="group block rounded-3xl overflow-hidden shadow-lg bg-white dark:bg-[#1a1a1a] border border-[#E6E3DF] dark:border-[#2a2a2a] transition-transform transform hover:scale-[1.03] hover:shadow-2xl"
                 >
                   <div className="relative w-full h-52 sm:h-60">
                     <Image
@@ -196,11 +184,11 @@ export default function FilteredProducts({ products, search }: { products: Produ
                     />
                   </div>
                   <div className="p-5 space-y-2">
-                    <h2 className="text-lg font-semibold text-[#333] truncate">
+                    <h2 className="text-lg font-semibold text-[#333] dark:text-white truncate">
                       {product.title}
                     </h2>
-                    <p className="text-sm text-[#555] line-clamp-2">{product.description}</p>
-                    <p className="mt-3 font-bold text-[#D29587] text-lg">
+                    <p className="text-sm text-[#555] dark:text-gray-300 line-clamp-2">{product.description}</p>
+                    <p className="mt-3 font-bold text-[#D29587] dark:text-[#FBCFC2] text-lg">
                       {product.price.toLocaleString()} FCFA
                     </p>
                   </div>
@@ -213,4 +201,3 @@ export default function FilteredProducts({ products, search }: { products: Produ
     </main>
   )
 }
-
