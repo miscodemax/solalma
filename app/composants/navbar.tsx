@@ -98,7 +98,7 @@ export default function Navbar() {
         >
           <input
             type="text"
-            placeholder="Rechercher un produit..."
+            placeholder="Désolée la recherche n'est pas encore fonctionnelle !"
             className="w-full border rounded-l-md px-4 py-2 text-sm border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#D29587]"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
