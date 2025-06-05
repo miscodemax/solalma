@@ -9,43 +9,41 @@ import dayjs from "dayjs"
 import RatingSeller from "@/app/composants/ratingseller"
 import CopyButton from "@/app/composants/sharebutton"
 import { FaWhatsapp } from "react-icons/fa"
-// app/product/[id]/page.tsx
-import type { Metadata } from "next"
 
-// en haut de ton fichier, après les imports
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({ params }: Props) {
   const res = await fetch(`${supabaseUrl}/rest/v1/product?id=eq.${params.id}`, {
     headers: {
       apikey: supabaseKey,
       Authorization: `Bearer ${supabaseKey}`,
     },
-    cache: "no-store",
+    cache: 'no-store',
   })
-
   const [product] = await res.json()
 
-  if (!product) return {}
+  if (!product) return { title: "Produit non trouvé" }
+
+  const url = `https://sangse.shop/product/${product.id}`
 
   return {
-    title: product.title,
-    description: `Achetez ${product.title} pour seulement ${product.price} FCFA !`,
+    title: `${product.title} - ${product.price.toLocaleString()} FCFA`,
+    description: `Découvrez ${product.title} dans la catégorie ${product.category} à seulement ${product.price.toLocaleString()} FCFA !`,
     openGraph: {
       title: product.title,
-      description: `Achetez ${product.title} pour seulement ${product.price} FCFA !`,
-      url: `https://sangse.shop/product/${product.id}`,
+      description: `À seulement ${product.price.toLocaleString()} FCFA dans la catégorie ${product.category}`,
       images: [
         {
           url: product.image_url || "https://sangse.shop/placeholder.jpg",
-          width: 1200,
-          height: 630,
-          alt: product.title,
+          width: 800,
+          height: 600,
         },
       ],
+      url,
+      type: "product",
     },
     twitter: {
       card: "summary_large_image",
       title: product.title,
-      description: `Achetez ${product.title} pour seulement ${product.price} FCFA !`,
+      description: `À seulement ${product.price.toLocaleString()} FCFA !`,
       images: [product.image_url || "https://sangse.shop/placeholder.jpg"],
     },
   }
