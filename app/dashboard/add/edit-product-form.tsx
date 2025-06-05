@@ -74,7 +74,7 @@ export default function EditProductForm({ product }: Props) {
     }
 
     return (
-        <div>
+        <div className='dark:bg-black'>
             <Button
                 variant="outline"
                 size="lg"

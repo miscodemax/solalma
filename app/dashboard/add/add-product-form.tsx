@@ -70,7 +70,7 @@ export default function AddProductForm({ userId }: Props) {
     }
 
     return (
-        <div className="animate-fade-in max-w-xl mx-auto">
+        <div className="animate-fade-in dark:bg-black max-w-xl mx-auto">
             <Button
                 variant="outline"
                 size="lg"

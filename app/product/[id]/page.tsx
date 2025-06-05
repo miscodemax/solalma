@@ -117,7 +117,7 @@ export default async function ProductDetailPage({ params }: Props) {
     : null
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-10">
+    <div className="max-w-6xl mx-auto px-4 dark:bg-black py-10">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
         {/* Image principale */}
         <div className="relative w-full h-[520px] rounded-2xl overflow-hidden shadow border border-[#E6E3DF] group cursor-zoom-in">

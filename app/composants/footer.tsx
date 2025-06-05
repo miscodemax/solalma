@@ -6,7 +6,7 @@ import { Facebook, Instagram, Mail } from 'lucide-react'
 
 export default function Footer() {
     return (
-        <footer className="bg-white border-t w-full text-sm text-gray-600 overflow-x-hidden">
+        <footer className="bg-white dark:bg-black border-t w-full text-sm text-gray-600 overflow-x-hidden">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10">
 
                 {/* Bloc Logo */}

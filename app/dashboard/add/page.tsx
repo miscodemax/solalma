@@ -27,7 +27,7 @@ export default async function AddProductPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F9F6F1] py-10 px-4 flex items-center justify-center">
+    <div className="min-h-screen bg-[#F9F6F1]dark:bg-black py-10 px-4 flex items-center justify-center">
       <div className="w-full max-w-2xl bg-white shadow-lg border border-[#E6E3DF] rounded-2xl p-8">
         <div className="mb-6 text-center">
           <h1 className="text-3xl font-extrabold text-[#1E1E1E] mb-2">

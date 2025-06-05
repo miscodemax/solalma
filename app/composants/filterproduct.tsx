@@ -102,7 +102,7 @@ export default function FilteredProducts({ products, search }: { products: Produ
   }
 
   return (
-    <main className="w-full overflow-x-hidden bg-[#FAF6F4] min-h-screen py-10">
+    <main className="w-full overflow-x-hidden bg-[#FAF6F4] dark:bg-black min-h-screen py-10">
       <div className="max-w-7xl mx-auto px-6 sm:px-8 space-y-14">
 
         {/* Bouton pour ouvrir le modal */}
@@ -116,7 +116,7 @@ export default function FilteredProducts({ products, search }: { products: Produ
               <DialogTrigger asChild>
                 <button
                   type="button"
-                  className="px-6 py-3 bg-[#D29587] text-white rounded-xl font-semibold shadow-md hover:bg-[#bb7d72] transition flex items-center justify-center gap-2"
+                  className="px-6 py-3 bg-[#D29587] dark:bg-black text-white rounded-xl font-semibold shadow-md hover:bg-[#bb7d72] transition flex items-center justify-center gap-2"
                 >
                   💰 Choisir ton budget
                   <svg
@@ -154,7 +154,7 @@ export default function FilteredProducts({ products, search }: { products: Produ
                 <DialogClose asChild>
                   <button
                     type="button"
-                    className="px-6 py-2 bg-[#D29587] text-white rounded-xl font-semibold hover:bg-[#bb7d72] transition"
+                    className="px-6 py-2 bg-[#D29587] dark:bg-black text-white rounded-xl font-semibold hover:bg-[#bb7d72] transition"
                   >
                     Valider
                   </button>
@@ -184,7 +184,7 @@ export default function FilteredProducts({ products, search }: { products: Produ
                 <Link
                   key={product.id}
                   href={`/product/${product.id}`}
-                  className="group block rounded-3xl overflow-hidden shadow-lg bg-white border border-[#E6E3DF] transition-transform transform hover:scale-[1.03] hover:shadow-2xl"
+                  className="group block rounded-3xl overflow-hidden shadow-lg bg-white dark:bg-black border border-[#E6E3DF] transition-transform transform hover:scale-[1.03] hover:shadow-2xl"
                 >
                   <div className="relative w-full h-52 sm:h-60">
                     <Image

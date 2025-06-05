@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { ThemeToggle } from './theme-toggle'
 import Link from 'next/link'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import {
@@ -83,7 +84,7 @@ export default function Navbar() {
   }
 
   return (
-    <nav className="bg-white shadow-md sticky top-0 z-50">
+    <nav className="bg-white dark:bg-black shadow-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
         {/* Logo + Accueil */}
         <Link href="/" className="flex items-center gap-2 text-2xl font-bold text-[#D29587] hover:opacity-80">
@@ -119,18 +120,22 @@ export default function Navbar() {
         </button>
 
         {/* Navigation Desktop */}
-        <nav className="hidden md:flex items-center space-x-8">
+        <nav className="hidden md:flex items-center space-x-6">
           {navLinks.map(({ href, label, icon: Icon }) => (
             <Link
               key={href}
               href={href}
-              className={`flex items-center gap-1 text-gray-700 hover:text-[#D29587] font-medium transition ${pathname === href ? 'text-[#D29587] font-semibold' : ''}`}
+              className={`flex items-center gap-1 text-gray-700 dark:text-gray-200 hover:text-[#D29587] font-medium transition ${pathname === href ? 'text-[#D29587] font-semibold' : ''}`}
             >
               <Icon size={18} />
               {label}
             </Link>
           ))}
 
+          {/* Sélecteur de thème */}
+          <ThemeToggle />
+
+          {/* Menu Profil */}
           {sessionUser && (
             <DropdownMenu>
               <DropdownMenuTrigger className="focus:outline-none">
@@ -153,6 +158,7 @@ export default function Navbar() {
             </DropdownMenu>
           )}
         </nav>
+
       </div>
 
       {/* Catégories Desktop */}
@@ -210,6 +216,11 @@ export default function Navbar() {
                   {cat.replace('_', ' ')}
                 </button>
               ))}
+              {/* Thème mobile */}
+              <div className="mt-4">
+                <ThemeToggle />
+              </div>
+
             </div>
 
             {/* Liens dynamiques */}

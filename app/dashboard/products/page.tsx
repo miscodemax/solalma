@@ -36,7 +36,7 @@ export default async function ProductsPage() {
     }
 
     return (
-        <div className="min-h-screen bg-[#F9F6F1] bg-[url('/dots.svg')] bg-repeat opacity-[0.95] px-4 py-10">
+        <div className="min-h-screen bg-[#F9F6F1] dark:bg-black bg-[url('/dots.svg')] bg-repeat opacity-[0.95] px-4 py-10">
             <div className="max-w-6xl mx-auto">
                 {/* Message immersif */}
                 <div className="bg-[#f3ede9] p-6 rounded-xl shadow-sm mb-10 flex items-center gap-4">

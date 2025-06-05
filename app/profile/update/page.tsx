@@ -81,7 +81,7 @@ export default function UpdateProfilePage() {
   }
 
   return (
-    <div className="max-w-xl mx-auto px-4 py-10">
+    <div className="max-w-xl mx-auto px-4 dark:bg-black py-10">
       <h1 className="text-3xl font-bold mb-6 text-center">🔧 Modifier mon profil</h1>
 
       <form onSubmit={handleUpdate} className="space-y-6">

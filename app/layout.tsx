@@ -5,6 +5,7 @@ import Footer from "./composants/footer";
 import Navbar from "./composants/navbar";
 import { Toaster } from "@/components/ui/sonner"
 import { Suspense } from 'react'
+import { ThemeProvider } from "./composants/theme-provider";
 //import { SessionContextProvider } from "@supabase/auth-helpers-react";
 //import { createClient } from "./lib/supabase"
 
@@ -33,18 +34,28 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen overflow-x-hidden`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen overflow-x-hidden dark:bg-black`}
       >
         <Suspense fallback={<div>Chargement...</div>}>
-          <Navbar />
-          <main className="flex-grow">
 
-            {children}
-            <Toaster />
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <Navbar />
+            <main className="flex-grow">
 
 
-          </main>
-          <Footer />
+              {children}
+
+              <Toaster />
+
+
+            </main>
+            <Footer />
+          </ThemeProvider>
         </Suspense>
       </body>
     </html >
