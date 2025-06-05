@@ -17,8 +17,7 @@ import {
   Info,
   Menu,
   X,
-  LogOut,
-  Search,
+  LogOut
 } from 'lucide-react'
 import TextLogo from './textLogo'
 import { createClient } from '@/lib/supabase'
@@ -37,7 +36,6 @@ export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [sessionUser, setSessionUser] = useState(null)
   const [profile, setProfile] = useState<{ avatar_url: string } | null>(null)
-  const [searchQuery, setSearchQuery] = useState('')
 
   const router = useRouter()
   const pathname = usePathname()
@@ -73,15 +71,6 @@ export default function Navbar() {
     router.refresh()
   }
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    const q = searchQuery.trim()
-    if (q) {
-      router.push(`/?search=${encodeURIComponent(q)}`)
-      setSearchQuery('')
-      setIsMobileMenuOpen(false)
-    }
-  }
 
   return (
     <nav className="bg-white dark:bg-black shadow-md sticky top-0 z-50">
@@ -91,25 +80,6 @@ export default function Navbar() {
           🌸 <TextLogo />
         </Link>
 
-        {/* Barre de recherche (mobile & desktop) */}
-        <form
-          onSubmit={handleSearchSubmit}
-          className="flex-1 mx-4 hidden md:flex max-w-md"
-        >
-          <input
-            type="text"
-            placeholder="Désolée la recherche n'est pas encore fonctionnelle !"
-            className="w-full border rounded-l-md px-4 py-2 text-sm border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#D29587]"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          <button
-            type="submit"
-            className="bg-[#D29587] text-white px-4 rounded-r-md hover:bg-[#c28273] transition"
-          >
-            <Search size={16} />
-          </button>
-        </form>
 
         {/* Menu hamburger mobile */}
         <button
@@ -184,21 +154,7 @@ export default function Navbar() {
       {isMobileMenuOpen && (
         <div className="md:hidden px-4 pb-4">
           {/* Barre de recherche mobile */}
-          <form onSubmit={handleSearchSubmit} className="flex mb-4">
-            <input
-              type="text"
-              placeholder="Rechercher..."
-              className="w-full border rounded-l-md px-3 py-2 text-sm border-gray-300 focus:outline-none"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            <button
-              type="submit"
-              className="bg-[#D29587] text-white px-3 rounded-r-md"
-            >
-              <Search size={16} />
-            </button>
-          </form>
+
 
           <div className="flex flex-col space-y-4">
             {/* Catégories */}

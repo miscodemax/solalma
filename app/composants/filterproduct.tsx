@@ -47,7 +47,7 @@ function PriceFilter({
   }
 
   return (
-    <div className="p-6 bg-white dark:bg-[#121212] rounded-3xl shadow-lg max-w-md mx-auto">
+    <div className="p-6 pt-3 bg-white dark:bg-[#121212] rounded-3xl shadow-lg max-w-md mx-auto">
       <h3 className="text-xl font-semibold text-[#D29587] dark:text-[#FBCFC2] mb-4 text-center">
         Quel est ton budget ?
       </h3>
