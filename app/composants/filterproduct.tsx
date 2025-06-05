@@ -77,21 +77,57 @@ function PriceFilter({
   )
 }
 
-export default function FilteredProducts({ products, search }: { products: Product[], search: string }) {
+export default function FilteredProducts({ products }: { products: Product[] }) {
+  const [searchQuery, setSearchQuery] = useState("")
+  const [searchResults, setSearchResults] = useState<Product[]>([])
   const [priceRange, setPriceRange] = useState<[number, number] | null>(null)
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [open, setOpen] = useState(false)
 
-  const searchLower = search.toLowerCase()
+  function handleSearchInput(value: string) {
+    setSearchQuery(value)
+    if (value.trim() === "") {
+      setSearchResults([])
+      return
+    }
+
+    const results = products.filter(p =>
+      p.title.toLowerCase().includes(value.toLowerCase())
+    )
+    setSearchResults(results.slice(0, 5)) // Limiter à 5 résultats
+  }
+
 
   const filteredProducts = products.filter(p =>
-    (!search || p.title.toLowerCase().includes(searchLower) || p.description.toLowerCase().includes(searchLower)) &&
+
     (!priceRange || (p.price >= priceRange[0] && p.price <= priceRange[1]))
   )
 
   return (
     <main className="w-full overflow-x-hidden bg-[#FAF6F4] dark:bg-black min-h-screen py-10">
       <div className="max-w-7xl mx-auto px-6 sm:px-8 space-y-14">
+        <div className="relative mt-8 max-w-md mx-auto">
+          <input
+            type="text"
+            placeholder="🔍 Rechercher un produit..."
+            value={searchQuery}
+            onChange={(e) => handleSearchInput(e.target.value)}
+            className="w-full px-5 py-3 rounded-full border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-[#D29587] dark:bg-[#1a1a1a] dark:text-white"
+          />
+          {searchResults.length > 0 && (
+            <div className="absolute z-10 mt-2 w-full bg-white dark:bg-[#1a1a1a] shadow-lg rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700">
+              {searchResults.map((product) => (
+                <Link
+                  key={product.id}
+                  href={`/product/${product.id}`}
+                  className="block px-4 py-3 hover:bg-[#F5F3F1] dark:hover:bg-[#2c2c2c] transition text-sm text-[#333] dark:text-white"
+                >
+                  {product.title}
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Bouton de filtre */}
         <div className="text-center">
