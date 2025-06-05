@@ -63,7 +63,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
 }
 
 
-export default async function UserProfilePage({ params }: { params: { id: string } }) {
+export async function UserProfilePage({ params }: { params: { id: string } }) {
   const cookieStore = await cookies()
   const supabase = createServerClient(supabaseUrl, supabaseKey, {
     cookies: {
