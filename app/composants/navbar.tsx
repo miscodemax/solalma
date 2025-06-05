@@ -17,6 +17,7 @@ import {
   Menu,
   X,
   LogOut,
+  Search,
 } from 'lucide-react'
 import TextLogo from './textLogo'
 import { createClient } from '@/lib/supabase'
@@ -35,6 +36,7 @@ export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [sessionUser, setSessionUser] = useState(null)
   const [profile, setProfile] = useState<{ avatar_url: string } | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
 
   const router = useRouter()
   const pathname = usePathname()
@@ -70,6 +72,16 @@ export default function Navbar() {
     router.refresh()
   }
 
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    const query = searchQuery.trim()
+    if (query) {
+      router.push(`/?search=${encodeURIComponent(query)}`)
+      setSearchQuery('')
+      setIsMobileMenuOpen(false)
+    }
+  }
+
   return (
     <nav className="bg-white shadow-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
@@ -77,6 +89,26 @@ export default function Navbar() {
         <Link href="/" className="flex items-center gap-2 text-2xl font-bold text-[#D29587] hover:opacity-80">
           🌸 <TextLogo />
         </Link>
+
+        {/* Barre de recherche (mobile & desktop) */}
+        <form
+          onSubmit={handleSearchSubmit}
+          className="flex-1 mx-4 hidden md:flex max-w-md"
+        >
+          <input
+            type="text"
+            placeholder="Rechercher un produit..."
+            className="w-full border rounded-l-md px-4 py-2 text-sm border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#D29587]"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          <button
+            type="submit"
+            className="bg-[#D29587] text-white px-4 rounded-r-md hover:bg-[#c28273] transition"
+          >
+            <Search size={16} />
+          </button>
+        </form>
 
         {/* Menu hamburger mobile */}
         <button
@@ -88,7 +120,6 @@ export default function Navbar() {
 
         {/* Navigation Desktop */}
         <nav className="hidden md:flex items-center space-x-8">
-          {/* Liens dynamiques */}
           {navLinks.map(({ href, label, icon: Icon }) => (
             <Link
               key={href}
@@ -100,7 +131,6 @@ export default function Navbar() {
             </Link>
           ))}
 
-          {/* Icône de profil si connecté */}
           {sessionUser && (
             <DropdownMenu>
               <DropdownMenuTrigger className="focus:outline-none">
@@ -125,7 +155,7 @@ export default function Navbar() {
         </nav>
       </div>
 
-      {/* Catégories visibles sur desktop */}
+      {/* Catégories Desktop */}
       <div className="hidden md:flex justify-center gap-8 pb-2">
         {categories.map((cat) => {
           const isActive = selectedCategory === cat
@@ -147,7 +177,24 @@ export default function Navbar() {
       {/* Menu mobile */}
       {isMobileMenuOpen && (
         <div className="md:hidden px-4 pb-4">
-          <div className="flex flex-col space-y-4 mt-4">
+          {/* Barre de recherche mobile */}
+          <form onSubmit={handleSearchSubmit} className="flex mb-4">
+            <input
+              type="text"
+              placeholder="Rechercher..."
+              className="w-full border rounded-l-md px-3 py-2 text-sm border-gray-300 focus:outline-none"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <button
+              type="submit"
+              className="bg-[#D29587] text-white px-3 rounded-r-md"
+            >
+              <Search size={16} />
+            </button>
+          </form>
+
+          <div className="flex flex-col space-y-4">
             {/* Catégories */}
             <div>
               <p className="text-sm font-semibold text-gray-600 mb-2">Catégories</p>
@@ -182,7 +229,7 @@ export default function Navbar() {
               ))}
             </div>
 
-            {/* Menu profil mobile */}
+            {/* Profil mobile */}
             {sessionUser && (
               <div className="border-t pt-4">
                 <Link

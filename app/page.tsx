@@ -4,7 +4,10 @@ import { supabaseUrl, supabaseKey } from "@/lib/supabase"
 import FilteredProducts from "./composants/filterproduct"
 
 type Props = {
-  searchParams: { category?: string }
+  searchParams: {
+    category?: string
+    q?: string  // <-- nouveau paramètre
+  }
 }
 
 export default async function HomePage({ searchParams }: Props) {
@@ -16,14 +19,21 @@ export default async function HomePage({ searchParams }: Props) {
   })
 
   const category = searchParams.category || ''
+  const q = searchParams.q?.trim() || ''  // <-- récupération du terme de recherche
 
   // Récupérer les produits
-  const query = supabase.from('product').select('*')
+  let query = supabase.from('product').select('*')
+
   if (category) {
-    query.ilike('category', category)
+    query = query.ilike('category', `%${category}%`)
+  }
+
+  if (q) {
+    query = query.or(`title.ilike.%${q}%,description.ilike.%${q}%`)
   }
 
   const { data: products, error } = await query
+
   if (error) {
     return (
       <p className="text-red-500 text-center mt-10">
