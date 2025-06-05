@@ -132,7 +132,7 @@ export default function Navbar() {
       </div>
 
       {/* Catégories Desktop */}
-      <div className="hidden md:flex justify-center gap-8 pb-2">
+      <div className="hidden md:flex justify-center gap-8">
         {categories.map((cat) => {
           const isActive = selectedCategory === cat
           return (
