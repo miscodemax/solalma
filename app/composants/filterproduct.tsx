@@ -105,8 +105,8 @@ export default function FilteredProducts({ products }: { products: Product[] }) 
 
   return (
     <main className="w-full overflow-x-hidden bg-[#FAF6F4] dark:bg-black min-h-screen py-10">
-      <div className="max-w-7xl mx-auto px-6 sm:px-8 space-y-14">
-        <div className="relative mt-8 max-w-md mx-auto">
+      <div className="max-w-7xl mx-auto px-6 sm:px-8 space-y-8">
+        <div className="relative max-w-md mx-auto">
           <input
             type="text"
             placeholder="🔍 Rechercher un produit..."
