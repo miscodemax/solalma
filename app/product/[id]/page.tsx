@@ -234,11 +234,17 @@ export default async function ProductDetailPage({ params }: Props) {
 
             </div>
           </div>
+          {/* Description */}
+          {product.description && (
+            <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+              {product.description}
+            </p>
+          )}
           {/* Produits similaires */}
           {similarProducts && similarProducts.length > 0 && (
             <section className="mt-10">
-              <h2 className="text-4xl font-extrabold text-[#333] mb-4">Produits similaires</h2>
-              <div className="flex space-x-6 overflow-x-auto scrollbar-thin scrollbar-thumb-[#D29587]/70 scrollbar-track-transparent py-2">
+              <h2 className="text-4xl text-center font-extrabold text-[#333] mb-4">Produits similaires</h2>
+              <div className="flex justify-center space-x-6 overflow-x-auto scrollbar-thin scrollbar-thumb-[#D29587]/70 scrollbar-track-transparent py-2">
                 {similarProducts.map((p) => (
                   <Link
                     key={p.id}
@@ -268,12 +274,7 @@ export default async function ProductDetailPage({ params }: Props) {
             </section>
           )}
         </div>
-        {/* Description */}
-        {product.description && (
-          <p className="text-gray-700 leading-relaxed whitespace-pre-line">
-            {product.description}
-          </p>
-        )}
+
       </div>
 
 
