@@ -55,7 +55,7 @@ type Props = {
   }
 }
 
-export async function ProductDetailPage({ params }: Props) {
+export default async function ProductDetailPage({ params }: Props) {
   const cookieStore = await cookies()
   const supabase = createServerClient(supabaseUrl, supabaseKey, {
     cookies: {
