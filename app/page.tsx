@@ -28,9 +28,7 @@ export default async function HomePage({ searchParams }: Props) {
     query = query.ilike('category', `%${category}%`)
   }
 
-  if (q) {
-    query = query.or(`title.ilike.%${q}%,description.ilike.%${q}%`)
-  }
+
 
   const { data: products, error } = await query
 
@@ -42,5 +40,5 @@ export default async function HomePage({ searchParams }: Props) {
     )
   }
 
-  return <FilteredProducts products={products || []} />
+  return <FilteredProducts products={products || []} search={q} />
 }
