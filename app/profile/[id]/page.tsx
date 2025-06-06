@@ -10,6 +10,7 @@ import CopyButton from "@/app/composants/sharebutton"
 import { FaWhatsapp } from "react-icons/fa"
 
 import { Metadata } from "next"
+import BackButton from "@/app/composants/back-button"
 
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
@@ -103,6 +104,7 @@ export default async function UserProfilePage({ params }: { params: { id: string
 
   return (
     <div className="max-w-4xl mx-auto dark:bg-black p-6 space-y-10">
+      <BackButton />
       {/* Section Profil */}
       <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
         <div className="w-24 h-24 relative">

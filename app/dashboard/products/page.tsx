@@ -6,6 +6,7 @@ import Link from "next/link"
 import ProductImage from "./productimage"
 import DeleteButton from "./deletebutton"
 import { Store } from "lucide-react"
+import BackButton from "@/app/composants/back-button"
 
 export default async function ProductsPage() {
   const cookieStore = await cookies()
@@ -38,6 +39,7 @@ export default async function ProductsPage() {
   return (
     <div className="min-h-screen bg-[#F9F6F1] dark:bg-[#0f0f0f] bg-[url('/dots.svg')] bg-repeat opacity-[0.95] px-4 py-10">
       <div className="max-w-6xl mx-auto">
+        <BackButton />
         {/* Message de bienvenue */}
         <div className="bg-[#f3ede9] dark:bg-[#1e1e1e] p-6 rounded-xl shadow-sm mb-10 flex items-center gap-4">
           <div className="bg-[#D29587] text-white p-3 rounded-full shadow">

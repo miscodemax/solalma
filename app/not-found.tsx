@@ -4,10 +4,12 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { MoveLeft } from 'lucide-react'
 import { motion } from 'framer-motion'
+import BackButton from './composants/back-button'
 
 export default function Notfound() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#F9F6F1] dark:bg-[#0D0D0D] px-6">
+      <BackButton />
       <motion.div
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}

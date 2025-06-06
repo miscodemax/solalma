@@ -10,12 +10,13 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion"
+import BackButton from "../composants/back-button"
 
 export default function AboutPage() {
   return (
     <div className="min-h-screen bg-[#F9F6F1] dark:bg-[#121212] py-16 px-4 transition-colors duration-500">
       <div className="max-w-6xl mx-auto space-y-24">
-
+        <BackButton />
         {/* Introduction */}
         <motion.div
           initial={{ opacity: 0, y: -30 }}
