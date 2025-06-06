@@ -22,6 +22,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Sangse - Marketplace Mode Féminine abordable | Vêtements, Hijabs & Accessoires tendance",
   description: "Découvrez Sangse, la marketplace dédiée à la mode féminine à prix abordable. Trouvez des vêtements stylés, hijabs colorés, maquillage et accessoires tendance, livrés rapidement.",
+  icons: {
+    icon: "/sangse.png", // <- lien vers le favicon
+  },
 };
 
 export default function RootLayout({
