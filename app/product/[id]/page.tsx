@@ -11,6 +11,7 @@ import CopyButton from "@/app/composants/sharebutton"
 import { FaWhatsapp } from "react-icons/fa"
 // app/product/[id]/page.tsx
 import type { Metadata } from "next"
+import BackButton from "@/app/composants/back-button"
 
 // en haut de ton fichier, après les imports
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -118,6 +119,7 @@ export default async function ProductDetailPage({ params }: Props) {
 
   return (
     <div className="max-w-6xl mx-auto px-4 dark:bg-black py-10">
+      <BackButton />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
         {/* Image principale */}
         <div className="relative w-full h-[520px] rounded-2xl overflow-hidden shadow border border-[#E6E3DF] group cursor-zoom-in">
