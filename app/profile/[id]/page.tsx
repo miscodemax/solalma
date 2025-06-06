@@ -1,6 +1,5 @@
 // /app/profile/[id]/page.tsx
 
-
 import { cookies } from "next/headers"
 import { createServerClient } from "@supabase/ssr"
 import { supabaseUrl, supabaseKey } from "@/lib/supabase"
@@ -8,10 +7,8 @@ import Image from "next/image"
 import Link from "next/link"
 import CopyButton from "@/app/composants/sharebutton"
 import { FaWhatsapp } from "react-icons/fa"
-
 import { Metadata } from "next"
 import BackButton from "@/app/composants/back-button"
-
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const cookieStore = await cookies()
@@ -32,7 +29,6 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     : "Profil vendeur - Sangse.shop"
 
   const description = profile?.bio || "Découvre les produits proposés par ce vendeur."
-
   const image = profile?.avatar_url || "https://sangse.shop/default-avatar.png"
   const url = `https://sangse.shop/profile/${params.id}`
 
@@ -63,7 +59,6 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   }
 }
 
-
 export default async function UserProfilePage({ params }: { params: { id: string } }) {
   const cookieStore = await cookies()
   const supabase = createServerClient(supabaseUrl, supabaseKey, {
@@ -71,6 +66,7 @@ export default async function UserProfilePage({ params }: { params: { id: string
       get: (name) => cookieStore.get(name)?.value,
     },
   })
+
   const { id } = params
 
   const { data: profile, error: profileError } = await supabase
@@ -105,6 +101,7 @@ export default async function UserProfilePage({ params }: { params: { id: string
   return (
     <div className="max-w-4xl mx-auto dark:bg-black p-6 space-y-10">
       <BackButton />
+
       {/* Section Profil */}
       <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
         <div className="w-24 h-24 relative">
@@ -118,10 +115,25 @@ export default async function UserProfilePage({ params }: { params: { id: string
         <div className="flex-1 w-full">
           <h1 className="text-2xl font-bold">{profile.username || "Utilisateur"}</h1>
           <p className="text-gray-600">{profile.bio || "Pas de biographie disponible."}</p>
+
           {ratings.length > 0 ? (
-            <p className="text-sm text-yellow-600 mt-2">
-              ⭐ Note moyenne du vendeur : <span className="font-semibold">{averageRating} / 5</span>
-            </p>
+            <>
+              <p className="text-sm text-yellow-600 mt-2">
+                ⭐ Note moyenne du vendeur : <span className="font-semibold">{averageRating} / 5</span>
+              </p>
+
+              {parseFloat(averageRating!) >= 4.8 && (
+                <p className="text-sm text-yellow-700 font-semibold mt-1 bg-yellow-100 rounded-xl px-3 py-1 inline-block">
+                  🥇 Vendeur d’or
+                </p>
+              )}
+
+              {parseFloat(averageRating!) >= 4.5 && parseFloat(averageRating!) < 4.8 && (
+                <p className="text-sm text-amber-700 font-semibold mt-1 bg-amber-100 rounded-xl px-3 py-1 inline-block">
+                  🥈 Vendeur fiable
+                </p>
+              )}
+            </>
           ) : (
             <p className="text-sm text-gray-400 mt-2">⭐ Aucun avis pour l’instant</p>
           )}
@@ -130,7 +142,6 @@ export default async function UserProfilePage({ params }: { params: { id: string
           <div className="mt-6">
             <h2 className="text-sm font-semibold text-gray-600 mb-2">📤 Partager cette boutique</h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-md">
-              {/* WhatsApp */}
               <a
                 href={`https://wa.me/?text=${encodeURIComponent(
                   `🔗 Découvre la boutique de ${profile.username} sur Sangse.shop : https://sangse.shop/profile/${id}`
@@ -143,13 +154,10 @@ export default async function UserProfilePage({ params }: { params: { id: string
                 Partager
               </a>
 
-              {/* Instagram */}
               <CopyButton
                 text={`https://sangse.shop/profile/${id}`}
                 platform="Tiktok/Instagram"
               />
-
-
             </div>
           </div>
 
@@ -166,10 +174,9 @@ export default async function UserProfilePage({ params }: { params: { id: string
                 href="/dashboard/products"
                 className="inline-block mt-6 px-4 py-2 text-sm bg-[#D29587] text-white rounded-xl hover:bg-[#bb7e70] transition"
               >
-                ✏️ Gerer mes produits
+                ✏️ Gérer mes produits
               </Link>
             </div>
-
           )}
         </div>
       </div>
