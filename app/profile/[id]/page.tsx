@@ -153,12 +153,21 @@ export default async function UserProfilePage({ params }: { params: { id: string
 
           {/* Modifier profil (si c’est l'utilisateur connecté) */}
           {user?.id === id && (
-            <Link
-              href="/profile/update"
-              className="inline-block mt-6 px-4 py-2 text-sm bg-[#D29587] text-white rounded-xl hover:bg-[#bb7e70] transition"
-            >
-              ✏️ Modifier mon profil
-            </Link>
+            <div className="flex flex-col md:flex-row gap-3">
+              <Link
+                href="/profile/update"
+                className="inline-block mt-6 px-4 py-2 text-sm bg-[#D29587] text-white rounded-xl hover:bg-[#bb7e70] transition"
+              >
+                ✏️ Modifier mon profil
+              </Link>
+              <Link
+                href="/dashboard/products"
+                className="inline-block mt-6 px-4 py-2 text-sm bg-[#D29587] text-white rounded-xl hover:bg-[#bb7e70] transition"
+              >
+                ✏️ Gerer mes produits
+              </Link>
+            </div>
+
           )}
         </div>
       </div>
