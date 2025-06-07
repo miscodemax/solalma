@@ -78,6 +78,7 @@ export default async function UserProfilePage({ params }: { params: { id: string
   const {
     data: { user },
   } = await supabase.auth.getUser()
+  
 
   const { data: products } = await supabase
     .from("product")

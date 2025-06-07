@@ -4,7 +4,7 @@ import { createServerClient } from "@supabase/ssr"
 import { supabaseUrl, supabaseKey } from "../../../lib/supabase"
 import Image from "next/image"
 import Link from "next/link"
-import { notFound, redirect } from "next/navigation"
+import { notFound } from "next/navigation"
 import dayjs from "dayjs"
 import RatingSeller from "@/app/composants/ratingseller"
 import CopyButton from "@/app/composants/sharebutton"
@@ -12,6 +12,7 @@ import { FaWhatsapp } from "react-icons/fa"
 // app/product/[id]/page.tsx
 import type { Metadata } from "next"
 import BackButton from "@/app/composants/back-button"
+import AuthModal from "@/app/composants/auth-modal"
 
 // en haut de ton fichier, après les imports
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -66,9 +67,15 @@ export default async function ProductDetailPage({ params }: Props) {
     },
   })
 
-  const { data: userData, error: userError } = await supabase.auth.getUser()
-  if (userError || !userData.user) {
-    redirect("/signin")
+  const { data: userData } = await supabase.auth.getUser()
+
+  // Si l'utilisateur n'est pas connecté, affiche le modal d'authentification
+  if (!userData?.user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center dark:bg-black">
+        <AuthModal />
+      </div>
+    )
   }
 
   const {
