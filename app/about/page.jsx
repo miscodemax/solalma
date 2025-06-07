@@ -25,23 +25,20 @@ export default function AboutPage() {
           className="text-center space-y-6"
         >
           <h1 className="text-4xl md:text-5xl font-extrabold text-[#1E1E1E] dark:text-[#E0E0E0]">
-            Une plateforme née d&apos;un rêve 🌱
+            Crée ta boutique. Développe ta visibilité. 📱
           </h1>
+
           <p className="text-lg text-[#6B6B6B] dark:text-[#A0A0A0] max-w-2xl mx-auto leading-relaxed">
-            Hey ! Moi c&apos;est <strong>Mamadou</strong>, étudiant en maths à l&apos;UCAD 📚.
-            À la base, je résous des équations, pas des bugs 😅. Je n&apos;ai jamais mis les pieds dans une école d&apos;informatique… et pourtant, <em>me voilà à coder une marketplace tout seul comme un grand</em> ! 💻✨
+            Tu vends déjà sur WhatsApp, Instagram ou Snapchat ? Alors cette plateforme est faite pour toi.
             <br /><br />
-            Comment j&apos;en suis arrivé là ? Eh bien… un mélange de café ☕ (naan je blague, je déteste le café !), de tutoriels YouTube à 2h du matin 🌙, de beaucoup (beaaaaucoup) de galères, et d&apos;un rêve un peu fou : permettre aux créatrices sénégalaises de vendre facilement leurs merveilles 🧕🏾👜.
+            Ici, tu peux créer ta boutique en quelques clics, regrouper tous tes produits sur une seule page professionnelle et partager le lien à ta clientèle comme un catalogue.
             <br /><br />
-            Ce site, c&apos;est un peu comme un projet DIY (oui, comme les tutos coiffure mais en version code) : j&apos;ai tout fait à la main, avec amour, erreurs et persévérance ❤️.
+            Fini les albums éparpillés et les descriptions répétitives. Ta boutique est claire, jolie, et facile à consulter. Et surtout : tes clientes peuvent découvrir <strong>d’autres produits</strong> que tu proposes sans que tu aies à tout leur renvoyer à chaque fois.
             <br /><br />
-            Donc si jamais tu croises une coquille ou un bouton un peu capricieux… sois sympa, pense au jeune mathématicien qui a troqué ses intégrales contre du JavaScript 😄.
+            Plus tu partages ta boutique, plus la plateforme attire du monde… ce qui veut dire : plus de chances d’être découverte, même par de nouvelles clientes 👀✨.
           </p>
 
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            className="inline-block"
-          >
+          <motion.div whileHover={{ scale: 1.05 }} className="inline-block">
             <Link href="/dashboard/add" legacyBehavior>
               <a
                 className="bg-[#D29587] hover:bg-[#c37f71] text-white px-6 py-3 rounded-full text-lg shadow-md flex items-center gap-2 transition-colors duration-300"
@@ -53,6 +50,7 @@ export default function AboutPage() {
             </Link>
           </motion.div>
         </motion.div>
+
 
         {/* Histoire de Fatou */}
         <motion.div
