@@ -18,9 +18,10 @@ export default function AuthModal() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${location.origin}/auth/callback`
+        redirectTo: `${window.location.origin}/auth/callback?redirect=${encodeURIComponent(window.location.pathname)}`
       }
     })
+
     if (error) {
       setError(error.message)
       setLoading(false)
@@ -28,7 +29,7 @@ export default function AuthModal() {
   }
 
   return (
-    <Dialog open={true} onOpenChange={() => {}}>
+    <Dialog open={true} onOpenChange={() => { }}>
       <DialogContent className="sm:max-w-md animate-in fade-in zoom-in-95 duration-300">
         <DialogHeader>
           <DialogTitle className="text-center text-xl font-semibold">

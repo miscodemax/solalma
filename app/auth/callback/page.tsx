@@ -15,20 +15,19 @@ export default function AuthCallback() {
   useEffect(() => {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession()
-
       const redirectTo = searchParams.get('redirect') || '/'
 
       if (session) {
-        // Redirige l'utilisateur là où il voulait aller
+        console.log('Session found, redirecting to:', redirectTo)
         router.replace(redirectTo)
       } else {
-        // Sinon, envoie vers la page d'inscription
+        console.log('No session found, redirecting to /register')
         router.replace('/register')
       }
     }
 
     checkSession()
-  }, [router, supabase, searchParams])
+  }, [router, searchParams])
 
   return (
     <div className='flex justify-center items-center min-h-screen'>

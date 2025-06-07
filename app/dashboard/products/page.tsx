@@ -25,6 +25,8 @@ export default async function ProductsPage() {
   if (error || !user) {
     redirect("/signin")
   }
+ 
+
 
   const { data: products, error: productsError } = await supabase
     .from("product")
