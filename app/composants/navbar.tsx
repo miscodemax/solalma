@@ -57,11 +57,7 @@ export default function Navbar() {
     setOpen(false)
   }
 
-  const handleShare = () => {
-    const message = encodeURIComponent("Coucou ! 🌸 Découvre cette nouvelle plateforme de mode féminine, hijabs, skincare et + : https://sangse.shop — rejoins-nous !");
-    const whatsappUrl = `https://wa.me/?text=${message}`
-    window.open(whatsappUrl, '_blank')
-  }
+ 
 
 
   return (
@@ -72,17 +68,7 @@ export default function Navbar() {
         </Link>
 
         <div className="flex items-center gap-4 md:hidden">
-          <div className="pt-4 border-t">
-            <button
-              onClick={handleShare}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[#D29587] to-pink-400 text-white font-semibold shadow-md hover:scale-105 transition-transform"
-            >
-              💌 Invite une amie 🤫
-            </button>
-            <p className="mt-1 text-center text-xs text-gray-500 italic">
-              Fais-lui découvrir ta nouvelle boutique secrète... 🌸
-            </p>
-          </div>
+          
 
 
           <ThemeToggle />

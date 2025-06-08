@@ -102,8 +102,25 @@ export default function FilteredProducts({ products }: { products: Product[] }) 
     setSearchResults(results.slice(0, 5))
   }
 
+  const handleShare = () => {
+    const message = encodeURIComponent("Coucou ! 🌸 Découvre cette nouvelle plateforme de mode féminine, hijabs, skincare et + : https://sangse.shop — rejoins-nous !");
+    const whatsappUrl = `https://wa.me/?text=${message}`
+    window.open(whatsappUrl, '_blank')
+  }
+
   return (
     <main className="w-full bg-[#FAF6F4] dark:bg-black min-h-screen pb-12 pt-5 px-4 sm:px-6">
+      <div className="pt-4 border-t">
+        <button
+          onClick={handleShare}
+          className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[#D29587] to-pink-400 text-white font-semibold shadow-md hover:scale-105 transition-transform"
+        >
+          💌 Invite une amie 🤫
+        </button>
+        <p className="mt-1 text-center text-xs text-gray-500 italic">
+          Fais-lui découvrir ta nouvelle boutique secrète... 🌸
+        </p>
+      </div>
       {showOnboarding && (
         <div className="text-center mb-8 mt-6">
           <div className="bg-[#FDF1EE] dark:bg-[#2c2c2c] border border-[#FBCFC2] dark:border-[#D29587] rounded-2xl p-5 shadow-md max-w-2xl mx-auto">
