@@ -72,12 +72,18 @@ export default function Navbar() {
         </Link>
 
         <div className="flex items-center gap-4 md:hidden">
-          <button
-            onClick={handleShare}
-            className="text-sm font-medium text-[#D29587] hover:underline"
-          >
-            📲 Inviter une amie
-          </button>
+          <div className="pt-4 border-t">
+            <button
+              onClick={handleShare}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[#D29587] to-pink-400 text-white font-semibold shadow-md hover:scale-105 transition-transform"
+            >
+              💌 Invite une amie 🤫
+            </button>
+            <p className="mt-1 text-center text-xs text-gray-500 italic">
+              Fais-lui découvrir ta nouvelle boutique secrète... 🌸
+            </p>
+          </div>
+
 
           <ThemeToggle />
           <button onClick={() => setOpen(!open)} className="text-gray-700">
