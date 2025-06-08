@@ -109,7 +109,7 @@ export default function FilteredProducts({ products }: { products: Product[] }) 
   }
 
   return (
-    <main className="w-full bg-[#FAF6F4] dark:bg-black min-h-screen pb-12 pt-5 px-4 sm:px-6">
+    <main className="w-full bg-[#FAF6F4] dark:bg-black min-h-screen pb-12 pt-3 px-4 sm:px-6">
       <div className="pt-4 border-t">
         <button
           onClick={handleShare}
