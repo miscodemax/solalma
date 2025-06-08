@@ -105,23 +105,23 @@ export default function FilteredProducts({ products }: { products: Product[] }) 
   return (
     <main className="w-full bg-[#FAF6F4] dark:bg-black min-h-screen pb-12 pt-5 px-4 sm:px-6">
       {showOnboarding && (
-         <div className="text-center mb-8 mt-6">
-        <div className="bg-[#FDF1EE] dark:bg-[#2c2c2c] border border-[#FBCFC2] dark:border-[#D29587] rounded-2xl p-5 shadow-md max-w-2xl mx-auto">
-          <h3 className="text-lg sm:text-xl font-semibold text-[#D29587] dark:text-[#FBCFC2] mb-1">
-            Tu veux gagner des revenus supplementaires depuis chez toi ? 🧕📱
-          </h3>
-          <p className="text-sm text-[#5C5C5C] dark:text-gray-300 mb-4">
-            Ouvre ta boutique gratuitement et commence à vendre en quelques clics. C’est simple, rapide et sans engagement.
-          </p>
-          <Link
-            href="/dashboard"
-            onClick={dismissOnboarding}
-            className="inline-block px-6 py-3 bg-[#D29587] dark:bg-[#FBCFC2] text-white dark:text-black font-semibold rounded-full hover:bg-[#bb7d72] dark:hover:bg-[#f3b9a9] transition shadow"
-          >
-            🎉 Commencer à vendre
-          </Link>
+        <div className="text-center mb-8 mt-6">
+          <div className="bg-[#FDF1EE] dark:bg-[#2c2c2c] border border-[#FBCFC2] dark:border-[#D29587] rounded-2xl p-5 shadow-md max-w-2xl mx-auto">
+            <h3 className="text-lg sm:text-xl font-semibold text-[#D29587] dark:text-[#FBCFC2] mb-1">
+              Tu veux gagner des revenus supplementaires depuis chez toi ? 🧕📱
+            </h3>
+            <p className="text-sm text-[#5C5C5C] dark:text-gray-300 mb-4">
+              Ouvre ta boutique gratuitement et commence à vendre en quelques clics. C’est simple, rapide et sans engagement.
+            </p>
+            <Link
+              href="/dashboard/add"
+              onClick={dismissOnboarding}
+              className="inline-block px-6 py-3 bg-[#D29587] dark:bg-[#FBCFC2] text-white dark:text-black font-semibold rounded-full hover:bg-[#bb7d72] dark:hover:bg-[#f3b9a9] transition shadow"
+            >
+              🎉 Commencer à vendre
+            </Link>
+          </div>
         </div>
-      </div>
       )}
 
 
@@ -148,7 +148,7 @@ export default function FilteredProducts({ products }: { products: Product[] }) 
           </div>
         )}
       </div>
-     
+
 
       {/* Filter trigger */}
       <div className="text-center mb-8">
