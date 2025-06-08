@@ -110,7 +110,7 @@ export default function FilteredProducts({ products }: { products: Product[] }) 
 
   return (
     <main className="w-full bg-[#FAF6F4] dark:bg-black min-h-screen pb-12 pt-3 px-4 sm:px-6">
-      <div className="pt-4 border-t">
+      <div className="pt-4 border-t max-w-64">
         <button
           onClick={handleShare}
           className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[#D29587] to-pink-400 text-white font-semibold shadow-md hover:scale-105 transition-transform"
