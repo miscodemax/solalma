@@ -1,5 +1,4 @@
 import { cookies } from "next/headers"
-import { redirect } from "next/navigation"
 import { createServerClient } from "@supabase/ssr"
 import { supabaseUrl, supabaseKey } from "../../../lib/supabase"
 import Link from "next/link"
@@ -7,6 +6,7 @@ import ProductImage from "./productimage"
 import DeleteButton from "./deletebutton"
 import { Store } from "lucide-react"
 import BackButton from "@/app/composants/back-button"
+import AuthModal from "@/app/composants/auth-modal"
 
 export default async function ProductsPage() {
   const cookieStore = await cookies()
@@ -22,10 +22,13 @@ export default async function ProductsPage() {
     error,
   } = await supabase.auth.getUser()
 
-  if (error || !user) {
-    redirect("/signin")
+  if (!user || error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center dark:bg-black">
+        <AuthModal />
+      </div>
+    )
   }
- 
 
 
   const { data: products, error: productsError } = await supabase
