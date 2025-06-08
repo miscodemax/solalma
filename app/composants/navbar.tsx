@@ -57,8 +57,10 @@ export default function Navbar() {
     setOpen(false)
   }
 
- 
-
+  const resetCategory = () => {
+    router.push('/')
+    setOpen(false)
+  }
 
   return (
     <nav className="sticky top-0 z-50 bg-white dark:bg-black shadow-md">
@@ -68,9 +70,6 @@ export default function Navbar() {
         </Link>
 
         <div className="flex items-center gap-4 md:hidden">
-          
-
-
           <ThemeToggle />
           <button onClick={() => setOpen(!open)} className="text-gray-700">
             {open ? <X size={24} /> : <Menu size={24} />}
@@ -79,9 +78,12 @@ export default function Navbar() {
 
         <div className="hidden md:flex items-center gap-6">
           {navLinks.map(({ href, label, icon: Icon }) => (
-            <Link key={href} href={href}
-              className={`flex items-center gap-1 text-sm font-medium transition ${pathname === href ? 'text-[#D29587]' : 'text-gray-600 hover:text-[#D29587]'
-                }`}
+            <Link
+              key={href}
+              href={href}
+              className={`flex items-center gap-1 text-sm font-medium transition ${
+                pathname === href ? 'text-[#D29587]' : 'text-gray-600 hover:text-[#D29587]'
+              }`}
             >
               <Icon size={16} />
               {label}
@@ -113,16 +115,25 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Catégories défilantes mobile + desktop */}
+      {/* Catégories défilantes */}
       <div className="flex overflow-x-auto gap-4 px-4 py-2 border-t text-sm font-medium bg-white dark:bg-black">
+        <button
+          onClick={resetCategory}
+          className={`whitespace-nowrap capitalize px-2 py-1 rounded transition ${
+            !category ? 'text-[#D29587] border-b-2 border-[#D29587]' : 'text-gray-600 hover:text-[#D29587]'
+          }`}
+        >
+          Voir tout
+        </button>
         {categories.map((cat) => {
           const active = category === cat
           return (
             <button
               key={cat}
               onClick={() => handleCategory(cat)}
-              className={`whitespace-nowrap capitalize px-2 py-1 rounded transition ${active ? 'text-[#D29587] border-b-2 border-[#D29587]' : 'text-gray-600 hover:text-[#D29587]'
-                }`}
+              className={`whitespace-nowrap capitalize px-2 py-1 rounded transition ${
+                active ? 'text-[#D29587] border-b-2 border-[#D29587]' : 'text-gray-600 hover:text-[#D29587]'
+              }`}
             >
               {cat.replace('_', ' ')}
             </button>
@@ -140,8 +151,9 @@ export default function Navbar() {
                 key={href}
                 href={href}
                 onClick={() => setOpen(false)}
-                className={`flex items-center gap-2 py-1 ${pathname === href ? 'text-[#D29587]' : 'text-gray-700 hover:text-[#D29587]'
-                  }`}
+                className={`flex items-center gap-2 py-1 ${
+                  pathname === href ? 'text-[#D29587]' : 'text-gray-700 hover:text-[#D29587]'
+                }`}
               >
                 <Icon size={16} />
                 {label}
