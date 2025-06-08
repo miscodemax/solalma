@@ -57,6 +57,13 @@ export default function Navbar() {
     setOpen(false)
   }
 
+  const handleShare = () => {
+    const message = encodeURIComponent("Coucou ! 🌸 Découvre cette nouvelle plateforme de mode féminine, hijabs, skincare et + : https://sangse.shop — rejoins-nous !");
+    const whatsappUrl = `https://wa.me/?text=${message}`
+    window.open(whatsappUrl, '_blank')
+  }
+
+
   return (
     <nav className="sticky top-0 z-50 bg-white dark:bg-black shadow-md">
       <div className="flex items-center justify-between px-4 py-3 max-w-7xl mx-auto">
@@ -65,6 +72,13 @@ export default function Navbar() {
         </Link>
 
         <div className="flex items-center gap-4 md:hidden">
+          <button
+            onClick={handleShare}
+            className="text-sm font-medium text-[#D29587] hover:underline"
+          >
+            📲 Inviter une amie
+          </button>
+
           <ThemeToggle />
           <button onClick={() => setOpen(!open)} className="text-gray-700">
             {open ? <X size={24} /> : <Menu size={24} />}
@@ -74,9 +88,8 @@ export default function Navbar() {
         <div className="hidden md:flex items-center gap-6">
           {navLinks.map(({ href, label, icon: Icon }) => (
             <Link key={href} href={href}
-              className={`flex items-center gap-1 text-sm font-medium transition ${
-                pathname === href ? 'text-[#D29587]' : 'text-gray-600 hover:text-[#D29587]'
-              }`}
+              className={`flex items-center gap-1 text-sm font-medium transition ${pathname === href ? 'text-[#D29587]' : 'text-gray-600 hover:text-[#D29587]'
+                }`}
             >
               <Icon size={16} />
               {label}
@@ -116,9 +129,8 @@ export default function Navbar() {
             <button
               key={cat}
               onClick={() => handleCategory(cat)}
-              className={`whitespace-nowrap capitalize px-2 py-1 rounded transition ${
-                active ? 'text-[#D29587] border-b-2 border-[#D29587]' : 'text-gray-600 hover:text-[#D29587]'
-              }`}
+              className={`whitespace-nowrap capitalize px-2 py-1 rounded transition ${active ? 'text-[#D29587] border-b-2 border-[#D29587]' : 'text-gray-600 hover:text-[#D29587]'
+                }`}
             >
               {cat.replace('_', ' ')}
             </button>
@@ -136,9 +148,8 @@ export default function Navbar() {
                 key={href}
                 href={href}
                 onClick={() => setOpen(false)}
-                className={`flex items-center gap-2 py-1 ${
-                  pathname === href ? 'text-[#D29587]' : 'text-gray-700 hover:text-[#D29587]'
-                }`}
+                className={`flex items-center gap-2 py-1 ${pathname === href ? 'text-[#D29587]' : 'text-gray-700 hover:text-[#D29587]'
+                  }`}
               >
                 <Icon size={16} />
                 {label}
