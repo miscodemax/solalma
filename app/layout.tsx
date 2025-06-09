@@ -6,6 +6,7 @@ import Navbar from "./composants/navbar";
 import { Toaster } from "@/components/ui/sonner"
 import { Suspense } from 'react'
 import { ThemeProvider } from "./composants/theme-provider";
+import Script from "next/script";
 //import { SessionContextProvider } from "@supabase/auth-helpers-react";
 //import { createClient } from "./lib/supabase"
 
@@ -36,6 +37,13 @@ export default function RootLayout({
 
   return (
     <html lang="fr">
+      <head>
+        {/* Script d'injection de Botpress */}
+
+        <Script src="https://cdn.botpress.cloud/webchat/v3.0/inject.js" />
+        <Script src="https://files.bpcontent.cloud/2025/06/08/22/20250608224703-TFXKL5BC.js" />
+
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen overflow-x-hidden`}
       >
