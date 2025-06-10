@@ -13,7 +13,7 @@ export default function LikeButton({ productId, userId }: { productId: number; u
   useEffect(() => {
     const fetchLike = async () => {
       const { data } = await supabase
-        .from("likes")
+        .from("product_like")
         .select("*")
         .eq("user_id", userId)
         .eq("product_id", productId)
