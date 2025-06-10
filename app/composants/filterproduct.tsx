@@ -71,7 +71,7 @@ function PriceFilter({
   )
 }
 
-export default function FilteredProducts({ products }: { products: Product[] }) {
+export default function FilteredProducts({ products, userId }: { products: Product[], userId: string }) {
   const [searchQuery, setSearchQuery] = useState("")
   const [searchResults, setSearchResults] = useState<Product[]>([])
   const [priceRange, setPriceRange] = useState<[number, number] | null>(null)
@@ -214,7 +214,7 @@ export default function FilteredProducts({ products }: { products: Product[] }) 
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {filteredProducts.map((product) => (
-             <ProductCard key={product.id} product={product} />
+             <ProductCard key={product.id} product={product} userId={userId}/>
             ))}
           </div>
 

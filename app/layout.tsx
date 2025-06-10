@@ -36,7 +36,7 @@ export default function RootLayout({
 
 
   return (
-    <html lang="fr">
+    <html lang="fr" suppressHydrationWarning>
       <head>
         {/* Script d'injection de Botpress */}
         <Script src="https://cdn.botpress.cloud/webchat/v3.0/inject.js" />

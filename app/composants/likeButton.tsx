@@ -41,7 +41,7 @@ export default function LikeButton({ productId, userId }: { productId: number; u
     }
   }
 
-  if (!userId || loading) return null
+  if (userId === null || loading) return null
 
   return (
     <button

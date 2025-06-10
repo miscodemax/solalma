@@ -2,7 +2,7 @@
 import { cookies } from "next/headers"
 import { createServerClient } from "@supabase/ssr"
 import { supabaseUrl, supabaseKey } from "@/lib/supabase"
-import ProductCard from "./product-card"
+import FilteredProducts from "./filterproduct"
 
 export default async function ProductList({ products }) {
     const cookieStore = await cookies()
@@ -11,17 +11,19 @@ export default async function ProductList({ products }) {
             get: (name) => cookieStore.get(name)?.value,
         },
     })
+
     const { data: { user } } = await supabase.auth.getUser()
+    let id = null
+    if (user) {
+        id = user.id
+    }
+
 
     return (
         <div>
-            {products.map(product => (
-                <ProductCard
-                    key={product.id}
-                    product={product}
-                    userId={user?.id}
-                />
-            ))}
+
+            <FilteredProducts products={products || []} userId={id} />
+
         </div>
     )
 }
