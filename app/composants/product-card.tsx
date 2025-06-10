@@ -21,7 +21,7 @@ export default async function ProductCard({
     userId?: string;
 }) {
     console.log(product);
-    
+
     const supabase = createClient();
     const { data: likes } = await supabase
         .from("product_like")
@@ -29,6 +29,8 @@ export default async function ProductCard({
         .eq("product_id", product.id);
 
     const numberLike = likes?.length ?? 0;
+    console.log(numberLike);
+
 
     return (
         <div className="group rounded-xl overflow-hidden bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#2a2a2a] hover:shadow-lg transition-all">
