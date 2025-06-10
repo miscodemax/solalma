@@ -38,7 +38,7 @@ export default async function FavoritesPage() {
   let products = []
   if (productIds && productIds.length > 0) {
     const { data } = await supabase
-      .from("products")
+      .from("product")
       .select("*")
       .in("id", productIds)
     products = data || []
