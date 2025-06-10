@@ -30,7 +30,7 @@ export default function LikeButton({ productId, userId }: { productId: number; u
     setLiked(!liked) // UI optimiste
     if (liked) {
       await supabase
-        .from("likes")
+        .from("product_like")
         .delete()
         .eq("user_id", userId)
         .eq("product_id", productId)
