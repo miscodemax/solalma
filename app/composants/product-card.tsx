@@ -1,8 +1,4 @@
-
-'use server'
-import { cookies } from "next/headers"
-import { createServerClient } from "@supabase/ssr"
-import { supabaseUrl, supabaseKey } from "@/lib/supabase"
+// app/composants/ProductCard.tsx
 import Link from "next/link"
 import Image from "next/image"
 import LikeButton from "./likeButton"
@@ -16,16 +12,15 @@ type Product = {
     user_id: string
 }
 
-export default async function ProductCard({ product }: { product: Product }) {
-    const cookieStore = await cookies()
-    const supabase = createServerClient(supabaseUrl, supabaseKey, {
-        cookies: {
-            get: (name) => cookieStore.get(name)?.value,
-        },
-    })
-    const { data: { user } } = await supabase.auth.getUser()
+export default function ProductCard({
+    product,
+    userId,
+}: {
+    product: Product
+    userId?: string
+}) {
     return (
-        <Link
+         <Link
             href={`/product/${product.id}`}
             className="group rounded-xl overflow-hidden bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#2a2a2a] hover:shadow-lg transition-all"
         >
@@ -49,9 +44,9 @@ export default async function ProductCard({ product }: { product: Product }) {
                     <span className="text-sm font-bold text-[#D29587] dark:text-[#FBCFC2]">
                         {product.price.toLocaleString()} FCFA
                     </span>
-                    {user && (
-                        <LikeButton productId={product.id} userId={user.id} />
-                    )}
+                   
+                        <LikeButton productId={product.id} userId={userId} />
+                
                 </div>
             </div>
         </Link>
