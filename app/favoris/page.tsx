@@ -28,9 +28,9 @@ export default async function FavoritesPage() {
   // Étape 1 : Récupère les likes
   const { data: likes } = await supabase
     .from("product_like")
-    .select("product_id")
+    .select("*")
     .eq("user_id", user.id)
-console.log(likes);
+  console.log(likes);
 
   const productIds = likes?.map((like) => like.product_id)
 
