@@ -11,6 +11,7 @@ type Product = {
     price: number;
     image_url: string | null;
     user_id: string;
+    likes?: number; //
 };
 
 export default async function ProductCard({
@@ -48,7 +49,7 @@ export default async function ProductCard({
                 {/* Like + Count in corner */}
                 <div className="absolute top-2 right-2 bg-white/90 dark:bg-black/50 backdrop-blur-sm px-2 py-1 rounded-full flex items-center gap-1 text-sm text-gray-800 dark:text-white shadow-sm">
                     <LikeButton productId={product.id} userId={userId} />
-                    <span className="text-xs">{numberLike}</span>
+                    <span className="text-xs">{product.likes}</span>
                 </div>
             </div>
 
