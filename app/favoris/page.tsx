@@ -25,10 +25,11 @@ export default async function FavoritesPage() {
     )
   }
 
-  const { data: likedProducts } = await supabase
-    .from("product_like")
-    .select("*")
-    .eq("user_id", user.id)
+const { data: likedProducts } = await supabase
+  .from("product_like")
+  .select("products(*)") // jointure explicite sur la table "products"
+  .eq("user_id", user.id)
+
 
   const products = likedProducts?.map((like) => like.products) || []
 
