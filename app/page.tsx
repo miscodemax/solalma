@@ -1,7 +1,6 @@
 import { cookies } from "next/headers"
 import { createServerClient } from "@supabase/ssr"
 import { supabaseUrl, supabaseKey } from "@/lib/supabase"
-import FilteredProducts from "./composants/filterproduct"
 import ProductList from "./composants/productlist"
 
 type Props = {

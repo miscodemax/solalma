@@ -214,7 +214,7 @@ export default function FilteredProducts({ products, userId }: { products: Produ
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {filteredProducts.map((product) => (
-             <ProductCard key={product.id} product={product} userId={userId}/>
+              <ProductCard key={product.id} product={product} userId={userId} />
             ))}
           </div>
 
