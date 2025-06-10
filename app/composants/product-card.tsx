@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import LikeButton from "./likeButton";
-import { createClient } from "@/lib/supabase";
+
 
 
 type Product = {
@@ -21,16 +21,8 @@ export default async function ProductCard({
     product: Product;
     userId?: string;
 }) {
-    console.log(product);
 
-    const supabase = createClient();
-    const { data: likes } = await supabase
-        .from("product_like")
-        .select("*")
-        .eq("product_id", product.id);
 
-    const numberLike = likes?.length ?? 0;
-    console.log(numberLike);
 
 
     return (
