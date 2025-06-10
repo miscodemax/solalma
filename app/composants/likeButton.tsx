@@ -36,7 +36,7 @@ export default function LikeButton({ productId, userId }: { productId: number; u
         .eq("product_id", productId)
     } else {
       await supabase
-        .from("likes")
+        .from("product_like")
         .insert({ user_id: userId, product_id: productId })
     }
   }
