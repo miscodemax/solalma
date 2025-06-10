@@ -30,6 +30,7 @@ export default async function FavoritesPage() {
     .from("product_like")
     .select("product_id")
     .eq("user_id", user.id)
+console.log(likes);
 
   const productIds = likes?.map((like) => like.product_id)
 
@@ -42,6 +43,7 @@ export default async function FavoritesPage() {
       .in("id", productIds)
     products = data || []
   }
+  console.log(products);
 
   let id = null
   if (user) {
