@@ -27,7 +27,7 @@ export default async function FavoritesPage() {
 
   const { data: likedProducts } = await supabase
     .from("product_like")
-    .select("product_id, products(*)")
+    .select("*")
     .eq("user_id", user.id)
 
   const products = likedProducts?.map((like) => like.products) || []
