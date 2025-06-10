@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import LikeButton from "./likeButton";
+import { createClient } from "@/lib/supabase";
 
 type Product = {
     id: number;
@@ -11,13 +12,21 @@ type Product = {
     user_id: string;
 };
 
-export default function ProductCard({
+export default async function ProductCard({
     product,
     userId,
 }: {
     product: Product;
     userId?: string;
 }) {
+    const supabase = createClient()
+    const { data: likes } = await supabase
+        .from("product_like")
+        .select("*")
+        .eq("product_id", product.id)
+
+    const numberLike = likes?.length ?? 0;
+
     return (
         <div className="group rounded-xl overflow-hidden bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#2a2a2a] hover:shadow-lg transition-all">
             <Link href={`/product/${product.id}`}>
@@ -43,6 +52,7 @@ export default function ProductCard({
                         {product.price.toLocaleString()} FCFA
                     </span>
                     <LikeButton productId={product.id} userId={userId} />
+                    <span>{numberLike}</span>
                 </div>
             </div>
         </div>
