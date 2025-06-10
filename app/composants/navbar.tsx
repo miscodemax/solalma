@@ -7,7 +7,7 @@ import {
   DropdownMenu, DropdownMenuContent,
   DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { HomeIcon, ShoppingCart, User, Info, Menu, X, LogOut } from 'lucide-react'
+import { HomeIcon, ShoppingCart, User, Info, Menu, X, LogOut, Heart } from 'lucide-react'
 import { ThemeToggle } from './theme-toggle'
 import TextLogo from './textLogo'
 import { createClient } from '@/lib/supabase'
@@ -19,7 +19,7 @@ const navLinks = [
   { href: '/dashboard/add', icon: ShoppingCart, label: 'Vendre' },
   { href: '/dashboard/products', icon: User, label: 'Mes produits' },
   { href: '/about', icon: Info, label: 'À propos' },
-  { href: '/favoris', icon: Info, label: 'favoris' },
+  { href: '/favoris', icon: Heart, label: '' },
 ]
 
 export default function Navbar() {
@@ -82,9 +82,8 @@ export default function Navbar() {
             <Link
               key={href}
               href={href}
-              className={`flex items-center gap-1 text-sm font-medium transition ${
-                pathname === href ? 'text-[#D29587]' : 'text-gray-600 hover:text-[#D29587]'
-              }`}
+              className={`flex items-center gap-1 text-sm font-medium transition ${pathname === href ? 'text-[#D29587]' : 'text-gray-600 hover:text-[#D29587]'
+                }`}
             >
               <Icon size={16} />
               {label}
@@ -120,9 +119,8 @@ export default function Navbar() {
       <div className="flex overflow-x-auto gap-4 px-4 py-2 border-t text-sm font-medium bg-white dark:bg-black">
         <button
           onClick={resetCategory}
-          className={`whitespace-nowrap capitalize px-2 py-1 rounded transition ${
-            !category ? 'text-[#D29587] border-b-2 border-[#D29587]' : 'text-gray-600 hover:text-[#D29587]'
-          }`}
+          className={`whitespace-nowrap capitalize px-2 py-1 rounded transition ${!category ? 'text-[#D29587] border-b-2 border-[#D29587]' : 'text-gray-600 hover:text-[#D29587]'
+            }`}
         >
           Voir tout
         </button>
@@ -132,9 +130,8 @@ export default function Navbar() {
             <button
               key={cat}
               onClick={() => handleCategory(cat)}
-              className={`whitespace-nowrap capitalize px-2 py-1 rounded transition ${
-                active ? 'text-[#D29587] border-b-2 border-[#D29587]' : 'text-gray-600 hover:text-[#D29587]'
-              }`}
+              className={`whitespace-nowrap capitalize px-2 py-1 rounded transition ${active ? 'text-[#D29587] border-b-2 border-[#D29587]' : 'text-gray-600 hover:text-[#D29587]'
+                }`}
             >
               {cat.replace('_', ' ')}
             </button>
@@ -151,15 +148,14 @@ export default function Navbar() {
               <Link
                 key={href}
                 href={href}
-                onClick={() => setOpen(false)}
-                className={`flex items-center gap-2 py-1 ${
-                  pathname === href ? 'text-[#D29587]' : 'text-gray-700 hover:text-[#D29587]'
-                }`}
+                className={`flex items-center gap-1 text-sm font-medium transition ${pathname === href ? 'text-[#D29587]' : 'text-gray-600 hover:text-[#D29587]'
+                  }`}
               >
-                <Icon size={16} />
-                {label}
+                <Icon size={18} />
+                {label && <span>{label}</span>}
               </Link>
             ))}
+
           </div>
           {user && (
             <div className="border-t pt-3">
