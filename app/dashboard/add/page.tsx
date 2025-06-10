@@ -1,8 +1,8 @@
 import { cookies } from "next/headers"
 import { createServerClient } from "@supabase/ssr"
-import { supabaseUrl, supabaseKey } from "../../../lib/supabase"
-import AddProductForm from "./add-product-form"
+import { supabaseUrl, supabaseKey } from "@/lib/supabase"
 import AuthModal from "@/app/composants/auth-modal"
+import AddProductForm from "./add-product-form"
 
 
 export const dynamic = "force-dynamic"

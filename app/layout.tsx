@@ -39,7 +39,6 @@ export default function RootLayout({
     <html lang="fr">
       <head>
         {/* Script d'injection de Botpress */}
-
         <Script src="https://cdn.botpress.cloud/webchat/v3.0/inject.js" />
         <Script src="https://files.bpcontent.cloud/2025/06/08/22/20250608224703-TFXKL5BC.js" />
 

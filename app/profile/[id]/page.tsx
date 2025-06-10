@@ -96,8 +96,8 @@ export default async function UserProfilePage({ params }: { params: { id: string
   const getBadge = () => {
     if (!averageRating) return null
     const rating = parseFloat(averageRating)
-    if (rating >= 4.8) return "🥇 Vendeur d’or"
-    if (rating >= 4.5) return "🥈 Vendeur fiable"
+    if (rating >= 4.5) return "🥇 Vendeur d’or"
+    if (rating >= 4.0) return "🥈 Vendeur fiable"
     return null
   }
 

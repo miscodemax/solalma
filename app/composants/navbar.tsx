@@ -19,6 +19,7 @@ const navLinks = [
   { href: '/dashboard/add', icon: ShoppingCart, label: 'Vendre' },
   { href: '/dashboard/products', icon: User, label: 'Mes produits' },
   { href: '/about', icon: Info, label: 'À propos' },
+  { href: '/favoris', icon: Info, label: 'favoris' },
 ]
 
 export default function Navbar() {

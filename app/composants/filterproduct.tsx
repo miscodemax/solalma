@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import Image from "next/image"
 import Link from "next/link"
 import {
   Dialog,
@@ -13,6 +12,7 @@ import {
   DialogClose,
   DialogDescription,
 } from "@/components/ui/dialog"
+import ProductCard from "./product-card"
 
 type Product = {
   id: number
@@ -214,35 +214,7 @@ export default function FilteredProducts({ products }: { products: Product[] }) 
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {filteredProducts.map((product) => (
-              <Link
-                key={product.id}
-                href={`/product/${product.id}`}
-                className="group rounded-xl overflow-hidden bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#2a2a2a] hover:shadow-lg transition-all"
-              >
-                <div className="relative w-full aspect-[4/5]">
-                  <Image
-                    src={product.image_url || "/placeholder.jpg"}
-                    alt={product.title}
-                    fill
-                    className="object-cover transition-transform duration-300 group-hover:scale-105"
-                    sizes="(max-width: 768px) 50vw, 20vw"
-                  />
-                </div>
-                <div className="p-3 space-y-1">
-                  <h2 className="text-sm font-semibold text-[#222] dark:text-white truncate">
-                    {product.title}
-                  </h2>
-                  <p className="text-xs text-gray-600 dark:text-gray-300 line-clamp-2">
-                    {product.description}
-                  </p>
-                  <div className="flex justify-between items-center mt-1">
-                    <span className="text-sm font-bold text-[#D29587] dark:text-[#FBCFC2]">
-                      {product.price.toLocaleString()} FCFA
-                    </span>
-
-                  </div>
-                </div>
-              </Link>
+             <ProductCard key={product.id} product={product} />
             ))}
           </div>
 
