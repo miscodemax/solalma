@@ -25,15 +25,28 @@ export default async function FavoritesPage() {
     )
   }
 
-  const { data: likedProducts } = await supabase
+  // Étape 1 : Récupère les likes
+  const { data: likes } = await supabase
     .from("product_like")
-    .select("products(*)") // jointure explicite sur la table "products"
+    .select("product_id")
     .eq("user_id", user.id)
 
-  console.log("LIKED PRODUCTS ===>", likedProducts)
+  const productIds = likes?.map((like) => like.product_id)
 
-  const products = likedProducts?.map((like) => like.products) || []
+  // Étape 2 : Récupère les produits correspondants
+  let products = []
+  if (productIds && productIds.length > 0) {
+    const { data } = await supabase
+      .from("products")
+      .select("*")
+      .in("id", productIds)
+    products = data || []
+  }
 
+  let id = null
+  if (user) {
+    id = user.id
+  }
   return (
     <main className="min-h-screen bg-[#f9f9f9] dark:bg-[#0d0d0d] px-4 py-6">
       <div className="max-w-4xl mx-auto">
@@ -49,7 +62,7 @@ export default async function FavoritesPage() {
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
+              <ProductCard key={product.id} product={product} userId={id} />
             ))}
           </div>
         )}
