@@ -54,7 +54,7 @@ export default async function FavoritesPage() {
             💖 Tes coups de cœur
           </h1>
           <Link
-            href="/vendre"
+            href="/dashboard/add"
             className="inline-flex items-center gap-2 bg-pink-600 hover:bg-pink-700 text-white font-semibold text-sm sm:text-base px-5 py-2 rounded-full shadow transition-all"
           >
             🚀 Vends tes articles

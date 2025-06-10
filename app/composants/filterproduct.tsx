@@ -171,7 +171,7 @@ export default function FilteredProducts({ products, userId }: { products: Produ
       <div className="text-center mb-8">
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <button className="px-6 py-3 bg-[#D29587] dark:bg-[#FBCFC2] text-white dark:text-black rounded-full font-semibold shadow-md hover:bg-[#bb7d72] dark:hover:bg-[#f3b9a9] transition">
+            <button type="button" className="px-6 py-3 bg-[#D29587] dark:bg-[#FBCFC2] text-white dark:text-black rounded-full font-semibold shadow-md hover:bg-[#bb7d72] dark:hover:bg-[#f3b9a9] transition">
               💰 Filtrer par budget
             </button>
           </DialogTrigger>
@@ -191,12 +191,12 @@ export default function FilteredProducts({ products, userId }: { products: Produ
             />
             <DialogFooter className="mt-6 flex justify-center gap-3">
               <DialogClose asChild>
-                <button className="px-5 py-2 bg-[#D29587] dark:bg-[#FBCFC2] text-white dark:text-black rounded-lg font-semibold hover:bg-[#bb7d72] dark:hover:bg-[#f3b9a9] transition">
+                <button type="button" className="px-5 py-2 bg-[#D29587] dark:bg-[#FBCFC2] text-white dark:text-black rounded-lg font-semibold hover:bg-[#bb7d72] dark:hover:bg-[#f3b9a9] transition">
                   Valider
                 </button>
               </DialogClose>
               <DialogClose asChild>
-                <button className="px-5 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-white rounded-lg font-semibold hover:bg-gray-400 dark:hover:bg-gray-500 transition">
+                <button type="button" className="px-5 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-white rounded-lg font-semibold hover:bg-gray-400 dark:hover:bg-gray-500 transition">
                   Annuler
                 </button>
               </DialogClose>
