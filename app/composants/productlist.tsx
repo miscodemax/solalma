@@ -18,7 +18,7 @@ export default async function ProductList({ products }) {
         id = user.id
     }
 
-
+    
     return (
         <div>
 
