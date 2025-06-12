@@ -128,7 +128,7 @@ export default async function UserProfilePage({ params }: { params: { id: string
           </div>
           <p className="text-lg font-semibold text-red-600">Profil introuvable</p>
           <Link href="/" className="inline-block bg-[#D29587] text-white px-6 py-3 rounded-xl">
-            Retour à l'accueil
+            Retour à l accueil
           </Link>
         </div>
       </div>
