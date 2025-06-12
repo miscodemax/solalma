@@ -1,8 +1,8 @@
-import ProductCard from "../auth/callback/composants/product-card"
+import ProductCard from "../composants/product-card"
 import { cookies } from "next/headers"
 import { createServerClient } from "@supabase/ssr"
 import { supabaseUrl, supabaseKey } from "@/lib/supabase"
-import AuthModal from "@/app/auth/callback/composants/auth-modal"
+import AuthModal from "../composants/auth-modal"
 import Link from "next/link"
 
 export default async function FavoritesPage() {

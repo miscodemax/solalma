@@ -5,7 +5,8 @@ import { supabaseUrl, supabaseKey } from "@/lib/supabase"
 import Image from "next/image"
 import Link from "next/link"
 import CopyButton from "@/app/composants/sharebutton"
-import { FaWhatsapp } from "react-icons/fa"
+import { FaWhatsapp, FaStar, FaBox, FaHeart } from "react-icons/fa"
+import { HiBadgeCheck, HiTrendingUp } from "react-icons/hi"
 import { Metadata } from "next"
 import BackButton from "@/app/composants/back-button"
 import ProductCard from "@/app/composants/product-card"
@@ -28,7 +29,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     ? `Découvre la boutique de ${profile.username} sur Sangse.shop`
     : "Profil vendeur - Sangse.shop"
 
-  const description = profile?.bio || "Voici ma boutique sur Sangse 🌸Tu peux commander tous mes produits ici, c’est rapide et sécurisé.Tu peux même te connecter avec Google en 1 clic."
+  const description = profile?.bio || "Voici ma boutique sur Sangse 🌸Tu peux commander tous mes produits ici, c'est rapide et sécurisé.Tu peux même te connecter avec Google en 1 clic."
   const image = profile?.avatar_url || "https://sangse.shop/default-avatar.png"
   const url = `https://sangse.shop/profile/${params.id}`
 
@@ -97,94 +98,225 @@ export default async function UserProfilePage({ params }: { params: { id: string
   const getBadge = () => {
     if (!averageRating) return null
     const rating = parseFloat(averageRating)
-    if (rating >= 4.5) return "🥇 Vendeur d’or"
-    if (rating >= 4.0) return "🥈 Vendeur fiable"
+    if (rating >= 4.5) return { label: "Vendeur d'Or", icon: "🥇", color: "from-yellow-400 to-yellow-600" }
+    if (rating >= 4.0) return { label: "Vendeur Fiable", icon: "🥈", color: "from-gray-300 to-gray-500" }
+    if (rating >= 3.5) return { label: "Bon Vendeur", icon: "🥉", color: "from-orange-300 to-orange-500" }
     return null
   }
 
+  const renderStars = (rating: number) => {
+    return Array.from({ length: 5 }, (_, i) => (
+      <FaStar
+        key={i}
+        className={`w-4 h-4 ${i < Math.floor(rating) ? 'text-yellow-400' : 'text-gray-300 dark:text-gray-600'
+          }`}
+      />
+    ))
+  }
+
   const products = allProducts || []
+  const badge = getBadge()
+  const totalProducts = products.length
+  const isOwner = user?.id === id
 
   if (!profile) {
-    return <p className="p-6 text-center text-red-500 font-semibold">Profil introuvable.</p>
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="w-20 h-20 mx-auto bg-red-100 rounded-full flex items-center justify-center">
+            <span className="text-2xl">😕</span>
+          </div>
+          <p className="text-lg font-semibold text-red-600">Profil introuvable</p>
+          <Link href="/" className="inline-block bg-[#D29587] text-white px-6 py-3 rounded-xl">
+            Retour à l'accueil
+          </Link>
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-8">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 space-y-6">
       <BackButton />
 
-      {/* Header Vendeur */}
-      <div className="rounded-3xl p-6 bg-white dark:bg-[#0f0f0f] shadow-lg border border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row items-center gap-6">
-        <div className="relative w-28 h-28 sm:w-32 sm:h-32 shrink-0">
-          <Image
-            src={profile.avatar_url || "/default-avatar.png"}
-            alt="Avatar"
-            fill
-            className="rounded-full object-cover border border-gray-300 dark:border-gray-600"
-          />
-        </div>
-        <div className="flex-1 space-y-2 text-center sm:text-left">
-          <h1 className="text-2xl font-extrabold text-[#111] dark:text-white flex items-center justify-center sm:justify-start gap-2">
-            {profile.username}
-            {getBadge() && (
-              <span className="bg-yellow-200 text-yellow-900 text-xs font-medium px-2 py-1 rounded-full">
-                {getBadge()}
-              </span>
-            )}
-          </h1>
-          <p className="text-sm text-gray-600 dark:text-gray-400">{profile.bio || "Pas de description."}</p>
-          <p className="text-sm text-gray-700 dark:text-gray-300">
-            ⭐ {ratings.length > 0 ? `Note moyenne : ${averageRating}/5` : "Aucun avis pour le moment"}
-          </p>
+      {/* Header Premium */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-pink-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900 shadow-xl border border-pink-100 dark:border-gray-700">
+        {/* Badge flottant si vendeur premium */}
+        {badge && (
+          <div className="absolute top-4 right-4 z-10">
+            <div className={`bg-gradient-to-r ${badge.color} text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1`}>
+              <span>{badge.icon}</span>
+              <span>{badge.label}</span>
+            </div>
+          </div>
+        )}
 
-          {/* Actions */}
-          <div className="flex flex-wrap justify-center sm:justify-start gap-3 mt-3">
-            <a
-              href={`https://wa.me/?text=${encodeURIComponent(
-                `🔗 Découvre la boutique de ${profile.username} sur Sangse.shop : https://sangse.shop/profile/${id}`
-              )}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 text-sm rounded-xl flex items-center gap-2"
-            >
-              <FaWhatsapp />
-              Partager
-            </a>
-            <CopyButton text={`https://sangse.shop/profile/${id}`} platform="Tiktok/Instagram" />
-            {user?.id === id && (
-              <>
-                <Link
-                  href="/profile/update"
-                  className="bg-[#D29587] hover:bg-[#bb7e70] text-white px-4 py-2 text-sm rounded-xl"
+        <div className="p-6 sm:p-8">
+          <div className="flex flex-col sm:flex-row items-center gap-6">
+            {/* Avatar avec statut en ligne */}
+            <div className="relative">
+              <div className="relative w-32 h-32 sm:w-36 sm:h-36 shrink-0">
+                <Image
+                  src={profile.avatar_url || "/default-avatar.png"}
+                  alt={`Boutique de ${profile.username}`}
+                  fill
+                  className="rounded-full object-cover border-4 border-white dark:border-gray-700 shadow-lg"
+                />
+                {/* Indicateur vérifié si badge */}
+                {badge && (
+                  <div className="absolute -bottom-2 -right-2 bg-green-500 rounded-full p-2 border-4 border-white dark:border-gray-800">
+                    <HiBadgeCheck className="w-4 h-4 text-white" />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Infos vendeur */}
+            <div className="flex-1 text-center sm:text-left space-y-3">
+              <div>
+                <h1 className="text-3xl font-black text-gray-900 dark:text-white mb-2">
+                  {profile.username}
+                </h1>
+                <p className="text-gray-600 dark:text-gray-300 text-base leading-relaxed">
+                  {profile.bio || "✨ Passionnée de mode, je partage mes coups de cœur avec vous !"}
+                </p>
+              </div>
+
+              {/* Stats en ligne */}
+              <div className="flex flex-wrap justify-center sm:justify-start gap-4 text-sm">
+                <div className="flex items-center gap-2 bg-white/50 dark:bg-gray-800/50 px-3 py-2 rounded-xl">
+                  <FaBox className="text-[#D29587]" />
+                  <span className="font-semibold">{totalProducts}</span>
+                  <span className="text-gray-600 dark:text-gray-400">articles</span>
+                </div>
+
+                {ratings.length > 0 && (
+                  <div className="flex items-center gap-2 bg-white/50 dark:bg-gray-800/50 px-3 py-2 rounded-xl">
+                    <div className="flex items-center gap-1">
+                      {renderStars(parseFloat(averageRating!))}
+                    </div>
+                    <span className="font-semibold">{averageRating}</span>
+                    <span className="text-gray-600 dark:text-gray-400">({ratings.length} avis)</span>
+                  </div>
+                )}
+
+                {!ratings.length && (
+                  <div className="flex items-center gap-2 bg-white/50 dark:bg-gray-800/50 px-3 py-2 rounded-xl">
+                    <HiTrendingUp className="text-blue-500" />
+                    <span className="text-gray-600 dark:text-gray-400">Nouveau vendeur</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Actions principales */}
+          <div className="mt-6 pt-6 border-t border-pink-100 dark:border-gray-700">
+            <div className="flex flex-wrap justify-center sm:justify-start gap-3">
+              {!isOwner && (
+                <a
+                  href={`https://wa.me/?text=${encodeURIComponent(
+                    `🔗 Découvre la boutique de ${profile.username} sur Sangse.shop : https://sangse.shop/profile/${id}`
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-xl flex items-center gap-2 font-semibold shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
                 >
-                  ✏️ Modifier mon profil
-                </Link>
-                <Link
-                  href="/dashboard/products"
-                  className="bg-[#D29587] hover:bg-[#bb7e70] text-white px-4 py-2 text-sm rounded-xl"
-                >
-                  📦 Gérer mes produits
-                </Link>
-              </>
-            )}
+                  <FaWhatsapp className="w-5 h-5" />
+                  Partager sur WhatsApp
+                </a>
+              )}
+
+              <CopyButton
+                text={`https://sangse.shop/profile/${id}`}
+                platform="Copier le lien"
+              />
+
+              {isOwner && (
+                <>
+                  <Link
+                    href="/profile/update"
+                    className="bg-[#D29587] hover:bg-[#bb7e70] text-white px-6 py-3 rounded-xl flex items-center gap-2 font-semibold shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
+                  >
+                    ✏️ Modifier profil
+                  </Link>
+                  <Link
+                    href="/dashboard/products"
+                    className="bg-purple-500 hover:bg-purple-600 text-white px-6 py-3 rounded-xl flex items-center gap-2 font-semibold shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
+                  >
+                    📦 Gérer produits
+                  </Link>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Section Produits */}
-      <section>
-        <h2 className="text-xl font-semibold text-[#111] dark:text-white mb-4">
-          🛍️ Articles en vente
-        </h2>
+      {/* Section Produits améliorée */}
+      <section className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+            <div className="w-1 h-8 bg-gradient-to-b from-[#D29587] to-purple-500 rounded-full"></div>
+            Ma Collection
+          </h2>
+          {totalProducts > 0 && (
+            <span className="bg-[#D29587] text-white px-3 py-1 rounded-full text-sm font-semibold">
+              {totalProducts} articles
+            </span>
+          )}
+        </div>
+
         {products.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             {products.map((product) => (
-              <ProductCard key={product.id} product={product} userId={user.id} />
+              <ProductCard key={product.id} product={product} userId={user?.id} />
             ))}
           </div>
         ) : (
-          <p className="text-gray-500 text-sm">Ce vendeur n’a pas encore publié d’article.</p>
+          <div className="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-3xl">
+            <div className="w-20 h-20 mx-auto mb-4 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
+              <FaBox className="w-8 h-8 text-gray-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              {isOwner ? "Votre collection est vide" : "Aucun article pour le moment"}
+            </h3>
+            <p className="text-gray-500 dark:text-gray-400 mb-4">
+              {isOwner
+                ? "Ajoutez vos premiers articles pour commencer à vendre"
+                : "Ce vendeur n'a pas encore publié d'articles"
+              }
+            </p>
+            {isOwner && (
+              <Link
+                href="/dashboard/products/add"
+                className="inline-block bg-[#D29587] hover:bg-[#bb7e70] text-white px-6 py-3 rounded-xl font-semibold transition-colors"
+              >
+                Ajouter un article
+              </Link>
+            )}
+          </div>
         )}
       </section>
+
+      {/* Call to action pour visiteurs */}
+      {!isOwner && products.length > 0 && (
+        <div className="bg-gradient-to-r from-[#D29587] to-purple-500 rounded-3xl p-6 text-center text-white">
+          <h3 className="text-xl font-bold mb-2">💝 Un coup de cœur ?</h3>
+          <p className="mb-4 opacity-90">Contactez {profile.username} directement via WhatsApp pour commander</p>
+          <a
+            href={`https://wa.me/?text=${encodeURIComponent(
+              `Bonjour ${profile.username} ! J'ai vu votre boutique sur Sangse.shop et j'aimerais en savoir plus sur vos articles 😊`
+            )}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 bg-white text-[#D29587] px-6 py-3 rounded-xl font-bold hover:bg-gray-100 transition-colors"
+          >
+            <FaWhatsapp className="w-5 h-5" />
+            Contacter maintenant
+          </a>
+        </div>
+      )}
     </div>
   )
 }
