@@ -27,7 +27,7 @@ export default function Search({ products }: { products: Product[] }) {
   }
 
   return (
-    <div className="relative max-w-lg w-full mx-auto">
+    <div className="relative max-w-md w-full mx-auto">
       <input
         type="text"
         placeholder="🔍 Rechercher un produit"
