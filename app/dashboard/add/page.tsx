@@ -22,15 +22,15 @@ export default async function AddProductPage() {
 
   const { data: { user }, error } = await supabase.auth.getUser()
 
-  
-    // Si l'utilisateur n'est pas connecté, affiche le modal d'authentification
-    if (!user || error) {
-      return (
-        <div className="min-h-screen flex items-center justify-center dark:bg-black">
-          <AuthModal />
-        </div>
-      )
-    }
+
+  // Si l'utilisateur n'est pas connecté, affiche le modal d'authentification
+  if (!user || error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center dark:bg-black">
+        <AuthModal />
+      </div>
+    )
+  }
   return (
     <div className="min-h-screen bg-[#F9F6F1]dark:bg-black py-10 px-4 flex items-center justify-center">
       <div className="w-full max-w-2xl bg-white shadow-lg border border-[#E6E3DF] rounded-2xl p-8">

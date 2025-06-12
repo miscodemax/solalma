@@ -1,8 +1,8 @@
-import ProductCard from "../composants/product-card"
+import ProductCard from "../auth/callback/composants/product-card"
 import { cookies } from "next/headers"
 import { createServerClient } from "@supabase/ssr"
 import { supabaseUrl, supabaseKey } from "@/lib/supabase"
-import AuthModal from "@/app/composants/auth-modal"
+import AuthModal from "@/app/auth/callback/composants/auth-modal"
 import Link from "next/link"
 
 export default async function FavoritesPage() {
@@ -81,7 +81,7 @@ export default async function FavoritesPage() {
                 Gagne de l’argent facilement en vendant tes articles en quelques clics. C’est simple, rapide et ouvert à tout le monde.
               </p>
               <Link
-                href="/vendre"
+                href="/dashboard/add"
                 className="inline-block bg-pink-600 hover:bg-pink-700 text-white font-semibold px-5 py-2 rounded-full text-sm transition"
               >
                 ✨ Commencer à vendre

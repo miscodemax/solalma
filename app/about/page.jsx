@@ -10,7 +10,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion"
-import BackButton from "../composants/back-button"
+import BackButton from "../auth/callback/composants/back-button"
 
 export default function AboutPage() {
   return (

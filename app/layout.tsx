@@ -63,7 +63,7 @@ export default async function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <Navbar products={products}/>
+            <Navbar products={products} />
             <main className="flex-grow">
 
 
