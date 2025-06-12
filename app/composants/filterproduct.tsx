@@ -72,8 +72,7 @@ function PriceFilter({
 }
 
 export default function FilteredProducts({ products, userId }: { products: Product[], userId: string }) {
-  const [searchQuery, setSearchQuery] = useState("")
-  const [searchResults, setSearchResults] = useState<Product[]>([])
+
   const [priceRange, setPriceRange] = useState<[number, number] | null>(null)
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [open, setOpen] = useState(false)
@@ -93,14 +92,7 @@ export default function FilteredProducts({ products, userId }: { products: Produ
     (p) => !priceRange || (p.price >= priceRange[0] && p.price <= priceRange[1])
   )
 
-  const handleSearchInput = (value: string) => {
-    setSearchQuery(value)
-    if (value.trim() === "") return setSearchResults([])
-    const results = products.filter((p) =>
-      p.title.toLowerCase().includes(value.toLowerCase())
-    )
-    setSearchResults(results.slice(0, 5))
-  }
+
 
   const handleShare = () => {
     const message = encodeURIComponent("Coucou ! 🌸 Découvre cette nouvelle plateforme de mode féminine, hijabs, skincare et + : https://sangse.shop — rejoins-nous !");
@@ -142,29 +134,6 @@ export default function FilteredProducts({ products, userId }: { products: Produ
       )}
 
 
-      {/* Search bar */}
-      <div className="relative max-w-md mx-auto mb-6">
-        <input
-          type="text"
-          placeholder="🔍 Rechercher un produit..."
-          value={searchQuery}
-          onChange={(e) => handleSearchInput(e.target.value)}
-          className="w-full px-5 py-3 rounded-full border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-[#D29587] dark:bg-[#1a1a1a] dark:text-white"
-        />
-        {searchResults.length > 0 && (
-          <div className="absolute z-10 mt-2 w-full bg-white dark:bg-[#1a1a1a] shadow-lg rounded-xl border border-gray-200 dark:border-gray-700">
-            {searchResults.map((product) => (
-              <Link
-                key={product.id}
-                href={`/product/${product.id}`}
-                className="block px-4 py-3 hover:bg-[#F5F3F1] dark:hover:bg-[#2c2c2c] transition text-sm text-[#333] dark:text-white"
-              >
-                {product.title}
-              </Link>
-            ))}
-          </div>
-        )}
-      </div>
 
 
       {/* Filter trigger */}

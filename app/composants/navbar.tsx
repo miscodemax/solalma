@@ -12,6 +12,7 @@ import { ThemeToggle } from './theme-toggle'
 import TextLogo from './textLogo'
 import { createClient } from '@/lib/supabase'
 import Image from 'next/image'
+import Search from './search'
 
 const categories = ['Vetement', 'artisanat', 'maquillage', 'soins_et_astuces']
 const navLinks = [
@@ -19,10 +20,17 @@ const navLinks = [
   { href: '/dashboard/add', icon: ShoppingCart, label: 'Vendre' },
   { href: '/dashboard/products', icon: User, label: 'Mes produits' },
   { href: '/about', icon: Info, label: 'À propos' },
-  { href: '/favoris', icon: Heart, label: '' },
+  { href: '/favoris', icon: Heart, label: 'favoris' },
 ]
 
-export default function Navbar() {
+type Product = {
+  id: number
+  title: string
+  description: string
+  price: number
+  image_url: string | null
+}
+export default function Navbar({ products }: { products: Product[] }) {
   const [open, setOpen] = useState(false)
   const [user, setUser] = useState(null)
   const [avatar, setAvatar] = useState('')
@@ -69,15 +77,16 @@ export default function Navbar() {
         <Link href="/" className="flex items-center gap-1 text-xl font-bold text-[#D29587]">
           🌸 <TextLogo />
         </Link>
-
         <div className="flex items-center gap-4 md:hidden">
           <ThemeToggle />
           <button onClick={() => setOpen(!open)} className="text-gray-700">
             {open ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
-
+          <Search products={products} />
         <div className="hidden md:flex items-center gap-6">
+
+
           {navLinks.map(({ href, label, icon: Icon }) => (
             <Link
               key={href}

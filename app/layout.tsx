@@ -7,6 +7,7 @@ import { Toaster } from "@/components/ui/sonner"
 import { Suspense } from 'react'
 import { ThemeProvider } from "./composants/theme-provider";
 import Script from "next/script";
+import { createClient } from "@/lib/supabase";
 //import { SessionContextProvider } from "@supabase/auth-helpers-react";
 //import { createClient } from "./lib/supabase"
 
@@ -28,11 +29,19 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+
+  const supabase = createClient()
+  const {
+    data: products
+
+  } = await supabase
+    .from("product")
+    .select("*")
 
 
   return (
@@ -54,7 +63,7 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <Navbar />
+            <Navbar products={products}/>
             <main className="flex-grow">
 
 
