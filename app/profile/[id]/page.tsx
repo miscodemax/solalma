@@ -8,6 +8,7 @@ import CopyButton from "@/app/composants/sharebutton"
 import { FaWhatsapp } from "react-icons/fa"
 import { Metadata } from "next"
 import BackButton from "@/app/composants/back-button"
+import ProductCard from "@/app/composants/product-card"
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const cookieStore = await cookies()
@@ -177,29 +178,7 @@ export default async function UserProfilePage({ params }: { params: { id: string
         {products.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
             {products.map((product) => (
-              <Link
-                href={`/product/${product.id}`}
-                key={product.id}
-                className="group bg-white dark:bg-[#181818] rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-xl transition"
-              >
-                <div className="relative w-full aspect-[4/5]">
-                  <Image
-                    src={product.image_url || "/placeholder.jpg"}
-                    alt={product.title}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                </div>
-                <div className="p-3 space-y-1">
-                  <h3 className="text-sm font-medium text-[#222] dark:text-white truncate">
-                    {product.title}
-                  </h3>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2">{product.description}</p>
-                  <p className="text-sm font-bold text-[#D29587] dark:text-[#FBCFC2]">
-                    {product.price.toLocaleString()} FCFA
-                  </p>
-                </div>
-              </Link>
+              <ProductCard key={product.id} product={product} userId={user.id} />
             ))}
           </div>
         ) : (
