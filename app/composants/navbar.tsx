@@ -7,7 +7,10 @@ import {
   DropdownMenu, DropdownMenuContent,
   DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { HomeIcon, ShoppingCart, User, Info, Menu, X, LogOut, Heart } from 'lucide-react'
+import {
+  HomeIcon, ShoppingCart, User,
+  Info, Menu, X, LogOut, Heart
+} from 'lucide-react'
 import { ThemeToggle } from './theme-toggle'
 import TextLogo from './textLogo'
 import { createClient } from '@/lib/supabase'
@@ -20,7 +23,7 @@ const navLinks = [
   { href: '/dashboard/add', icon: ShoppingCart, label: 'Vendre' },
   { href: '/dashboard/products', icon: User, label: 'Mes produits' },
   { href: '/about', icon: Info, label: 'À propos' },
-  { href: '/favoris', icon: Heart, label: 'favoris' },
+  { href: '/favoris', icon: Heart, label: 'Favoris' },
 ]
 
 type Product = {
@@ -30,6 +33,7 @@ type Product = {
   price: number
   image_url: string | null
 }
+
 export default function Navbar({ products }: { products: Product[] }) {
   const [open, setOpen] = useState(false)
   const [user, setUser] = useState(null)
@@ -73,20 +77,29 @@ export default function Navbar({ products }: { products: Product[] }) {
 
   return (
     <nav className="sticky top-0 z-50 bg-white dark:bg-black shadow-md">
-      <div className="flex items-center justify-between px-4 py-3 max-w-7xl mx-auto">
-        <Link href="/" className="flex items-center gap-1 text-xl font-bold text-[#D29587]">
-          🌸 <TextLogo />
-        </Link>
-        <div className="flex items-center gap-4 md:hidden">
-          <ThemeToggle />
-          <button onClick={() => setOpen(!open)} className="text-gray-700">
-            {open ? <X size={24} /> : <Menu size={24} />}
-          </button>
+      <div className="flex flex-col md:flex-row items-center justify-between px-4 py-3 max-w-7xl mx-auto w-full gap-2 md:gap-0">
+        {/* Top section: Logo + Search + Nav links */}
+        <div className="flex items-center justify-between w-full md:w-auto">
+          <Link href="/" className="flex items-center gap-1 text-xl font-bold text-[#D29587]">
+            🌸 <TextLogo />
+          </Link>
+
+          {/* Mobile menu button */}
+          <div className="flex items-center gap-3 md:hidden">
+            <ThemeToggle />
+            <button onClick={() => setOpen(!open)} className="text-gray-700">
+              {open ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
         </div>
+
+        {/* Search - Desktop */}
+        <div className="hidden md:flex flex-1 justify-center px-4 w-full max-w-md">
           <Search products={products} />
+        </div>
+
+        {/* Nav links - Desktop */}
         <div className="hidden md:flex items-center gap-6">
-
-
           {navLinks.map(({ href, label, icon: Icon }) => (
             <Link
               key={href}
@@ -124,6 +137,11 @@ export default function Navbar({ products }: { products: Product[] }) {
         </div>
       </div>
 
+      {/* Search - Mobile */}
+      <div className="md:hidden px-4 mt-2">
+        <Search products={products} />
+      </div>
+
       {/* Catégories défilantes */}
       <div className="flex overflow-x-auto gap-4 px-4 py-2 border-t text-sm font-medium bg-white dark:bg-black">
         <button
@@ -159,13 +177,14 @@ export default function Navbar({ products }: { products: Product[] }) {
                 href={href}
                 className={`flex items-center gap-1 text-sm font-medium transition ${pathname === href ? 'text-[#D29587]' : 'text-gray-600 hover:text-[#D29587]'
                   }`}
+                onClick={() => setOpen(false)}
               >
                 <Icon size={18} />
                 {label && <span>{label}</span>}
               </Link>
             ))}
-
           </div>
+
           {user && (
             <div className="border-t pt-3">
               <Link
