@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     ? `Découvre la boutique de ${profile.username} sur Sangse.shop`
     : "Profil vendeur - Sangse.shop"
 
-  const description = profile?.bio || "Découvre les produits proposés par ce vendeur."
+  const description = profile?.bio || "Voici ma boutique sur Sangse 🌸Tu peux commander tous mes produits ici, c’est rapide et sécurisé.Tu peux même te connecter avec Google en 1 clic."
   const image = profile?.avatar_url || "https://sangse.shop/default-avatar.png"
   const url = `https://sangse.shop/profile/${params.id}`
 
