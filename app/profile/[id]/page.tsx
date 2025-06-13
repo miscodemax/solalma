@@ -10,6 +10,7 @@ import { Metadata } from "next"
 import BackButton from "@/app/composants/back-button"
 import { Suspense } from "react"
 import ProductGallery from "@/app/composants/productgallery"
+import Loader from "@/app/loading"
 
 
 
@@ -274,7 +275,7 @@ export default async function UserProfilePage({ params }: { params: { id: string
             </span>
           )}
         </div>
-        <Suspense fallback={<div>Chargement des filtres...</div>}>
+        <Suspense fallback={<Loader />}>
           {/* Filtrage par catégorie/prix */}
           <ProductGallery products={products} userId={user?.id} />
         </Suspense>
