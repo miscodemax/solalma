@@ -8,15 +8,11 @@ import { FaWhatsapp, FaStar, FaBox } from "react-icons/fa"
 import { HiBadgeCheck, HiTrendingUp } from "react-icons/hi"
 import { Metadata } from "next"
 import BackButton from "@/app/composants/back-button"
-import ProductCard from "@/app/composants/product-card"
 import { Suspense } from "react"
+import ProductGallery from "@/app/composants/productgallery"
 
-const categories = [
-  { label: 'Vêtement', tip: 'Découvre nos habits tendances pour tous les styles !' },
-  { label: 'Artisanat', tip: 'Des pièces uniques faites main, pour offrir ou se faire plaisir.' },
-  { label: 'Maquillage', tip: 'Sublime-toi grâce à notre sélection de makeup.' },
-  { label: 'Soins et astuces', tip: 'Prends soin de toi avec nos produits naturels et conseils.' }
-]
+
+
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const cookieStore = await cookies()
@@ -67,127 +63,11 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   }
 }
 
-function CategoryFilter({
-  selectedCategory,
-  onSelect,
-}: {
-  selectedCategory: string | null
-  onSelect: (category: string | null) => void
-}) {
-  return (
-    <div className="flex flex-wrap gap-3 mb-2">
-      <button
-        type="button"
-        onClick={() => onSelect(null)}
-        className={`px-4 py-2 rounded-full border transition text-sm font-semibold ${!selectedCategory
-            ? "bg-[#D29587] text-white border-[#D29587]"
-            : "bg-white dark:bg-[#292021] border-[#D29587] text-[#D29587] dark:text-[#FBCFC2] hover:bg-[#FBE9E3]"
-          }`}
-      >
-        Toutes
-      </button>
-      {categories.map((cat) => (
-        <button
-          key={cat.label}
-          type="button"
-          onClick={() => onSelect(cat.label)}
-          className={`px-4 py-2 rounded-full border transition text-sm font-semibold relative group ${selectedCategory === cat.label
-              ? "bg-[#D29587] text-white border-[#D29587]"
-              : "bg-white dark:bg-[#292021] border-[#D29587] text-[#D29587] dark:text-[#FBCFC2] hover:bg-[#FBE9E3]"
-            }`}
-        >
-          {cat.label}
-          <span className="absolute left-1/2 -translate-x-1/2 top-full mt-2 z-20 w-max min-w-[160px] max-w-xs px-3 py-2 rounded-xl bg-white dark:bg-[#222] border border-[#EDE9E3] dark:border-[#333] shadow opacity-0 group-hover:opacity-100 pointer-events-none text-xs text-[#D29587] dark:text-[#FBCFC2] transition-opacity">
-            {cat.tip}
-          </span>
-        </button>
-      ))}
-    </div>
-  )
-}
 
-function PriceFilter({
-  minPrice,
-  maxPrice,
-  setMinPrice,
-  setMaxPrice,
-}: {
-  minPrice: string
-  maxPrice: string
-  setMinPrice: (v: string) => void
-  setMaxPrice: (v: string) => void
-}) {
-  return (
-    <div className="flex items-center gap-3 mb-2 flex-wrap">
-      <input
-        type="number"
-        value={minPrice}
-        min={0}
-        onChange={e => setMinPrice(e.target.value)}
-        placeholder="Prix min"
-        className="px-3 py-2 w-24 rounded-xl border border-[#EDE9E3] dark:border-[#333] bg-white dark:bg-[#19191c] text-sm focus:outline-none focus:ring-2 focus:ring-[#D29587]"
-      />
-      <span className="text-gray-400 text-sm">—</span>
-      <input
-        type="number"
-        value={maxPrice}
-        min={0}
-        onChange={e => setMaxPrice(e.target.value)}
-        placeholder="Prix max"
-        className="px-3 py-2 w-24 rounded-xl border border-[#EDE9E3] dark:border-[#333] bg-white dark:bg-[#19191c] text-sm focus:outline-none focus:ring-2 focus:ring-[#D29587]"
-      />
-    </div>
-  )
-}
+
 
 // Client-side filter logic
-function ProductGallery({
-  products,
-  userId,
-}: {
-  products: any[]
-  userId?: string
-}) {
-  "use client"
-  import { useState, useMemo } from "react"
-  const [category, setCategory] = useState<string | null>(null)
-  const [minPrice, setMinPrice] = useState("")
-  const [maxPrice, setMaxPrice] = useState("")
 
-  const filtered = useMemo(() => {
-    let filtered = [...products]
-    if (category) filtered = filtered.filter(p => p.category === category)
-    if (minPrice) filtered = filtered.filter(p => Number(p.price) >= Number(minPrice))
-    if (maxPrice) filtered = filtered.filter(p => Number(p.price) <= Number(maxPrice))
-    return filtered
-  }, [products, category, minPrice, maxPrice])
-
-  return (
-    <>
-      <CategoryFilter selectedCategory={category} onSelect={setCategory} />
-      <PriceFilter minPrice={minPrice} maxPrice={maxPrice} setMinPrice={setMinPrice} setMaxPrice={setMaxPrice} />
-      {filtered.length > 0 ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-          {filtered.map((product) => (
-            <ProductCard key={product.id} product={product} userId={userId} />
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-3xl">
-          <div className="w-20 h-20 mx-auto mb-4 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
-            <FaBox className="w-8 h-8 text-gray-400" />
-          </div>
-          <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">
-            Aucun produit trouvé
-          </h3>
-          <p className="text-gray-500 dark:text-gray-400 mb-4">
-            Essayez d’autres filtres ou revenez plus tard 🌸
-          </p>
-        </div>
-      )}
-    </>
-  )
-}
 
 export default async function UserProfilePage({ params }: { params: { id: string } }) {
   const cookieStore = await cookies()

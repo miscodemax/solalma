@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import {
   HomeIcon, ShoppingCart, User,
-  Info, Menu, X, LogOut, Heart, Sun, Moon, HelpCircle
+  Info, Menu, X, LogOut, Heart
 } from 'lucide-react'
 import { ThemeToggle } from './theme-toggle'
 import TextLogo from './textLogo'
