@@ -5,8 +5,8 @@ import Link from "next/link"
 import ProductImage from "./productimage"
 import DeleteButton from "./deletebutton"
 import { Store } from "lucide-react"
-import BackButton from "@/app/auth/callback/composants/back-button"
-import AuthModal from "@/app/auth/callback/composants/auth-modal"
+import BackButton from "@/app/composants/back-button"
+import AuthModal from "@/app/composants/auth-modal"
 
 export default async function ProductsPage() {
   const cookieStore = await cookies()

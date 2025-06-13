@@ -6,13 +6,13 @@ import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import dayjs from "dayjs"
-import RatingSeller from "@/app/auth/callback/composants/ratingseller"
-import CopyButton from "@/app/auth/callback/composants/sharebutton"
+import RatingSeller from "@/app/composants/ratingseller"
+import CopyButton from "@/app/composants/sharebutton"
 import { FaWhatsapp } from "react-icons/fa"
 // app/product/[id]/page.tsx
 import type { Metadata } from "next"
-import BackButton from "@/app/auth/callback/composants/back-button"
-import AuthModal from "@/app/auth/callback/composants/auth-modal"
+import BackButton from "@/app/composants/back-button"
+import AuthModal from "@/app/composants/auth-modal"
 
 // en haut de ton fichier, après les imports
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
