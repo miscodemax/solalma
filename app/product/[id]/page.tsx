@@ -268,7 +268,7 @@ export default async function ProductDetailPage({ params }: Props) {
                 </Link>
               </div>
               {profile.bio && (
-                <div className="mb-4 text-gray-600 text-sm">{profile.bio}</div>
+                <div className="mb-4 text-gray-600 text-sm">{profile.bio.slice(0, 50) + '...'}</div>
               )}
 
               <RatingSeller
