@@ -104,6 +104,12 @@ export default async function ProductDetailPage({ params }: Props) {
     .select('rating')
     .eq('seller_id', Number(params.id))
 
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("username, avatar_url, bio")
+    .eq("id", product.user_id)
+    .single()
   const averageRating =
     allRatings && allRatings.length > 0
       ? allRatings.reduce((a, b) => a + b.rating, 0) / allRatings.length
@@ -121,7 +127,7 @@ export default async function ProductDetailPage({ params }: Props) {
   return (
     <div className="max-w-7xl mx-auto px-4 dark:bg-black py-8">
       <BackButton />
-      
+
       {/* Header avec breadcrumb amélioré */}
       <div className="mb-8">
         <nav className="flex items-center space-x-2 text-sm text-gray-500 mb-4">
@@ -142,7 +148,7 @@ export default async function ProductDetailPage({ params }: Props) {
               className="object-cover transition-all duration-700 ease-in-out group-hover:scale-105"
               priority
             />
-            
+
             {/* Badges flottants */}
             <div className="absolute top-4 left-4 flex flex-col gap-2">
               {isNew && (
@@ -159,7 +165,7 @@ export default async function ProductDetailPage({ params }: Props) {
                   </div>
                 </div>
               )}
-              
+
               {/* Badge confiance */}
               <div className="group relative">
                 <span className="inline-flex items-center bg-blue-500 text-white px-3 py-1.5 rounded-full text-sm font-semibold shadow-lg">
@@ -241,26 +247,45 @@ export default async function ProductDetailPage({ params }: Props) {
           </div>
 
           {/* Informations vendeur avec hover card */}
-          {sellerId && (
+          {sellerId && profile && (
             <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-              <div className="group relative">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-semibold text-gray-800">👤 Informations vendeur</h3>
-                  <Link
-                    href={`/profile/${sellerId}`}
-                    className="text-[#D29587] hover:text-[#bb6b5f] font-medium text-sm transition-colors"
-                  >
-                    Voir profil →
-                  </Link>
-                </div>
-                
-                <RatingSeller
-                  sellerId={sellerId}
-                  initialAverage={averageRating}
-                  initialCount={ratingCount}
-                />
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold text-gray-800 flex items-center gap-2">
+                  <Image
+                    src={profile.avatar_url || "/placeholder-avatar.jpg"}
+                    alt={profile.username || "Vendeur"}
+                    width={48}
+                    height={48}
+                    className="rounded-full border border-gray-300 object-cover"
+                  />
+                  {profile.username || "Vendeur"}
+                </h3>
+                <Link
+                  href={`/profile/${sellerId}`}
+                  className="text-[#D29587] hover:text-[#bb6b5f] font-medium text-sm transition-colors"
+                >
+                  Voir profil →
+                </Link>
+              </div>
+              {profile.bio && (
+                <div className="mb-4 text-gray-600 text-sm">{profile.bio}</div>
+              )}
 
-                {/* Hover Card pour infos vendeur */}
+              <RatingSeller
+                sellerId={sellerId}
+                initialAverage={averageRating}
+                initialCount={ratingCount}
+              />
+
+              {/* Hover Card pour infos vendeur */}
+              <div className="relative group mt-3">
+                <button
+                  type="button"
+                  className="inline-flex items-center text-xs text-gray-500 hover:underline"
+                >
+                  <FaCheckCircle className="text-green-600 mr-1" />
+                  Voir plus d'infos sur le vendeur
+                </button>
                 <div className="absolute left-0 top-full mt-2 w-72 bg-white rounded-xl shadow-xl border p-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-20">
                   <div className="space-y-3">
                     <h4 className="font-semibold text-gray-800">À propos du vendeur</h4>
@@ -283,7 +308,6 @@ export default async function ProductDetailPage({ params }: Props) {
               </div>
             </div>
           )}
-
           {/* Boutons de contact améliorés */}
           <div className="space-y-4">
             <h3 className="font-semibold text-gray-800">💬 Contacter le vendeur</h3>
@@ -379,7 +403,7 @@ export default async function ProductDetailPage({ params }: Props) {
               Découvrez d'autres articles qui pourraient vous intéresser dans la même catégorie
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {similarProducts.map((p) => (
               <Link
@@ -396,7 +420,7 @@ export default async function ProductDetailPage({ params }: Props) {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 </div>
-                
+
                 <div className="p-4">
                   <h3 className="font-semibold text-gray-900 line-clamp-2 mb-2 group-hover:text-[#D29587] transition-colors">
                     {p.title}
