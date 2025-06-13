@@ -124,7 +124,7 @@ export default function FilteredProducts({ products, userId }: { products: Produ
 
   return (
     <main className="w-full bg-[#FAF6F4] dark:bg-black min-h-screen pb-16 pt-5 px-4 sm:px-6 transition-colors duration-300">
-      <div className="pt-4 max-w-64">
+      <div className="w-full flex flex-col gap-2 pt-3 md:flex-row md:justify-between">
         <HoverCard>
           <HoverCardTrigger asChild>
             <button
@@ -141,6 +141,43 @@ export default function FilteredProducts({ products, userId }: { products: Produ
         <p className="mt-1 text-center text-xs text-gray-500 italic">
           Fais-lui découvrir ta nouvelle boutique secrète... 🌸
         </p>
+        {/* Filter trigger */}
+        <div className="text-center mb-8">
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <button type="button" className="px-6 py-3 bg-[#D29587] dark:bg-[#FBCFC2] text-white dark:text-black rounded-full font-semibold shadow-md hover:bg-[#bb7d72] dark:hover:bg-[#f3b9a9] transition">
+                💰 Filtrer par budget
+              </button>
+            </DialogTrigger>
+            <DialogContent className="w-[95%] sm:max-w-md rounded-2xl p-6 dark:bg-[#1b1b1b] dark:text-white">
+              <DialogHeader>
+                <DialogTitle className="text-xl text-center text-[#D29587] dark:text-[#FBCFC2] font-bold mb-3">
+                  Choisis ta fourchette de prix
+                </DialogTitle>
+                <DialogDescription className="sr-only">
+                  Sélectionne un budget
+                </DialogDescription>
+              </DialogHeader>
+              <PriceFilter
+                onChange={setPriceRange}
+                selectedIndex={selectedIndex}
+                onSelect={setSelectedIndex}
+              />
+              <DialogFooter className="mt-6 flex justify-center gap-3">
+                <DialogClose asChild>
+                  <button type="button" className="px-5 py-2 bg-[#D29587] dark:bg-[#FBCFC2] text-white dark:text-black rounded-lg font-semibold hover:bg-[#bb7d72] dark:hover:bg-[#f3b9a9] transition">
+                    Valider
+                  </button>
+                </DialogClose>
+                <DialogClose asChild>
+                  <button type="button" className="px-5 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-white rounded-lg font-semibold hover:bg-gray-400 dark:hover:bg-gray-500 transition">
+                    Annuler
+                  </button>
+                </DialogClose>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {showOnboarding && (
@@ -177,43 +214,7 @@ export default function FilteredProducts({ products, userId }: { products: Produ
         </div>
       )}
 
-      {/* Filter trigger */}
-      <div className="text-center mb-8">
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <button type="button" className="px-6 py-3 bg-[#D29587] dark:bg-[#FBCFC2] text-white dark:text-black rounded-full font-semibold shadow-md hover:bg-[#bb7d72] dark:hover:bg-[#f3b9a9] transition">
-              💰 Filtrer par budget
-            </button>
-          </DialogTrigger>
-          <DialogContent className="w-[95%] sm:max-w-md rounded-2xl p-6 dark:bg-[#1b1b1b] dark:text-white">
-            <DialogHeader>
-              <DialogTitle className="text-xl text-center text-[#D29587] dark:text-[#FBCFC2] font-bold mb-3">
-                Choisis ta fourchette de prix
-              </DialogTitle>
-              <DialogDescription className="sr-only">
-                Sélectionne un budget
-              </DialogDescription>
-            </DialogHeader>
-            <PriceFilter
-              onChange={setPriceRange}
-              selectedIndex={selectedIndex}
-              onSelect={setSelectedIndex}
-            />
-            <DialogFooter className="mt-6 flex justify-center gap-3">
-              <DialogClose asChild>
-                <button type="button" className="px-5 py-2 bg-[#D29587] dark:bg-[#FBCFC2] text-white dark:text-black rounded-lg font-semibold hover:bg-[#bb7d72] dark:hover:bg-[#f3b9a9] transition">
-                  Valider
-                </button>
-              </DialogClose>
-              <DialogClose asChild>
-                <button type="button" className="px-5 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-white rounded-lg font-semibold hover:bg-gray-400 dark:hover:bg-gray-500 transition">
-                  Annuler
-                </button>
-              </DialogClose>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
+
 
       {/* Products */}
       <section>
