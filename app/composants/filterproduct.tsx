@@ -12,6 +12,11 @@ import {
   DialogClose,
   DialogDescription,
 } from "@/components/ui/dialog"
+import {
+  HoverCard,
+  HoverCardTrigger,
+  HoverCardContent
+} from "@/components/ui/hover-card"
 import ProductCard from "./product-card"
 
 type Product = {
@@ -32,39 +37,45 @@ function PriceFilter({
   onSelect: (index: number) => void
 }) {
   const ranges = [
-    { label: "Tous les prix", range: null },
-    { label: "500 - 3 000 FCFA", range: [500, 3000] },
-    { label: "3 000 - 7 000 FCFA", range: [3000, 7000] },
-    { label: "7 000 - 10 000 FCFA", range: [7000, 10000] },
-    { label: "10 000 - 15 000 FCFA", range: [10000, 15000] },
-    { label: "15 000 - 20 000 FCFA", range: [15000, 20000] },
-    { label: "Plus de 20 000 FCFA", range: [20001, Infinity] },
+    { label: "Tous les prix", range: null, tip: "Tous les produits, sans restriction 💫" },
+    { label: "500 - 3 000 FCFA", range: [500, 3000], tip: "Petits prix, grandes trouvailles 🧴" },
+    { label: "3 000 - 7 000 FCFA", range: [3000, 7000], tip: "Idéal pour tester sans se ruiner 💅" },
+    { label: "7 000 - 10 000 FCFA", range: [7000, 10000], tip: "Un équilibre parfait ✨" },
+    { label: "10 000 - 15 000 FCFA", range: [10000, 15000], tip: "Qualité et style assurés 🌟" },
+    { label: "15 000 - 20 000 FCFA", range: [15000, 20000], tip: "Des pièces premium 😍" },
+    { label: "Plus de 20 000 FCFA", range: [20001, Infinity], tip: "Pour les coups de cœur ❤️" },
   ]
 
   return (
-    <div className="p-4 bg-white dark:bg-[#121212] rounded-2xl shadow-md">
-      <h3 className="text-center text-lg font-semibold text-[#D29587] dark:text-[#FBCFC2]">
+    <div className="p-5 bg-white dark:bg-[#121212] rounded-3xl shadow-xl border border-[#f3e8e4] dark:border-[#2a2a2a]">
+      <h3 className="text-center text-xl font-bold text-[#D29587] dark:text-[#FBCFC2] mb-1">
         Ton budget ?
       </h3>
-      <p className="text-center text-gray-600 dark:text-gray-300 text-sm mb-3">
-        Sélectionne une fourchette 💸
+      <p className="text-center text-gray-600 dark:text-gray-300 text-sm mb-5">
+        Choisis une fourchette pour filtrer les merveilles 💸
       </p>
       <div className="flex flex-wrap justify-center gap-2">
-        {ranges.map(({ label }, i) => (
-          <button
-            key={label}
-            onClick={() => {
-              onSelect(i)
-              onChange(ranges[i].range)
-            }}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition
-              ${selectedIndex === i
-                ? "bg-[#D29587] text-white shadow"
-                : "bg-[#F5F3F1] text-[#5A5A5A] hover:bg-[#D29587] hover:text-white dark:bg-[#2c2c2c] dark:text-gray-300"
-              } focus:outline-none focus:ring-2 focus:ring-[#D29587]/50`}
-          >
-            {label}
-          </button>
+        {ranges.map(({ label, tip }, i) => (
+          <HoverCard key={label}>
+            <HoverCardTrigger asChild>
+              <button
+                onClick={() => {
+                  onSelect(i)
+                  onChange(ranges[i].range)
+                }}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition
+                  ${selectedIndex === i
+                    ? "bg-[#D29587] text-white shadow"
+                    : "bg-[#F5F3F1] text-[#5A5A5A] hover:bg-[#D29587] hover:text-white dark:bg-[#2c2c2c] dark:text-gray-300"
+                  } focus:outline-none focus:ring-2 focus:ring-[#D29587]/50`}
+              >
+                {label}
+              </button>
+            </HoverCardTrigger>
+            <HoverCardContent className="bg-white dark:bg-[#2c2c2c] border border-[#FBCFC2] dark:border-[#D29587] text-sm text-[#5A5A5A] dark:text-gray-300 rounded-xl shadow-md w-64">
+              {tip}
+            </HoverCardContent>
+          </HoverCard>
         ))}
       </div>
     </div>
@@ -72,7 +83,6 @@ function PriceFilter({
 }
 
 export default function FilteredProducts({ products, userId }: { products: Product[], userId: string }) {
-
   const [priceRange, setPriceRange] = useState<[number, number] | null>(null)
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [open, setOpen] = useState(false)
@@ -92,20 +102,18 @@ export default function FilteredProducts({ products, userId }: { products: Produ
     (p) => !priceRange || (p.price >= priceRange[0] && p.price <= priceRange[1])
   )
 
-
-
   const handleShare = () => {
-    const message = encodeURIComponent("Coucou ! 🌸 Découvre cette nouvelle plateforme de mode féminine, hijabs, skincare et + : https://sangse.shop — rejoins-nous !");
+    const message = encodeURIComponent("Coucou ! 🌸 Découvre cette nouvelle plateforme de mode féminine, hijabs, skincare et + : https://sangse.shop — rejoins-nous !")
     const whatsappUrl = `https://wa.me/?text=${message}`
     window.open(whatsappUrl, '_blank')
   }
 
   return (
-    <main className="w-full bg-[#FAF6F4] dark:bg-black min-h-screen pb-12 pt-3 px-4 sm:px-6">
-      <div className="pt-4 border-t max-w-64">
+    <main className="w-full bg-[#FAF6F4] dark:bg-black min-h-screen pb-16 pt-5 px-4 sm:px-6 transition-colors duration-300">
+      <div className="pt-4 max-w-64">
         <button
           onClick={handleShare}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[#D29587] to-pink-400 text-white font-semibold shadow-md hover:scale-105 transition-transform"
+          className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[#D29587] to-pink-400 text-white font-semibold shadow-lg hover:scale-105 transition-transform"
         >
           💌 Invite une amie 🤫
         </button>
@@ -113,13 +121,14 @@ export default function FilteredProducts({ products, userId }: { products: Produ
           Fais-lui découvrir ta nouvelle boutique secrète... 🌸
         </p>
       </div>
+
       {showOnboarding && (
-        <div className="text-center mb-8 mt-6">
-          <div className="bg-[#FDF1EE] dark:bg-[#2c2c2c] border border-[#FBCFC2] dark:border-[#D29587] rounded-2xl p-5 shadow-md max-w-2xl mx-auto">
-            <h3 className="text-lg sm:text-xl font-semibold text-[#D29587] dark:text-[#FBCFC2] mb-1">
-              Tu veux gagner des revenus supplementaires depuis chez toi ? 🧕📱
+        <div className="text-center mb-10 mt-8">
+          <div className="bg-[#FDF1EE] dark:bg-[#2c2c2c] border border-[#FBCFC2] dark:border-[#D29587] rounded-2xl p-6 shadow-md max-w-2xl mx-auto">
+            <h3 className="text-xl font-semibold text-[#D29587] dark:text-[#FBCFC2] mb-2">
+              Tu veux gagner des revenus depuis chez toi ? 🧕📱
             </h3>
-            <p className="text-sm text-[#5C5C5C] dark:text-gray-300 mb-4">
+            <p className="text-sm text-[#5C5C5C] dark:text-gray-300 mb-5">
               Ouvre ta boutique gratuitement et commence à vendre en quelques clics. C’est simple, rapide et sans engagement.
             </p>
             <Link
@@ -133,9 +142,6 @@ export default function FilteredProducts({ products, userId }: { products: Produ
         </div>
       )}
 
-
-
-
       {/* Filter trigger */}
       <div className="text-center mb-8">
         <Dialog open={open} onOpenChange={setOpen}>
@@ -146,7 +152,7 @@ export default function FilteredProducts({ products, userId }: { products: Produ
           </DialogTrigger>
           <DialogContent className="w-[95%] sm:max-w-md rounded-2xl p-6 dark:bg-[#1b1b1b] dark:text-white">
             <DialogHeader>
-              <DialogTitle className="text-xl text-center text-[#D29587] dark:text-[#FBCFC2] font-bold mb-2">
+              <DialogTitle className="text-xl text-center text-[#D29587] dark:text-[#FBCFC2] font-bold mb-3">
                 Choisis ta fourchette de prix
               </DialogTitle>
               <DialogDescription className="sr-only">
@@ -181,12 +187,11 @@ export default function FilteredProducts({ products, userId }: { products: Produ
             Aucun produit ne correspond à ta recherche 😕
           </p>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
             {filteredProducts.map((product) => (
               <ProductCard key={product.id} product={product} userId={userId} />
             ))}
           </div>
-
         )}
       </section>
     </main>
