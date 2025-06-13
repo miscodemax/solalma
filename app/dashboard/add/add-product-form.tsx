@@ -19,7 +19,7 @@ const categories = [
   { value: 'artisanat', label: 'Artisanat (fait mains)' },
 ]
 
-// Simple hover card with tooltip
+// Simple hover card tooltip component
 function HoverCard({
   children,
   text,
@@ -119,7 +119,6 @@ export default function AddProductForm({ userId }: Props) {
       <form
         onSubmit={handleSubmit}
         className="bg-white dark:bg-[#121212] border border-[#EDE9E3] dark:border-[#333] shadow-xl rounded-3xl p-10 space-y-6"
-        autoComplete="off"
       >
         {error && <p className="text-red-500 text-center font-medium">{error}</p>}
         {success && (
@@ -207,9 +206,8 @@ export default function AddProductForm({ userId }: Props) {
             <div className="relative">
               <label
                 htmlFor="category"
-                className={`absolute left-4 top-3 text-sm dark:text-[#A6A6A6] text-[#A6A6A6] transition-all duration-200 ${
-                  form.category ? 'text-xs -top-2 bg-white dark:bg-[#121212] px-1 text-[#D29587]' : ''
-                }`}
+                className={`absolute left-4 top-3 text-sm dark:text-[#A6A6A6] text-[#A6A6A6] transition-all duration-200 ${form.category ? 'text-xs -top-2 bg-white dark:bg-[#121212] px-1 text-[#D29587]' : ''
+                  }`}
               >
                 Catégorie
               </label>
