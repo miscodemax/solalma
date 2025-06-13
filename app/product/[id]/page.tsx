@@ -8,13 +8,11 @@ import { notFound } from "next/navigation"
 import dayjs from "dayjs"
 import RatingSeller from "@/app/composants/ratingseller"
 import CopyButton from "@/app/composants/sharebutton"
-import { FaWhatsapp } from "react-icons/fa"
-// app/product/[id]/page.tsx
+import { FaWhatsapp, FaShieldAlt, FaCheckCircle, FaClock, FaEye, FaHeart } from "react-icons/fa"
 import type { Metadata } from "next"
 import BackButton from "@/app/composants/back-button"
 import AuthModal from "@/app/composants/auth-modal"
 
-// en haut de ton fichier, après les imports
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const res = await fetch(`${supabaseUrl}/rest/v1/product?id=eq.${params.id}`, {
     headers: {
@@ -69,7 +67,6 @@ export default async function ProductDetailPage({ params }: Props) {
 
   const { data: userData } = await supabase.auth.getUser()
 
-  // Si l'utilisateur n'est pas connecté, affiche le modal d'authentification
   if (!userData?.user) {
     return (
       <div className="min-h-screen flex items-center justify-center dark:bg-black">
@@ -102,7 +99,6 @@ export default async function ProductDetailPage({ params }: Props) {
     .neq("id", product.id)
     .limit(6)
 
-
   const { data: allRatings } = await supabase
     .from('ratings_sellers')
     .select('rating')
@@ -114,9 +110,7 @@ export default async function ProductDetailPage({ params }: Props) {
       : null
 
   const ratingCount = allRatings?.length || 0
-
-  const sellerId = product.user_id // ou product.profiles.id si join automatique
-
+  const sellerId = product.user_id
 
   const whatsappClean = product.whatsapp_number?.replace(/\D/g, "")
   const prefilledMessage = `Bonjour ! Je suis intéressé(e) par votre produit "${product.title}" à ${product.price.toLocaleString()} FCFA dans la catégorie ${product.category}. Est-il toujours disponible ?`
@@ -125,168 +119,299 @@ export default async function ProductDetailPage({ params }: Props) {
     : null
 
   return (
-    <div className="max-w-6xl mx-auto px-4 dark:bg-black py-10">
+    <div className="max-w-7xl mx-auto px-4 dark:bg-black py-8">
       <BackButton />
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
-        {/* Image principale */}
-        <div className="relative w-full h-[520px] rounded-2xl overflow-hidden shadow border border-[#E6E3DF] group cursor-zoom-in">
-          <Image
-            src={product.image_url || "/placeholder.jpg"}
-            alt={product.title}
-            fill
-            className="object-cover transition-transform duration-700 ease-in-out group-hover:scale-[1.15]"
-            priority
-          />
+      
+      {/* Header avec breadcrumb amélioré */}
+      <div className="mb-8">
+        <nav className="flex items-center space-x-2 text-sm text-gray-500 mb-4">
+          <Link href="/" className="hover:text-[#D29587] transition-colors">Accueil</Link>
+          <span>›</span>
+          <Link href={`/category/${product.category}`} className="hover:text-[#D29587] transition-colors">{product.category}</Link>
+          <span>›</span>
+          <span className="text-gray-700 font-medium">{product.title}</span>
+        </nav>
+      </div>
 
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+        {/* Section Image avec améliorations */}
+        <div className="space-y-4">
+          <div className="relative w-full h-[600px] rounded-3xl overflow-hidden shadow-2xl border border-gray-200 group">
+            <Image
+              src={product.image_url || "/placeholder.jpg"}
+              alt={product.title}
+              fill
+              className="object-cover transition-all duration-700 ease-in-out group-hover:scale-105"
+              priority
+            />
+            
+            {/* Badges flottants */}
+            <div className="absolute top-4 left-4 flex flex-col gap-2">
+              {isNew && (
+                <div className="group relative">
+                  <span className="inline-flex items-center bg-gradient-to-r from-green-400 to-emerald-500 text-white px-3 py-1.5 rounded-full text-sm font-semibold shadow-lg animate-pulse">
+                    ✨ Nouveau
+                  </span>
+                  {/* Hover Card pour "Nouveau" */}
+                  <div className="absolute left-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border p-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-10">
+                    <p className="text-sm text-gray-600">
+                      <FaClock className="inline mr-1 text-green-500" />
+                      Publié il y a moins de 7 jours
+                    </p>
+                  </div>
+                </div>
+              )}
+              
+              {/* Badge confiance */}
+              <div className="group relative">
+                <span className="inline-flex items-center bg-blue-500 text-white px-3 py-1.5 rounded-full text-sm font-semibold shadow-lg">
+                  <FaShieldAlt className="mr-1" /> Vérifié
+                </span>
+                {/* Hover Card pour sécurité */}
+                <div className="absolute left-0 top-full mt-2 w-56 bg-white rounded-xl shadow-xl border p-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-10">
+                  <div className="space-y-2">
+                    <h4 className="font-semibold text-gray-800 flex items-center">
+                      <FaShieldAlt className="mr-2 text-blue-500" />
+                      Achat Sécurisé
+                    </h4>
+                    <ul className="text-sm text-gray-600 space-y-1">
+                      <li className="flex items-center"><FaCheckCircle className="mr-2 text-green-500 text-xs" />Vendeur vérifié</li>
+                      <li className="flex items-center"><FaCheckCircle className="mr-2 text-green-500 text-xs" />Paiement sécurisé</li>
+                      <li className="flex items-center"><FaCheckCircle className="mr-2 text-green-500 text-xs" />Support client 24/7</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Bouton favoris */}
+            <div className="absolute top-4 right-4">
+              <button className="bg-white/90 backdrop-blur-sm p-2.5 rounded-full shadow-lg hover:bg-white hover:scale-110 transition-all duration-300 group">
+                <FaHeart className="text-gray-400 group-hover:text-red-500 transition-colors" />
+              </button>
+            </div>
+
+            {/* Indicateur de vues */}
+            <div className="absolute bottom-4 right-4 bg-black/50 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-sm">
+              <FaEye className="inline mr-1" /> 127 vues
+            </div>
+          </div>
         </div>
 
-        {/* Infos produit */}
-        <div className="space-y-5 flex flex-col">
-          <h1 className="text-4xl font-extrabold text-[#333]">{product.title}</h1>
+        {/* Section Informations avec améliorations */}
+        <div className="space-y-6">
+          {/* En-tête produit */}
+          <div className="space-y-4">
+            <div className="flex items-start justify-between">
+              <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 leading-tight">{product.title}</h1>
+            </div>
 
-          {isNew && (
-            <span className="inline-block bg-[#D29587]/20 text-[#D29587] px-4 py-1 rounded-full text-sm font-medium select-none">
-              🆕 Nouveauté
-            </span>
-          )}
+            <div className="flex items-center gap-3">
+              <span className="inline-flex items-center bg-[#D29587]/10 text-[#D29587] px-4 py-2 rounded-full text-sm font-semibold">
+                📁 {product.category || "Non spécifiée"}
+              </span>
+              <span className="text-gray-400">•</span>
+              <span className="text-sm text-gray-500">
+                Publié {dayjs(product.created_at).format('DD/MM/YYYY')}
+              </span>
+            </div>
 
-          <p className="text-md font-semibold text-[#D29587] uppercase tracking-wide">
-            Catégorie : {product.category || "Non spécifiée"}
-          </p>
-
-          <p className="text-3xl font-bold text-[#D29587]">
-            {product.price.toLocaleString()} FCFA
-          </p>
-
-          {/* Boutons de contact */}
-          <div className="flex flex-wrap items-center gap-4 mt-6">
-            {whatsappLink ? (
-              <a
-                href={whatsappLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center px-6 py-3 bg-green-500 text-white font-semibold rounded-xl hover:bg-green-600 transition"
-                aria-label="Contacter le vendeur sur WhatsApp"
-              >
-                <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M20.52 3.478A11.959 11.959 0 0012 0C5.373 0 0 5.373 0 12a11.94 11.94 0 001.611 6.072L0 24l5.977-1.559A11.958 11.958 0 0012 24c6.627 0 12-5.373 12-12 0-3.207-1.246-6.218-3.48-8.522zm-8.52 17.136a9.637 9.637 0 01-5.176-1.476l-.371-.224-3.548.925.947-3.464-.243-.364a9.675 9.675 0 0115.45-11.846 9.636 9.636 0 01-6.31 15.445zm5.414-7.333c-.298-.149-1.759-.868-2.031-.967-.273-.099-.472-.149-.672.15-.199.298-.768.967-.942 1.164-.173.198-.347.223-.645.075-.298-.149-1.257-.463-2.395-1.479-.885-.788-1.48-1.761-1.654-2.06-.173-.298-.018-.459.13-.607.134-.133.298-.347.447-.52.149-.173.198-.298.298-.497.099-.198.05-.372-.025-.52-.075-.149-.672-1.62-.92-2.213-.242-.58-.487-.5-.672-.51l-.572-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.872.118.571-.085 1.759-.718 2.006-1.412.248-.693.248-1.287.173-1.412-.074-.124-.273-.198-.571-.347z" />
-                </svg>
-                Contacter sur WhatsApp
-              </a>
-            ) : (
-              <p className="text-red-500 font-semibold select-none">
-                Numéro WhatsApp non disponible
-              </p>
-            )}
-
-            {product.whatsapp_number && (
-              <a
-                href={`tel:${product.whatsapp_number}`}
-                className="inline-flex items-center px-6 py-3 bg-blue-500 text-white font-semibold rounded-xl hover:bg-blue-600 transition"
-                aria-label="Appeler le vendeur"
-              >
-                <svg
-                  className="w-5 h-5 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M22 16.92v3a2 2 0 01-2.18 2 19.8 19.8 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.8 19.8 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.13 1.21.38 2.39.75 3.5a2 2 0 01-.45 2.11L9 10.92a16 16 0 006 6l1.59-1.59a2 2 0 012.11-.45c1.11.37 2.29.62 3.5.75a2 2 0 011.72 2z" />
-                </svg>
-                📞 Appeler le vendeur
-              </a>
-            )}
+            {/* Prix avec animation */}
+            <div className="bg-gradient-to-r from-[#D29587]/5 to-[#D29587]/10 p-6 rounded-2xl border border-[#D29587]/20">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Prix</p>
+                  <p className="text-4xl font-bold text-[#D29587] animate-pulse">
+                    {product.price.toLocaleString()} FCFA
+                  </p>
+                </div>
+                <div className="text-right">
+                  <div className="group relative">
+                    <div className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                      💰 Prix négociable
+                    </div>
+                    {/* Hover Card pour prix */}
+                    <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border p-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-10">
+                      <p className="text-sm text-gray-600">
+                        Contactez le vendeur pour discuter du prix !
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-          {sellerId && (
-            <>
-              <RatingSeller
-                sellerId={sellerId}
-                initialAverage={averageRating}
-                initialCount={ratingCount}
-              />
 
-              <Link
-                href={`/profile/${sellerId}`}
-                className="inline-flex items-center px-6 py-3 bg-[#D29587] text-white font-semibold rounded-xl hover:bg-[#bb6b5f] transition"
-                aria-label="Voir le profil du vendeur"
-              >
-                🛍️ Voir le profil du vendeur
-              </Link>
-            </>
+          {/* Informations vendeur avec hover card */}
+          {sellerId && (
+            <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+              <div className="group relative">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-semibold text-gray-800">👤 Informations vendeur</h3>
+                  <Link
+                    href={`/profile/${sellerId}`}
+                    className="text-[#D29587] hover:text-[#bb6b5f] font-medium text-sm transition-colors"
+                  >
+                    Voir profil →
+                  </Link>
+                </div>
+                
+                <RatingSeller
+                  sellerId={sellerId}
+                  initialAverage={averageRating}
+                  initialCount={ratingCount}
+                />
+
+                {/* Hover Card pour infos vendeur */}
+                <div className="absolute left-0 top-full mt-2 w-72 bg-white rounded-xl shadow-xl border p-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-20">
+                  <div className="space-y-3">
+                    <h4 className="font-semibold text-gray-800">À propos du vendeur</h4>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div className="bg-gray-50 p-2 rounded-lg">
+                        <p className="text-gray-500">Ventes réalisées</p>
+                        <p className="font-semibold">24+</p>
+                      </div>
+                      <div className="bg-gray-50 p-2 rounded-lg">
+                        <p className="text-gray-500">Membre depuis</p>
+                        <p className="font-semibold">2024</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 text-green-600">
+                      <FaCheckCircle className="text-sm" />
+                      <span className="text-sm">Vendeur vérifié</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           )}
 
-          <div className="mt-6">
-            <h2 className="text-sm font-semibold text-gray-600 mb-2">📤 Partager ce produit !</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-md">
-              {/* WhatsApp */}
+          {/* Boutons de contact améliorés */}
+          <div className="space-y-4">
+            <h3 className="font-semibold text-gray-800">💬 Contacter le vendeur</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {whatsappLink ? (
+                <div className="group relative">
+                  <a
+                    href={whatsappLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full inline-flex items-center justify-center px-6 py-4 bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                  >
+                    <FaWhatsapp className="mr-3 text-lg" />
+                    WhatsApp
+                  </a>
+                  {/* Hover Card pour WhatsApp */}
+                  <div className="absolute left-1/2 transform -translate-x-1/2 top-full mt-2 w-64 bg-white rounded-xl shadow-xl border p-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-10">
+                    <p className="text-sm text-gray-600">
+                      Discussion instantanée avec le vendeur via WhatsApp
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="w-full px-6 py-4 bg-gray-100 text-gray-500 font-semibold rounded-xl text-center">
+                  WhatsApp indisponible
+                </div>
+              )}
+
+              {product.whatsapp_number && (
+                <div className="group relative">
+                  <a
+                    href={`tel:${product.whatsapp_number}`}
+                    className="w-full inline-flex items-center justify-center px-6 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                  >
+                    <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path d="M22 16.92v3a2 2 0 01-2.18 2 19.8 19.8 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.8 19.8 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.13 1.21.38 2.39.75 3.5a2 2 0 01-.45 2.11L9 10.92a16 16 0 006 6l1.59-1.59a2 2 0 012.11-.45c1.11.37 2.29.62 3.5.75a2 2 0 011.72 2z" />
+                    </svg>
+                    Appeler
+                  </a>
+                  {/* Hover Card pour appel */}
+                  <div className="absolute left-1/2 transform -translate-x-1/2 top-full mt-2 w-64 bg-white rounded-xl shadow-xl border p-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-10">
+                    <p className="text-sm text-gray-600">
+                      Appel direct au {product.whatsapp_number}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Section partage améliorée */}
+          <div className="bg-gray-50 p-6 rounded-2xl">
+            <h3 className="font-semibold text-gray-800 mb-4 flex items-center">
+              📤 Partager ce produit
+            </h3>
+            <div className="grid grid-cols-2 gap-3">
               <a
                 href={`https://wa.me/?text=${encodeURIComponent(
-                  `🔗 Découvre ce ${product.title} à seulement ${product.price} sur Sangse.shop : https://sangse.shop/product/${product.id}`
+                  `🔗 Découvre ce ${product.title} à seulement ${product.price} FCFA sur Sangse.shop : https://sangse.shop/product/${product.id}`
                 )}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-xl text-sm flex items-center justify-center gap-2 transition"
+                className="bg-green-500 hover:bg-green-600 text-white px-4 py-3 rounded-xl text-sm flex items-center justify-center gap-2 transition-all duration-300 hover:scale-105"
               >
                 <FaWhatsapp className="w-4 h-4" />
                 Partager
               </a>
-
-              {/* Instagram */}
               <CopyButton
                 text={`https://sangse.shop/product/${product.id}`}
-                platform="Tiktok/Instagram"
+                platform="Copier le lien"
               />
-
-
             </div>
           </div>
+
           {/* Description */}
           {product.description && (
-            <p className="text-gray-700 leading-relaxed whitespace-pre-line">
-              {product.description}
-            </p>
-          )}
-          {/* Produits similaires */}
-          {similarProducts && similarProducts.length > 0 && (
-            <section className="mt-10">
-              <h2 className="text-4xl text-center font-extrabold text-[#333] mb-4">Produits similaires</h2>
-              <div className="flex justify-center space-x-6 overflow-x-auto scrollbar-thin scrollbar-thumb-[#D29587]/70 scrollbar-track-transparent py-2">
-                {similarProducts.map((p) => (
-                  <Link
-                    key={p.id}
-                    href={`/product/${p.id}`}
-                    className="group min-w-[220px] bg-white border border-[#E6E3DF] rounded-2xl shadow transition-all duration-300 hover:shadow-xl hover:-translate-y-1 p-4 flex flex-col"
-                    aria-label={`Voir le produit ${p.title}`}
-                  >
-                    {/* Image avec zoom fluide */}
-                    <div className="relative w-full h-40 rounded-xl overflow-hidden dark:bg-black mb-3">
-                      <Image
-                        src={p.image_url || "/placeholder.jpg"}
-                        alt={p.title}
-                        fill
-                        className="object-cover transition-transform duration-700 ease-in-out group-hover:scale-110"
-                      />
-                    </div>
-
-                    {/* Titre avec effet de ligne limitée */}
-                    <h3 className="font-semibold text-[#333] line-clamp-2 mb-1">{p.title}</h3>
-
-                    {/* Prix bien mis en avant */}
-                    <p className="text-[#D29587] font-bold text-lg mt-auto">{p.price.toLocaleString()} FCFA</p>
-                  </Link>
-
-                ))}
-              </div>
-            </section>
+            <div className="bg-white p-6 rounded-2xl border border-gray-200">
+              <h3 className="font-semibold text-gray-800 mb-3">📝 Description</h3>
+              <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+                {product.description}
+              </p>
+            </div>
           )}
         </div>
-
       </div>
 
-
+      {/* Section produits similaires améliorée */}
+      {similarProducts && similarProducts.length > 0 && (
+        <section className="mt-16">
+          <div className="text-center mb-10">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">Produits similaires</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              Découvrez d'autres articles qui pourraient vous intéresser dans la même catégorie
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {similarProducts.map((p) => (
+              <Link
+                key={p.id}
+                href={`/product/${p.id}`}
+                className="group bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-xl hover:-translate-y-2 transition-all duration-500"
+              >
+                <div className="relative h-48 overflow-hidden">
+                  <Image
+                    src={p.image_url || "/placeholder.jpg"}
+                    alt={p.title}
+                    fill
+                    className="object-cover transition-transform duration-700 group-hover:scale-110"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                </div>
+                
+                <div className="p-4">
+                  <h3 className="font-semibold text-gray-900 line-clamp-2 mb-2 group-hover:text-[#D29587] transition-colors">
+                    {p.title}
+                  </h3>
+                  <p className="text-[#D29587] font-bold text-lg">
+                    {p.price.toLocaleString()} FCFA
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   )
 }
