@@ -5,7 +5,7 @@ import { supabaseUrl, supabaseKey } from "@/lib/supabase"
 import Image from "next/image"
 import Link from "next/link"
 import CopyButton from "@/app/composants/sharebutton"
-import { FaWhatsapp, FaStar, FaBox, FaHeart } from "react-icons/fa"
+import { FaWhatsapp, FaStar, FaBox } from "react-icons/fa"
 import { HiBadgeCheck, HiTrendingUp } from "react-icons/hi"
 import { Metadata } from "next"
 import BackButton from "@/app/composants/back-button"
@@ -213,19 +213,18 @@ export default async function UserProfilePage({ params }: { params: { id: string
           {/* Actions principales */}
           <div className="mt-6 pt-6 border-t border-pink-100 dark:border-gray-700">
             <div className="flex flex-wrap justify-center sm:justify-start gap-3">
-              {!isOwner && (
-                <a
-                  href={`https://wa.me/?text=${encodeURIComponent(
-                    `🔗 Découvre la boutique de ${profile.username} sur Sangse.shop : https://sangse.shop/profile/${id}`
-                  )}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-xl flex items-center gap-2 font-semibold shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
-                >
-                  <FaWhatsapp className="w-5 h-5" />
-                  Partager sur WhatsApp
-                </a>
-              )}
+
+              <Link
+                href={`https://wa.me/?text=${encodeURIComponent(
+                  `🔗 Découvre la boutique de ${profile.username} sur Sangse.shop : https://sangse.shop/profile/${id}`
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-xl flex items-center gap-2 font-semibold shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
+              >
+                <FaWhatsapp className="w-5 h-5" />
+                Partager sur WhatsApp
+              </Link>
 
               <CopyButton
                 text={`https://sangse.shop/profile/${id}`}
