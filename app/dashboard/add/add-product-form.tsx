@@ -3,21 +3,10 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
+
 import Image from 'next/image'
 import ImageUploader from './imageuploader'
 import { Button } from '@/components/ui/button'
-
-// --- Ajout d'un composant HoverCard UX ---
-function HoverCard({ children, text }: { children: React.ReactNode; text: string }) {
-  return (
-    <span className="group relative inline-block">
-      {children}
-      <span className="pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity absolute z-50 left-1/2 -translate-x-1/2 mt-2 w-max max-w-xs bg-[#fff] dark:bg-[#222] text-[#1E1E1E] dark:text-[#FFF] text-sm px-4 py-2 rounded-xl shadow-lg border border-[#EDE9E3] dark:border-[#444]">
-        {text}
-      </span>
-    </span>
-  )
-}
 
 type Props = {
   userId: string
@@ -29,6 +18,26 @@ const categories = [
   { value: 'maquillage', label: 'Maquillage' },
   { value: 'artisanat', label: 'Artisanat (fait mains)' },
 ]
+
+// Simple hover card with tooltip
+function HoverCard({
+  children,
+  text,
+  className = '',
+}: {
+  children: React.ReactNode
+  text: string
+  className?: string
+}) {
+  return (
+    <span className={`relative group ${className}`}>
+      {children}
+      <span className="pointer-events-none absolute left-1/2 top-full z-30 mt-2 w-max min-w-[180px] max-w-xs -translate-x-1/2 rounded-xl bg-white dark:bg-[#222] border border-[#EDE9E3] dark:border-[#333] px-4 py-2 text-sm text-[#1E1E1E] dark:text-white shadow-xl opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-200">
+        {text}
+      </span>
+    </span>
+  )
+}
 
 export default function AddProductForm({ userId }: Props) {
   const [form, setForm] = useState({
@@ -47,9 +56,7 @@ export default function AddProductForm({ userId }: Props) {
   const router = useRouter()
   const supabase = createClient()
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     setForm((prev) => ({ ...prev, [name]: value }))
   }
@@ -105,7 +112,6 @@ export default function AddProductForm({ userId }: Props) {
         size="lg"
         onClick={() => router.back()}
         className="mb-8 border-[#D29587] text-[#D29587] font-semibold hover:bg-[#F7ECEA] hover:dark:bg-[#1a1a1a] transition"
-        type="button"
       >
         ← Retour
       </Button>
@@ -122,9 +128,8 @@ export default function AddProductForm({ userId }: Props) {
           </p>
         )}
 
-        {/* Image uploader avec HoverCard */}
         <div className="flex flex-col items-center gap-4">
-          <HoverCard text="Ajoute une belle photo, elle attire l’œil et donne confiance à l’acheteur ✨">
+          <HoverCard text="Ajoutez une photo de qualité, elle attire les acheteurs et inspire confiance.">
             <div>
               <ImageUploader onUpload={(url) => setForm((prev) => ({ ...prev, imageUrl: url }))} />
             </div>
@@ -141,8 +146,7 @@ export default function AddProductForm({ userId }: Props) {
         </div>
 
         <div className="space-y-4">
-          {/* Title HoverCard */}
-          <HoverCard text="Donne un nom accrocheur à ton produit.">
+          <HoverCard text="Donnez un nom clair et accrocheur à votre produit.">
             <input
               name="title"
               type="text"
@@ -154,8 +158,7 @@ export default function AddProductForm({ userId }: Props) {
             />
           </HoverCard>
 
-          {/* Prix HoverCard */}
-          <HoverCard text="Indique le prix en FCFA (par exemple : 1500). Sois juste et précis !">
+          <HoverCard text="Indiquez le prix en FCFA. Soyez transparent pour éviter les surprises.">
             <input
               name="price"
               type="number"
@@ -169,8 +172,7 @@ export default function AddProductForm({ userId }: Props) {
             />
           </HoverCard>
 
-          {/* Description HoverCard */}
-          <HoverCard text="Décris ton produit : composition, taille, couleur, usage, conseils… Sois rassurant(e) et précis(e) !">
+          <HoverCard text="Décrivez votre produit en détail (taille, couleur, conseils…). Plus vous êtes précis, plus vous rassurez l’acheteur.">
             <textarea
               name="description"
               placeholder="Description détaillée… soyez le plus clair possible pour mettre l'acheteur en confiance !"
@@ -181,8 +183,7 @@ export default function AddProductForm({ userId }: Props) {
             />
           </HoverCard>
 
-          {/* Whatsapp HoverCard */}
-          <HoverCard text="Ton numéro WhatsApp pour être contacté rapidement (8 à 9 chiffres après +221).">
+          <HoverCard text="Votre numéro WhatsApp pour être contacté facilement (8 à 9 chiffres après +221).">
             <div className="flex items-center border border-[#DAD5CD] dark:border-[#444] rounded-xl focus-within:ring-2 focus-within:ring-[#D29587] transition">
               <span className="px-4 py-3 bg-[#F7ECEA] dark:bg-[#2A2A2A] text-[#D29587] font-semibold rounded-l-xl select-none">
                 +221
@@ -202,13 +203,13 @@ export default function AddProductForm({ userId }: Props) {
             </div>
           </HoverCard>
 
-          {/* Catégorie HoverCard */}
-          <HoverCard text="Choisis la catégorie la plus adaptée pour que ton produit soit facilement trouvé.">
+          <HoverCard text="Choisissez la catégorie qui correspond le mieux à votre produit pour qu’il soit bien référencé.">
             <div className="relative">
               <label
                 htmlFor="category"
-                className={`absolute left-4 top-3 text-sm dark:text-[#A6A6A6] text-[#A6A6A6] transition-all duration-200 ${form.category ? 'text-xs -top-2 bg-white dark:bg-[#121212] px-1 text-[#D29587]' : ''
-                  }`}
+                className={`absolute left-4 top-3 text-sm dark:text-[#A6A6A6] text-[#A6A6A6] transition-all duration-200 ${
+                  form.category ? 'text-xs -top-2 bg-white dark:bg-[#121212] px-1 text-[#D29587]' : ''
+                }`}
               >
                 Catégorie
               </label>
