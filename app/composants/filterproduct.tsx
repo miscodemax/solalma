@@ -3,22 +3,15 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogClose,
-  DialogDescription,
+  Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle,
+  DialogFooter, DialogClose, DialogDescription
 } from "@/components/ui/dialog"
 import {
-  HoverCard,
-  HoverCardTrigger,
-  HoverCardContent
+  HoverCard, HoverCardTrigger, HoverCardContent
 } from "@/components/ui/hover-card"
-import ProductCard from "./product-card"
 import { Info, HelpCircle } from "lucide-react"
+
+import ProductCard from "./product-card"
 
 type Product = {
   id: number
@@ -29,9 +22,7 @@ type Product = {
 }
 
 function PriceFilter({
-  onChange,
-  selectedIndex,
-  onSelect,
+  onChange, selectedIndex, onSelect
 }: {
   onChange: (range: [number, number] | null) => void
   selectedIndex: number
@@ -49,7 +40,7 @@ function PriceFilter({
 
   return (
     <div className="p-5 bg-white dark:bg-[#121212] rounded-3xl shadow-xl border border-[#f3e8e4] dark:border-[#2a2a2a]">
-      <div className="flex items-center justify-center gap-2 mb-1">
+      <div className="flex items-center justify-center gap-2 mb-2">
         <h3 className="text-xl font-bold text-[#D29587] dark:text-[#FBCFC2]">
           Ton budget ?
         </h3>
@@ -59,7 +50,7 @@ function PriceFilter({
               <HelpCircle size={18} />
             </button>
           </HoverCardTrigger>
-          <HoverCardContent className="bg-white dark:bg-[#2c2c2c] border border-[#FBCFC2] dark:border-[#D29587] text-sm text-[#5A5A5A] dark:text-gray-300 rounded-xl shadow-md w-64">
+          <HoverCardContent className="w-64 text-sm text-[#5A5A5A] dark:text-gray-300 bg-white dark:bg-[#2c2c2c] border border-[#FBCFC2] dark:border-[#D29587] rounded-xl shadow-md">
             Filtre les produits par tranche de prix selon ton budget ou ton envie du moment !
           </HoverCardContent>
         </HoverCard>
@@ -69,7 +60,7 @@ function PriceFilter({
       </p>
       <div className="flex flex-wrap justify-center gap-2">
         {ranges.map(({ label, tip }, i) => (
-          <HoverCard key={label}>
+          <HoverCard key={i}>
             <HoverCardTrigger asChild>
               <button
                 onClick={() => {
@@ -86,7 +77,7 @@ function PriceFilter({
                 {label}
               </button>
             </HoverCardTrigger>
-            <HoverCardContent className="bg-white dark:bg-[#2c2c2c] border border-[#FBCFC2] dark:border-[#D29587] text-sm text-[#5A5A5A] dark:text-gray-300 rounded-xl shadow-md w-64">
+            <HoverCardContent className="w-64 text-sm text-[#5A5A5A] dark:text-gray-300 bg-white dark:bg-[#2c2c2c] border border-[#FBCFC2] dark:border-[#D29587] rounded-xl shadow-md">
               {tip}
             </HoverCardContent>
           </HoverCard>
@@ -112,40 +103,24 @@ export default function FilteredProducts({ products, userId }: { products: Produ
     setShowOnboarding(false)
   }
 
-  const filteredProducts = products.filter(
-    (p) => !priceRange || (p.price >= priceRange[0] && p.price <= priceRange[1])
+  const filteredProducts = products.filter(p =>
+    !priceRange || (p.price >= priceRange[0] && p.price <= priceRange[1])
   )
 
   const handleShare = () => {
     const message = encodeURIComponent("Coucou ! 🌸 Découvre cette nouvelle plateforme de mode féminine, hijabs, skincare et + : https://sangse.shop — rejoins-nous !")
-    const whatsappUrl = `https://wa.me/?text=${message}`
-    window.open(whatsappUrl, '_blank')
+    window.open(`https://wa.me/?text=${message}`, "_blank")
   }
 
   return (
     <main className="w-full bg-[#FAF6F4] dark:bg-black min-h-screen pb-16 pt-5 px-4 sm:px-6 transition-colors duration-300">
-      <div className="w-full flex flex-col gap-2 pt-3 md:flex-row md:justify-between">
-        <HoverCard>
-          <HoverCardTrigger asChild>
-            <button
-              onClick={handleShare}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[#D29587] to-pink-400 text-white font-semibold shadow-lg hover:scale-105 transition-transform"
-            >
-              💌 Invite une amie 🤫
-            </button>
-          </HoverCardTrigger>
-          <HoverCardContent className="bg-white dark:bg-[#2c2c2c] border border-[#FBCFC2] dark:border-[#D29587] text-sm text-[#5A5A5A] dark:text-gray-300 rounded-xl shadow-md w-64">
-            Partage la boutique à tes proches et gagne des surprises exclusives ! 🎁
-          </HoverCardContent>
-        </HoverCard>
-        <p className="mt-1 text-center text-xs text-gray-500 italic">
-          Fais-lui découvrir ta nouvelle boutique secrète... 🌸
-        </p>
-        {/* Filter trigger */}
-        <div className="text-center mb-8">
+
+      {/* Invite + filtre bouton */}
+      <div className="w-full flex flex-col-reverse gap-3 md:flex-row md:justify-between md:items-center">
+        <div className="text-center">
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <button type="button" className="px-6 py-3 bg-[#D29587] dark:bg-[#FBCFC2] text-white dark:text-black rounded-full font-semibold shadow-md hover:bg-[#bb7d72] dark:hover:bg-[#f3b9a9] transition">
+              <button className="px-6 py-3 bg-[#D29587] dark:bg-[#FBCFC2] text-white dark:text-black rounded-full font-semibold shadow-md hover:bg-[#bb7d72] dark:hover:bg-[#f3b9a9] transition">
                 💰 Filtrer par budget
               </button>
             </DialogTrigger>
@@ -154,23 +129,17 @@ export default function FilteredProducts({ products, userId }: { products: Produ
                 <DialogTitle className="text-xl text-center text-[#D29587] dark:text-[#FBCFC2] font-bold mb-3">
                   Choisis ta fourchette de prix
                 </DialogTitle>
-                <DialogDescription className="sr-only">
-                  Sélectionne un budget
-                </DialogDescription>
+                <DialogDescription className="sr-only">Sélectionne un budget</DialogDescription>
               </DialogHeader>
-              <PriceFilter
-                onChange={setPriceRange}
-                selectedIndex={selectedIndex}
-                onSelect={setSelectedIndex}
-              />
+              <PriceFilter onChange={setPriceRange} selectedIndex={selectedIndex} onSelect={setSelectedIndex} />
               <DialogFooter className="mt-6 flex justify-center gap-3">
                 <DialogClose asChild>
-                  <button type="button" className="px-5 py-2 bg-[#D29587] dark:bg-[#FBCFC2] text-white dark:text-black rounded-lg font-semibold hover:bg-[#bb7d72] dark:hover:bg-[#f3b9a9] transition">
+                  <button className="px-5 py-2 bg-[#D29587] dark:bg-[#FBCFC2] text-white dark:text-black rounded-lg font-semibold hover:bg-[#bb7d72] dark:hover:bg-[#f3b9a9] transition">
                     Valider
                   </button>
                 </DialogClose>
                 <DialogClose asChild>
-                  <button type="button" className="px-5 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-white rounded-lg font-semibold hover:bg-gray-400 dark:hover:bg-gray-500 transition">
+                  <button className="px-5 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-white rounded-lg font-semibold hover:bg-gray-400 dark:hover:bg-gray-500 transition">
                     Annuler
                   </button>
                 </DialogClose>
@@ -178,16 +147,31 @@ export default function FilteredProducts({ products, userId }: { products: Produ
             </DialogContent>
           </Dialog>
         </div>
+
+        <HoverCard>
+          <HoverCardTrigger asChild>
+            <button
+              onClick={handleShare}
+              className="w-full md:w-auto flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[#D29587] to-pink-400 text-white font-semibold shadow-lg hover:scale-105 transition-transform"
+            >
+              💌 Invite une amie 🤫
+            </button>
+          </HoverCardTrigger>
+          <HoverCardContent className="w-64 bg-white dark:bg-[#2c2c2c] border border-[#FBCFC2] dark:border-[#D29587] text-sm text-[#5A5A5A] dark:text-gray-300 rounded-xl shadow-md">
+            Partage la boutique à tes proches et gagne des surprises exclusives ! 🎁
+          </HoverCardContent>
+        </HoverCard>
       </div>
 
+      {/* Onboarding */}
       {showOnboarding && (
-        <div className="text-center mb-10 mt-8">
+        <div className="text-center mt-10">
           <HoverCard>
             <HoverCardTrigger asChild>
               <div className="bg-[#FDF1EE] dark:bg-[#2c2c2c] border border-[#FBCFC2] dark:border-[#D29587] rounded-2xl p-6 shadow-md max-w-2xl mx-auto cursor-pointer">
                 <h3 className="text-xl font-semibold text-[#D29587] dark:text-[#FBCFC2] mb-2 flex items-center justify-center gap-2">
                   Tu veux gagner des revenus depuis chez toi ? 🧕📱
-                  <Info size={20} className="text-[#D29587] dark:text-[#FBCFC2]" />
+                  <Info size={20} />
                 </h3>
                 <p className="text-sm text-[#5C5C5C] dark:text-gray-300 mb-5">
                   Ouvre ta boutique gratuitement et commence à vendre en quelques clics. C’est simple, rapide et sans engagement.
@@ -201,9 +185,9 @@ export default function FilteredProducts({ products, userId }: { products: Produ
                 </Link>
               </div>
             </HoverCardTrigger>
-            <HoverCardContent className="bg-white dark:bg-[#2c2c2c] border border-[#FBCFC2] dark:border-[#D29587] text-sm text-[#5A5A5A] dark:text-gray-300 rounded-xl shadow-md w-72">
+            <HoverCardContent className="w-72 bg-white dark:bg-[#2c2c2c] border border-[#FBCFC2] dark:border-[#D29587] text-sm text-[#5A5A5A] dark:text-gray-300 rounded-xl shadow-md">
               <b>Bénéfices :</b>
-              <ul className="list-disc pl-5 mt-2">
+              <ul className="list-disc pl-5 mt-2 space-y-1">
                 <li>Crée ta boutique gratuitement</li>
                 <li>Pas d’engagement, ni frais cachés</li>
                 <li>Accompagnement personnalisé</li>
@@ -214,10 +198,8 @@ export default function FilteredProducts({ products, userId }: { products: Produ
         </div>
       )}
 
-
-
-      {/* Products */}
-      <section>
+      {/* Produits */}
+      <section className="mt-10">
         {filteredProducts.length === 0 ? (
           <div className="flex flex-col items-center mt-10 gap-2">
             <span className="text-3xl">🤔</span>
@@ -237,16 +219,11 @@ export default function FilteredProducts({ products, userId }: { products: Produ
                     <ProductCard product={product} userId={userId} />
                   </div>
                 </HoverCardTrigger>
-                <HoverCardContent
-                  className="bg-white dark:bg-[#2c2c2c] border border-[#FBCFC2] dark:border-[#D29587] text-sm text-[#5A5A5A] dark:text-gray-300 rounded-xl shadow-md w-72"
-                  side="right"
-                >
-                  <div>
-                    <h4 className="font-semibold mb-1">{product.title}</h4>
-                    <div className="mb-2">{product.description}</div>
-                    <div className="text-xs text-[#D29587] dark:text-[#FBCFC2] font-semibold">
-                      Prix : {product.price} FCFA
-                    </div>
+                <HoverCardContent className="w-72 bg-white dark:bg-[#2c2c2c] border border-[#FBCFC2] dark:border-[#D29587] text-sm text-[#5A5A5A] dark:text-gray-300 rounded-xl shadow-md">
+                  <h4 className="font-semibold mb-1">{product.title}</h4>
+                  <p className="mb-2">{product.description}</p>
+                  <div className="text-xs text-[#D29587] dark:text-[#FBCFC2] font-semibold">
+                    Prix : {product.price} FCFA
                   </div>
                 </HoverCardContent>
               </HoverCard>
