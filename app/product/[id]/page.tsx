@@ -127,8 +127,6 @@ export default async function ProductDetailPage({ params }: Props) {
         <nav className="flex items-center space-x-2 text-sm text-gray-500 mb-4">
           <Link href="/" className="hover:text-[#D29587] transition-colors">Accueil</Link>
           <span>›</span>
-          <Link href={`/category/${product.category}`} className="hover:text-[#D29587] transition-colors">{product.category}</Link>
-          <span>›</span>
           <span className="text-gray-700 font-medium">{product.title}</span>
         </nav>
       </div>

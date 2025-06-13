@@ -18,6 +18,7 @@ import {
   HoverCardContent
 } from "@/components/ui/hover-card"
 import ProductCard from "./product-card"
+import { Info, HelpCircle } from "lucide-react"
 
 type Product = {
   id: number
@@ -48,9 +49,21 @@ function PriceFilter({
 
   return (
     <div className="p-5 bg-white dark:bg-[#121212] rounded-3xl shadow-xl border border-[#f3e8e4] dark:border-[#2a2a2a]">
-      <h3 className="text-center text-xl font-bold text-[#D29587] dark:text-[#FBCFC2] mb-1">
-        Ton budget ?
-      </h3>
+      <div className="flex items-center justify-center gap-2 mb-1">
+        <h3 className="text-xl font-bold text-[#D29587] dark:text-[#FBCFC2]">
+          Ton budget ?
+        </h3>
+        <HoverCard>
+          <HoverCardTrigger asChild>
+            <button aria-label="Aide sur le filtre budget" className="text-[#D29587] dark:text-[#FBCFC2] hover:text-[#bb7d72] dark:hover:text-[#f3b9a9]">
+              <HelpCircle size={18} />
+            </button>
+          </HoverCardTrigger>
+          <HoverCardContent className="bg-white dark:bg-[#2c2c2c] border border-[#FBCFC2] dark:border-[#D29587] text-sm text-[#5A5A5A] dark:text-gray-300 rounded-xl shadow-md w-64">
+            Filtre les produits par tranche de prix selon ton budget ou ton envie du moment !
+          </HoverCardContent>
+        </HoverCard>
+      </div>
       <p className="text-center text-gray-600 dark:text-gray-300 text-sm mb-5">
         Choisis une fourchette pour filtrer les merveilles 💸
       </p>
@@ -65,9 +78,10 @@ function PriceFilter({
                 }}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition
                   ${selectedIndex === i
-                    ? "bg-[#D29587] text-white shadow"
-                    : "bg-[#F5F3F1] text-[#5A5A5A] hover:bg-[#D29587] hover:text-white dark:bg-[#2c2c2c] dark:text-gray-300"
+                    ? "bg-[#D29587] text-white shadow scale-105"
+                    : "bg-[#F5F3F1] text-[#5A5A5A] hover:bg-[#D29587]/90 hover:text-white dark:bg-[#2c2c2c] dark:text-gray-300"
                   } focus:outline-none focus:ring-2 focus:ring-[#D29587]/50`}
+                aria-pressed={selectedIndex === i}
               >
                 {label}
               </button>
@@ -111,12 +125,19 @@ export default function FilteredProducts({ products, userId }: { products: Produ
   return (
     <main className="w-full bg-[#FAF6F4] dark:bg-black min-h-screen pb-16 pt-5 px-4 sm:px-6 transition-colors duration-300">
       <div className="pt-4 max-w-64">
-        <button
-          onClick={handleShare}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[#D29587] to-pink-400 text-white font-semibold shadow-lg hover:scale-105 transition-transform"
-        >
-          💌 Invite une amie 🤫
-        </button>
+        <HoverCard>
+          <HoverCardTrigger asChild>
+            <button
+              onClick={handleShare}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[#D29587] to-pink-400 text-white font-semibold shadow-lg hover:scale-105 transition-transform"
+            >
+              💌 Invite une amie 🤫
+            </button>
+          </HoverCardTrigger>
+          <HoverCardContent className="bg-white dark:bg-[#2c2c2c] border border-[#FBCFC2] dark:border-[#D29587] text-sm text-[#5A5A5A] dark:text-gray-300 rounded-xl shadow-md w-64">
+            Partage la boutique à tes proches et gagne des surprises exclusives ! 🎁
+          </HoverCardContent>
+        </HoverCard>
         <p className="mt-1 text-center text-xs text-gray-500 italic">
           Fais-lui découvrir ta nouvelle boutique secrète... 🌸
         </p>
@@ -124,21 +145,35 @@ export default function FilteredProducts({ products, userId }: { products: Produ
 
       {showOnboarding && (
         <div className="text-center mb-10 mt-8">
-          <div className="bg-[#FDF1EE] dark:bg-[#2c2c2c] border border-[#FBCFC2] dark:border-[#D29587] rounded-2xl p-6 shadow-md max-w-2xl mx-auto">
-            <h3 className="text-xl font-semibold text-[#D29587] dark:text-[#FBCFC2] mb-2">
-              Tu veux gagner des revenus depuis chez toi ? 🧕📱
-            </h3>
-            <p className="text-sm text-[#5C5C5C] dark:text-gray-300 mb-5">
-              Ouvre ta boutique gratuitement et commence à vendre en quelques clics. C’est simple, rapide et sans engagement.
-            </p>
-            <Link
-              href="/dashboard/add"
-              onClick={dismissOnboarding}
-              className="inline-block px-6 py-3 bg-[#D29587] dark:bg-[#FBCFC2] text-white dark:text-black font-semibold rounded-full hover:bg-[#bb7d72] dark:hover:bg-[#f3b9a9] transition shadow"
-            >
-              🎉 Commencer à vendre
-            </Link>
-          </div>
+          <HoverCard>
+            <HoverCardTrigger asChild>
+              <div className="bg-[#FDF1EE] dark:bg-[#2c2c2c] border border-[#FBCFC2] dark:border-[#D29587] rounded-2xl p-6 shadow-md max-w-2xl mx-auto cursor-pointer">
+                <h3 className="text-xl font-semibold text-[#D29587] dark:text-[#FBCFC2] mb-2 flex items-center justify-center gap-2">
+                  Tu veux gagner des revenus depuis chez toi ? 🧕📱
+                  <Info size={20} className="text-[#D29587] dark:text-[#FBCFC2]" />
+                </h3>
+                <p className="text-sm text-[#5C5C5C] dark:text-gray-300 mb-5">
+                  Ouvre ta boutique gratuitement et commence à vendre en quelques clics. C’est simple, rapide et sans engagement.
+                </p>
+                <Link
+                  href="/dashboard/add"
+                  onClick={dismissOnboarding}
+                  className="inline-block px-6 py-3 bg-[#D29587] dark:bg-[#FBCFC2] text-white dark:text-black font-semibold rounded-full hover:bg-[#bb7d72] dark:hover:bg-[#f3b9a9] transition shadow"
+                >
+                  🎉 Commencer à vendre
+                </Link>
+              </div>
+            </HoverCardTrigger>
+            <HoverCardContent className="bg-white dark:bg-[#2c2c2c] border border-[#FBCFC2] dark:border-[#D29587] text-sm text-[#5A5A5A] dark:text-gray-300 rounded-xl shadow-md w-72">
+              <b>Bénéfices :</b>
+              <ul className="list-disc pl-5 mt-2">
+                <li>Crée ta boutique gratuitement</li>
+                <li>Pas d’engagement, ni frais cachés</li>
+                <li>Accompagnement personnalisé</li>
+                <li>Rejoins une communauté bienveillante !</li>
+              </ul>
+            </HoverCardContent>
+          </HoverCard>
         </div>
       )}
 
@@ -183,13 +218,37 @@ export default function FilteredProducts({ products, userId }: { products: Produ
       {/* Products */}
       <section>
         {filteredProducts.length === 0 ? (
-          <p className="text-center text-gray-500 dark:text-gray-300 text-base mt-10">
-            Aucun produit ne correspond à ta recherche 😕
-          </p>
+          <div className="flex flex-col items-center mt-10 gap-2">
+            <span className="text-3xl">🤔</span>
+            <p className="text-center text-gray-500 dark:text-gray-300 text-base">
+              Aucun produit ne correspond à ta recherche<br />
+              <span className="text-sm text-[#D29587] dark:text-[#FBCFC2]">
+                Essaie une autre catégorie ou élargis ton budget !
+              </span>
+            </p>
+          </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
             {filteredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} userId={userId} />
+              <HoverCard key={product.id}>
+                <HoverCardTrigger asChild>
+                  <div>
+                    <ProductCard product={product} userId={userId} />
+                  </div>
+                </HoverCardTrigger>
+                <HoverCardContent
+                  className="bg-white dark:bg-[#2c2c2c] border border-[#FBCFC2] dark:border-[#D29587] text-sm text-[#5A5A5A] dark:text-gray-300 rounded-xl shadow-md w-72"
+                  side="right"
+                >
+                  <div>
+                    <h4 className="font-semibold mb-1">{product.title}</h4>
+                    <div className="mb-2">{product.description}</div>
+                    <div className="text-xs text-[#D29587] dark:text-[#FBCFC2] font-semibold">
+                      Prix : {product.price} FCFA
+                    </div>
+                  </div>
+                </HoverCardContent>
+              </HoverCard>
             ))}
           </div>
         )}
