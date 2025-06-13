@@ -7,6 +7,11 @@ import { createClient } from '@/lib/supabase'
 import Image from 'next/image'
 import ImageUploader from './imageuploader'
 import { Button } from '@/components/ui/button'
+import {
+  HoverCard,
+  HoverCardTrigger,
+  HoverCardContent,
+} from '@/components/ui/hover-card'
 
 type Props = {
   userId: string
@@ -121,90 +126,129 @@ export default function AddProductForm({ userId }: Props) {
         </div>
 
         <div className="space-y-4">
-          <input
-            name="title"
-            type="text"
-            placeholder="Titre du produit"
-            value={form.title}
-            onChange={handleChange}
-            className="w-full px-4 py-3 border border-[#DAD5CD] dark:border-[#444] bg-white dark:bg-[#1A1A1A] text-gray-800 dark:text-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D29587] transition"
-            required
-          />
+          <HoverCard>
+            <HoverCardTrigger asChild>
+              <input
+                name="title"
+                type="text"
+                placeholder="Titre du produit"
+                value={form.title}
+                onChange={handleChange}
+                className="w-full px-4 py-3 border border-[#DAD5CD] dark:border-[#444] bg-white dark:bg-[#1A1A1A] text-gray-800 dark:text-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D29587] transition"
+                required
+              />
+            </HoverCardTrigger>
+            <HoverCardContent className="w-64 text-sm text-gray-700 dark:text-gray-300">
+              Donnez un nom clair à votre produit. Ex : <strong>Robe Wax taille M</strong>
+            </HoverCardContent>
+          </HoverCard>
 
-          <input
-            name="price"
-            type="number"
-            placeholder="Prix (en FCFA) - Ex: 1500"
-            value={form.price}
-            onChange={handleChange}
-            className="w-full px-4 py-3 border border-[#DAD5CD] dark:border-[#444] bg-white dark:bg-[#1A1A1A] text-gray-800 dark:text-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D29587] transition"
-            required
-            min="0"
-            step="any"
-          />
 
-          <textarea
-            name="description"
-            placeholder="Description détaillée… soyez le plus clair possible pour mettre l'acheteur en confiance !"
-            value={form.description}
-            onChange={handleChange}
-            className="w-full px-4 py-3 border border-[#DAD5CD] dark:border-[#444] bg-white dark:bg-[#1A1A1A] text-gray-800 dark:text-gray-100 rounded-xl h-32 resize-none focus:outline-none focus:ring-2 focus:ring-[#D29587] transition"
-            required
-          />
+          <HoverCard>
+            <HoverCardTrigger asChild>
+              <input
+                name="price"
+                type="number"
+                placeholder="Prix (en FCFA) - Ex: 1500"
+                value={form.price}
+                onChange={handleChange}
+                className="w-full px-4 py-3 border border-[#DAD5CD] dark:border-[#444] bg-white dark:bg-[#1A1A1A] text-gray-800 dark:text-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D29587] transition"
+                required
+                min="0"
+                step="any"
+              />
+            </HoverCardTrigger>
+            <HoverCardContent className="w-64 text-sm text-gray-700 dark:text-gray-300">
+              Indiquez un prix réaliste en FCFA. Ne mettez que les chiffres (ex : 2500).
+            </HoverCardContent>
+          </HoverCard>
 
-          <div className="flex items-center border border-[#DAD5CD] dark:border-[#444] rounded-xl focus-within:ring-2 focus-within:ring-[#D29587] transition">
-            <span className="px-4 py-3 bg-[#F7ECEA] dark:bg-[#2A2A2A] text-[#D29587] font-semibold rounded-l-xl select-none">
-              +221
-            </span>
-            <input
-              name="whatsappNumber"
-              type="tel"
-              placeholder="771234567"
-              value={form.whatsappNumber}
-              onChange={handleWhatsappChange}
-              className="flex-grow px-4 py-3 rounded-r-xl bg-white dark:bg-[#1A1A1A] text-gray-800 dark:text-gray-100 focus:outline-none"
-              required
-              maxLength={9}
-              pattern="\d{8,9}"
-              title="Entrez le numéro après +221, uniquement chiffres (8 à 9 chiffres)"
-            />
-          </div>
 
-          <div className="relative">
-            <label
-              htmlFor="category"
-              className={`absolute left-4 top-3 text-sm dark:text-[#A6A6A6] text-[#A6A6A6] transition-all duration-200 ${
-                form.category ? 'text-xs -top-2 bg-white dark:bg-[#121212] px-1 text-[#D29587]' : ''
-              }`}
-            >
-              Catégorie
-            </label>
-            <select
-              id="category"
-              name="category"
-              value={form.category}
-              onChange={handleChange}
-              className="w-full appearance-none px-4 pt-6 pb-3 border border-[#DAD5CD] dark:border-[#444] bg-white dark:bg-[#1A1A1A] text-gray-700 dark:text-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D29587] transition"
-              required
-            >
-              {categories.map((cat) => (
-                <option key={cat.value} value={cat.value}>
-                  {cat.label}
-                </option>
-              ))}
-            </select>
-            <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-gray-400 dark:text-gray-500">
-              <svg
-                className="h-5 w-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-              </svg>
-            </div>
-          </div>
+          <HoverCard>
+            <HoverCardTrigger asChild>
+              <textarea
+                name="description"
+                placeholder="Description détaillée… soyez le plus clair possible pour mettre l'acheteur en confiance !"
+                value={form.description}
+                onChange={handleChange}
+                className="w-full px-4 py-3 border border-[#DAD5CD] dark:border-[#444] bg-white dark:bg-[#1A1A1A] text-gray-800 dark:text-gray-100 rounded-xl h-32 resize-none focus:outline-none focus:ring-2 focus:ring-[#D29587] transition"
+                required
+              />
+            </HoverCardTrigger>
+            <HoverCardContent className="w-64 text-sm text-gray-700 dark:text-gray-300">
+              Décrivez les avantages, matériaux, tailles ou instructions d’entretien.
+            </HoverCardContent>
+          </HoverCard>
+
+
+          <HoverCard>
+            <HoverCardTrigger asChild>
+              <div className="flex items-center border border-[#DAD5CD] dark:border-[#444] rounded-xl focus-within:ring-2 focus-within:ring-[#D29587] transition">
+                <span className="px-4 py-3 bg-[#F7ECEA] dark:bg-[#2A2A2A] text-[#D29587] font-semibold rounded-l-xl select-none">
+                  +221
+                </span>
+                <input
+                  name="whatsappNumber"
+                  type="tel"
+                  placeholder="771234567"
+                  value={form.whatsappNumber}
+                  onChange={handleWhatsappChange}
+                  className="flex-grow px-4 py-3 rounded-r-xl bg-white dark:bg-[#1A1A1A] text-gray-800 dark:text-gray-100 focus:outline-none"
+                  required
+                  maxLength={9}
+                  pattern="\d{8,9}"
+                  title="Entrez le numéro après +221, uniquement chiffres (8 à 9 chiffres)"
+                />
+              </div>
+            </HoverCardTrigger>
+            <HoverCardContent className="w-64 text-sm text-gray-700 dark:text-gray-300">
+              Ce numéro sera utilisé pour contacter l’acheteur sur WhatsApp.
+            </HoverCardContent>
+          </HoverCard>
+
+
+          <HoverCard>
+            <HoverCardTrigger asChild>
+              <div className="relative">
+                <label
+                  htmlFor="category"
+                  className={`absolute left-4 top-3 text-sm dark:text-[#A6A6A6] text-[#A6A6A6] transition-all duration-200 ${form.category ? 'text-xs -top-2 bg-white dark:bg-[#121212] px-1 text-[#D29587]' : ''
+                    }`}
+                >
+                  Catégorie
+                </label>
+                <select
+                  id="category"
+                  name="category"
+                  value={form.category}
+                  onChange={handleChange}
+                  className="w-full appearance-none px-4 pt-6 pb-3 border border-[#DAD5CD] dark:border-[#444] bg-white dark:bg-[#1A1A1A] text-gray-700 dark:text-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D29587] transition"
+                  required
+                >
+                  {categories.map((cat) => (
+                    <option key={cat.value} value={cat.value}>
+                      {cat.label}
+                    </option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-gray-400 dark:text-gray-500">
+                  <svg
+                    className="h-5 w-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
+            </HoverCardTrigger>
+            <HoverCardContent className="w-64 text-sm text-gray-700 dark:text-gray-300">
+              Choisissez la catégorie qui décrit le mieux votre produit.
+            </HoverCardContent>
+          </HoverCard>
+
         </div>
 
         <button
