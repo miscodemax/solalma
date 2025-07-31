@@ -6,7 +6,7 @@ import ProductList from "./composants/productlist"
 type Props = {
   searchParams: {
     category?: string
-    q?: string  // <-- encore inutilisé, mais laissé pour usage futur
+    q?: string
   }
 }
 
@@ -20,11 +20,15 @@ export default async function HomePage({ searchParams }: Props) {
 
   const category = searchParams.category || ''
 
-  // Requête initiale
+  // Requête avec jointure + comptage des likes
   let query = supabase
     .from('product')
-    .select('*')
-    .order('created_at', { ascending: false })  // produits récents d'abord
+    .select(`
+      *,
+      product_like(count)
+    `)
+    .order('product_like.count', { ascending: false }) // Tri par nombre de likes
+    .order('created_at', { ascending: false })         // Tri par produit récent
 
 
   if (category) {
@@ -41,7 +45,5 @@ export default async function HomePage({ searchParams }: Props) {
     )
   }
 
-  return (
-    <ProductList products={products} />
-  )
+  return <ProductList products={products} />
 }
