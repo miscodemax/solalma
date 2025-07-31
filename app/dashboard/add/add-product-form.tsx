@@ -22,6 +22,7 @@ const categories = [
   { value: 'soins_et_astuces', label: 'Soins et astuces' },
   { value: 'maquillage', label: 'Maquillage' },
   { value: 'artisanat', label: 'Artisanat (fait mains)' },
+  { value: 'electronique', label: 'Electronique' },
 ]
 
 export default function AddProductForm({ userId }: Props) {
