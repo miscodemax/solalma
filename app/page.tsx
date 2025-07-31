@@ -24,12 +24,10 @@ export default async function HomePage({ searchParams }: Props) {
   let query = supabase
     .from('product')
     .select(`
-      *,
-      product_like(count)
-    `)
-    .order('created_at', { ascending: false })         // Tri par produit récent
-    .order('product_like.count', { ascending: false }) // Tri par nombre de likes
-
+    *,
+    product_like(count)
+  `)
+    .order('created_at', { ascending: false }) // OK
 
   if (category) {
     query = query.ilike('category', `%${category}%`)
@@ -45,5 +43,13 @@ export default async function HomePage({ searchParams }: Props) {
     )
   }
 
-  return <ProductList products={products} />
+  // ✅ Tri côté JavaScript
+  const sorted = [...(products || [])].sort((a, b) => {
+    const likesA = a.product_like?.length || 0
+    const likesB = b.product_like?.length || 0
+    return likesB - likesA // Descendant
+  })
+
+  return <ProductList products={sorted} />
+
 }
