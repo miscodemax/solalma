@@ -27,8 +27,8 @@ export default async function HomePage({ searchParams }: Props) {
       *,
       product_like(count)
     `)
-    .order('product_like.count', { ascending: false }) // Tri par nombre de likes
     .order('created_at', { ascending: false })         // Tri par produit récent
+    .order('product_like.count', { ascending: false }) // Tri par nombre de likes
 
 
   if (category) {

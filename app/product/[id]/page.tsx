@@ -119,10 +119,11 @@ export default async function ProductDetailPage({ params }: Props) {
   const sellerId = product.user_id
 
   const whatsappClean = product.whatsapp_number?.replace(/\D/g, "")
-  const prefilledMessage = `Bonjour ! Je suis intéressé(e) par votre produit "${product.title}" à ${product.price.toLocaleString()} FCFA dans la catégorie ${product.category}. Est-il toujours disponible ?`
+  const prefilledMessage = `Bonjour ! Je suis intéressé(e) par ce produit "${product.title}" à ${product.price.toLocaleString()} FCFA sur Sangse.shop. Voici le lien : https://sangse.shop/product/${product.id}`
   const whatsappLink = whatsappClean
     ? `https://wa.me/${whatsappClean}?text=${encodeURIComponent(prefilledMessage)}`
     : null
+
 
   return (
     <div className="max-w-7xl mx-auto px-4 dark:bg-black py-8">
