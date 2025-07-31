@@ -6,7 +6,7 @@ import ProductList from "./composants/productlist"
 type Props = {
   searchParams: {
     category?: string
-    q?: string  // <-- nouveau paramètre
+    q?: string  // <-- encore inutilisé, mais laissé pour usage futur
   }
 }
 
@@ -20,15 +20,16 @@ export default async function HomePage({ searchParams }: Props) {
 
   const category = searchParams.category || ''
 
+  // Requête initiale
+  let query = supabase
+    .from('product')
+    .select('*')
+    .order('created_at', { ascending: false })  // produits récents d'abord
 
-  // Récupérer les produits
-  let query = supabase.from('product').select('*')
 
   if (category) {
     query = query.ilike('category', `%${category}%`)
   }
-
-
 
   const { data: products, error } = await query
 
@@ -41,8 +42,6 @@ export default async function HomePage({ searchParams }: Props) {
   }
 
   return (
-
     <ProductList products={products} />
-
   )
 }
