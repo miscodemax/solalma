@@ -509,43 +509,51 @@ export default function AboutPage() {
           </p>
         </motion.div>
 
-        {/* Final CTA avec urgence */}
+        {/* Final CTA */}
         <motion.div
           whileInView={{ scale: [0.9, 1.02, 1] }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
           className="text-center bg-gradient-to-r from-[#D29587] to-[#E6B8A2] rounded-3xl p-12 md:p-16 shadow-2xl relative overflow-hidden"
         >
-          <div className="absolute inset-0 bg-[url('/pattern.png')] opacity-10"></div>
           <div className="relative z-10 space-y-6">
             <h2 className="text-3xl md:text-5xl font-black text-white leading-tight">
-              Prête à rejoindre les 10,000 créatrices qui ont déjà transformé leur passion en business ?
+              Prêt(e) à être trouvé(e) par tes futurs clients ?
             </h2>
             <p className="text-xl text-white/90 max-w-2xl mx-auto">
-              Créer ta boutique prend moins de temps que de faire du ataya.
-              <strong> Et c'est 100% gratuit.</strong>
+              Rejoins les vendeurs qui ont compris que la visibilité,
+              c'est la clé du succès. <strong>Et c'est 100% gratuit.</strong>
             </p>
 
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="inline-block"
-            >
-              <Link href="/dashboard/add">
-                <a className="bg-white text-[#D29587] px-10 py-5 rounded-full text-xl font-bold shadow-xl flex items-center gap-3 hover:shadow-2xl transition-all duration-300">
-                  <Store className="w-6 h-6" />
-                  Je lance ma boutique maintenant
-                  <ArrowRight className="w-6 h-6" />
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Link href="/dashboard/add">
+                  <a className="bg-white text-[#D29587] px-10 py-5 rounded-full text-xl font-bold shadow-xl flex items-center gap-3 hover:shadow-2xl transition-all duration-300">
+                    <Store className="w-6 h-6" />
+                    Créer mon catalogue maintenant
+                    <ArrowRight className="w-6 h-6" />
+                  </a>
+                </Link>
+              </motion.div>
+
+              <Link href="/produits">
+                <a className="text-white hover:text-white/80 font-semibold px-6 py-3 border-2 border-white/30 hover:border-white/50 rounded-full transition-all duration-300 flex items-center gap-2">
+                  Voir ce qui se vend déjà
+                  <Eye className="w-4 h-4" />
                 </a>
               </Link>
-            </motion.div>
+            </div>
 
-            <div className="text-white/80 text-sm">
-              ⚡ Setup en moins de 5 minutes • 🎯 Booster ses ventes • 💰 100% gratuit!
+            <div className="text-white/80 text-sm pt-4">
+              ⚡ Création en 2 minutes • 📱 Contact WhatsApp automatique • 👀 Visible par des milliers de clients
             </div>
           </div>
-        </motion.div>
+        </motion.div >
       </div>
     </div>
+
   )
 }
