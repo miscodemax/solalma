@@ -89,7 +89,7 @@ export default async function ProductDetailPage({ params }: Props) {
   } = await supabase
     .from("product")
     .select("*")
-    .eq("id", product.user_id)
+    .eq("user_id", product.user_id)
 
   if (productError || !product) {
     notFound()
