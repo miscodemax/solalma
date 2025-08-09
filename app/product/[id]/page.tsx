@@ -84,6 +84,12 @@ export default async function ProductDetailPage({ params }: Props) {
     .select("*")
     .eq("id", Number(params.id))
     .single()
+  const {
+    data: allProducts,
+  } = await supabase
+    .from("product")
+    .select("*")
+    .eq("id", product.user_id)
 
   if (productError || !product) {
     notFound()
@@ -361,7 +367,7 @@ ${product.description?.slice(0, 100)}...
                   >
                     🛍️ Voir tous ses produits
                     <span className="text-xs bg-[#D29587]/20 px-2 py-1 rounded-full">
-                      +{Math.floor(Math.random() * 20) + 5}
+                      +{allProducts && allProducts.length}
                     </span>
                   </Link>
                 </div>
