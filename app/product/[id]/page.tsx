@@ -367,7 +367,7 @@ ${product.description?.slice(0, 100)}...
                   >
                     🛍️ Voir tous ses produits
                     <span className="text-xs bg-[#D29587]/20 px-2 py-1 rounded-full">
-                      +{allProducts && allProducts.length}
+                      +{allProducts && (allProducts.length - 1)}
                     </span>
                   </Link>
                 </div>
