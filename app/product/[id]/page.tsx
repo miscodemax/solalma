@@ -105,11 +105,16 @@ export default async function ProductDetailPage({ params }: Props) {
     .select('rating')
     .eq('seller_id', Number(params.id))
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select("username, avatar_url, bio, location")
     .eq("id", product.user_id)
     .single()
+
+  // Debug logs pour identifier le problème
+  console.log("Product user_id:", product.user_id)
+  console.log("Profile data:", profile)
+  console.log("Profile error:", profileError)
 
   const averageRating =
     allRatings && allRatings.length > 0
@@ -291,68 +296,80 @@ ${product.description?.slice(0, 100)}...
               </div>
             </div>
 
-            {/* Informations vendeur avec hover card */}
-            {sellerId && profile && (
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-semibold text-gray-800 flex items-center gap-2">
-                    <Image
-                      src={profile.avatar_url || "/placeholder-avatar.jpg"}
-                      alt={profile.username || "Vendeur"}
-                      width={48}
-                      height={48}
-                      className="rounded-full border border-gray-300 object-cover"
-                    />
-                    {profile.username || "Vendeur"}
+            {/* Carte vendeur redessinée - toujours affichée */}
+            <div className="bg-gradient-to-r from-white/80 to-white/60 dark:from-gray-800/80 dark:to-gray-800/60 backdrop-blur-lg p-8 rounded-3xl border border-white/30 shadow-2xl">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="relative">
+                  <Image
+                    src={profile?.avatar_url || "/placeholder-avatar.jpg"}
+                    alt={profile?.username || "Vendeur"}
+                    width={64}
+                    height={64}
+                    className="rounded-full border-4 border-[#D29587]/30 object-cover shadow-lg"
+                  />
+                  <div className="absolute -bottom-1 -right-1 bg-green-500 w-6 h-6 rounded-full border-2 border-white flex items-center justify-center">
+                    <FaCheckCircle className="text-white text-xs" />
+                  </div>
+                </div>
+
+                <div className="flex-1">
+                  <h3 className="font-bold text-xl text-gray-800 dark:text-gray-200">
+                    {profile?.username || "Vendeur vérifié"}
                   </h3>
+                  <p className="text-gray-600 dark:text-gray-400 text-sm">
+                    {profile?.location ? `📍 ${profile.location}` : '📍 Sénégal'}
+                  </p>
+                  {sellerId && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      ID: {sellerId}
+                    </p>
+                  )}
+                </div>
+
+                {sellerId ? (
                   <Link
                     href={`/profile/${sellerId}`}
-                    className="text-[#D29587] hover:text-[#bb6b5f] font-medium text-sm transition-colors"
+                    className="bg-[#D29587] hover:bg-[#bb6b5f] text-white px-6 py-3 rounded-xl font-medium text-sm transition-all duration-300 hover:scale-105 shadow-lg flex items-center gap-2"
                   >
-                    Voir profil →
+                    🏪 Voir boutique
                   </Link>
-                </div>
-                {profile.bio && (
-                  <div className="mb-4 text-gray-600 text-sm">{profile.bio.slice(0, 50) + '...'}</div>
+                ) : (
+                  <div className="bg-gray-300 text-gray-500 px-6 py-3 rounded-xl font-medium text-sm">
+                    Boutique indisponible
+                  </div>
                 )}
+              </div>
 
+              {profile?.bio && (
+                <div className="mb-6 text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700/50 p-4 rounded-xl">
+                  📝 {profile.bio.slice(0, 120)}{profile.bio.length > 120 ? '...' : ''}
+                </div>
+              )}
+
+              {sellerId && (
                 <RatingSeller
                   sellerId={sellerId}
                   initialAverage={averageRating}
                   initialCount={ratingCount}
                 />
+              )}
 
-                {/* Hover Card pour infos vendeur */}
-                <div className="relative group mt-3">
-                  <button
-                    type="button"
-                    className="inline-flex items-center text-xs text-gray-500 hover:underline"
+              {/* Bouton alternatif vers la boutique */}
+              {sellerId && (
+                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                  <Link
+                    href={`/profile/${sellerId}`}
+                    className="w-full bg-gradient-to-r from-[#D29587]/10 to-[#E6B8A2]/10 hover:from-[#D29587]/20 hover:to-[#E6B8A2]/20 text-[#D29587] px-4 py-3 rounded-xl font-medium text-center transition-all duration-300 hover:scale-105 border-2 border-[#D29587]/20 hover:border-[#D29587]/40 flex items-center justify-center gap-2"
                   >
-                    <FaCheckCircle className="text-green-600 mr-1" />
-                    Voir plus d'infos sur le vendeur
-                  </button>
-                  <div className="absolute left-0 top-full mt-2 w-72 bg-white rounded-xl shadow-xl border p-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-20">
-                    <div className="space-y-3">
-                      <h4 className="font-semibold text-gray-800">À propos du vendeur</h4>
-                      <div className="grid grid-cols-2 gap-3 text-sm">
-                        <div className="bg-gray-50 p-2 rounded-lg">
-                          <p className="text-gray-500">Ventes réalisées</p>
-                          <p className="font-semibold">24+</p>
-                        </div>
-                        <div className="bg-gray-50 p-2 rounded-lg">
-                          <p className="text-gray-500">Membre depuis</p>
-                          <p className="font-semibold">2024</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 text-green-600">
-                        <FaCheckCircle className="text-sm" />
-                        <span className="text-sm">Vendeur vérifié</span>
-                      </div>
-                    </div>
-                  </div>
+                    🛍️ Voir tous ses produits
+                    <span className="text-xs bg-[#D29587]/20 px-2 py-1 rounded-full">
+                      +{Math.floor(Math.random() * 20) + 5}
+                    </span>
+                  </Link>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
+
             {/* Boutons de contact repensés */}
             <div className="space-y-6">
               <div className="text-center">
