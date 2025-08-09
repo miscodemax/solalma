@@ -21,10 +21,10 @@ type Props = {
 
 const categories = [
   { label: 'Vêtements', value: 'vetement' },
-  { label: 'Soins et astuces', value: 'soins-et-astuces' },
+  { label: 'Soins et astuces', value: 'soins_et_astuces' },
   { label: 'Maquillage', value: 'maquillage' },
   { label: 'Artisanat (fait main)', value: 'artisanat' },
-  { value: 'electronique', label: 'Electronique' },
+  { label: 'Electronique', value: 'electronique' },
 ]
 
 export default function EditProductForm({ product }: Props) {

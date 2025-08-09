@@ -26,7 +26,7 @@ const categories = [
   { label: 'vetement', tip: 'Découvre nos habits tendances pour tous les styles !' },
   { label: 'artisanat', tip: 'Des pièces uniques faites main, pour offrir ou se faire plaisir.' },
   { label: 'maquillage', tip: 'Sublime-toi grâce à notre sélection de makeup.' },
-  { label: 'soins et astuces', tip: 'Prends soin de toi avec nos produits naturels et conseils.' },
+  { label: 'soins_et_astuces', tip: 'Prends soin de toi avec nos produits naturels et conseils.' },
   { label: 'electronique', tip: 'Encore plus de style avec notre gamme d\'appareil elecronique' },
 
 ]
