@@ -107,7 +107,7 @@ export default async function ProductDetailPage({ params }: Props) {
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("username, avatar_url, bio, location")
+    .select("username, avatar_url, bio")
     .eq("id", product.user_id)
     .single()
 
@@ -316,9 +316,7 @@ ${product.description?.slice(0, 100)}...
                   <h3 className="font-bold text-xl text-gray-800 dark:text-gray-200">
                     {profile?.username || "Vendeur vérifié"}
                   </h3>
-                  <p className="text-gray-600 dark:text-gray-400 text-sm">
-                    {profile?.location ? `📍 ${profile.location}` : '📍 Sénégal'}
-                  </p>
+                  
                   {sellerId && (
                     <p className="text-xs text-gray-500 mt-1">
                       ID: {sellerId}
