@@ -291,44 +291,29 @@ ${product.description?.slice(0, 100)}...
               </div>
             </div>
 
-            {/* Carte vendeur redessinée */}
+            {/* Informations vendeur avec hover card */}
             {sellerId && profile && (
-              <div className="bg-gradient-to-r from-white/80 to-white/60 dark:from-gray-800/80 dark:to-gray-800/60 backdrop-blur-lg p-8 rounded-3xl border border-white/30 shadow-2xl">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="relative">
+              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-semibold text-gray-800 flex items-center gap-2">
                     <Image
                       src={profile.avatar_url || "/placeholder-avatar.jpg"}
                       alt={profile.username || "Vendeur"}
-                      width={64}
-                      height={64}
-                      className="rounded-full border-4 border-[#D29587]/30 object-cover shadow-lg"
+                      width={48}
+                      height={48}
+                      className="rounded-full border border-gray-300 object-cover"
                     />
-                    <div className="absolute -bottom-1 -right-1 bg-green-500 w-6 h-6 rounded-full border-2 border-white flex items-center justify-center">
-                      <FaCheckCircle className="text-white text-xs" />
-                    </div>
-                  </div>
-
-                  <div className="flex-1">
-                    <h3 className="font-bold text-xl text-gray-800 dark:text-gray-200">
-                      {profile.username || "Vendeur vérifié"}
-                    </h3>
-                    <p className="text-gray-600 dark:text-gray-400 text-sm">
-                      {profile.location && `📍 ${profile.location}`}
-                    </p>
-                  </div>
-
+                    {profile.username || "Vendeur"}
+                  </h3>
                   <Link
                     href={`/profile/${sellerId}`}
-                    className="bg-[#D29587] hover:bg-[#bb6b5f] text-white px-4 py-2 rounded-xl font-medium text-sm transition-all duration-300 hover:scale-105 shadow-lg"
+                    className="text-[#D29587] hover:text-[#bb6b5f] font-medium text-sm transition-colors"
                   >
-                    Voir profil
+                    Voir profil →
                   </Link>
                 </div>
-
                 {profile.bio && (
-                  <div className="mb-6 text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700/50 p-4 rounded-xl">
-                    📝 {profile.bio.slice(0, 120)}...
-                  </div>
+                  <div className="mb-4 text-gray-600 text-sm">{profile.bio.slice(0, 50) + '...'}</div>
                 )}
 
                 <RatingSeller
@@ -336,9 +321,38 @@ ${product.description?.slice(0, 100)}...
                   initialAverage={averageRating}
                   initialCount={ratingCount}
                 />
+
+                {/* Hover Card pour infos vendeur */}
+                <div className="relative group mt-3">
+                  <button
+                    type="button"
+                    className="inline-flex items-center text-xs text-gray-500 hover:underline"
+                  >
+                    <FaCheckCircle className="text-green-600 mr-1" />
+                    Voir plus d'infos sur le vendeur
+                  </button>
+                  <div className="absolute left-0 top-full mt-2 w-72 bg-white rounded-xl shadow-xl border p-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-20">
+                    <div className="space-y-3">
+                      <h4 className="font-semibold text-gray-800">À propos du vendeur</h4>
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        <div className="bg-gray-50 p-2 rounded-lg">
+                          <p className="text-gray-500">Ventes réalisées</p>
+                          <p className="font-semibold">24+</p>
+                        </div>
+                        <div className="bg-gray-50 p-2 rounded-lg">
+                          <p className="text-gray-500">Membre depuis</p>
+                          <p className="font-semibold">2024</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 text-green-600">
+                        <FaCheckCircle className="text-sm" />
+                        <span className="text-sm">Vendeur vérifié</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
-
             {/* Boutons de contact repensés */}
             <div className="space-y-6">
               <div className="text-center">
