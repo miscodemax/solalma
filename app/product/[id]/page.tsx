@@ -95,7 +95,7 @@ export default async function ProductDetailPage({ params }: Props) {
 
   const { data: similarProducts } = await supabase
     .from("product")
-    .select("id, title, price, image_url, location")
+    .select("id, title, price, image_url")
     .eq("category", product.category)
     .neq("id", product.id)
     .limit(4)
@@ -316,7 +316,7 @@ ${product.description?.slice(0, 100)}...
                   <h3 className="font-bold text-xl text-gray-800 dark:text-gray-200">
                     {profile?.username || "Vendeur vérifié"}
                   </h3>
-                  
+
                   {sellerId && (
                     <p className="text-xs text-gray-500 mt-1">
                       ID: {sellerId}
@@ -486,11 +486,6 @@ ${product.description?.slice(0, 100)}...
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-                    {p.location && (
-                      <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-medium text-gray-700">
-                        📍 {p.location}
-                      </div>
-                    )}
                   </div>
 
                   <div className="p-6">
