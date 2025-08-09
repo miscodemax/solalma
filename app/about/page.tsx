@@ -6,15 +6,18 @@ import Link from "next/link"
 import {
   Store,
   ShoppingBag,
-  TrendingUp,
+  Search,
+  Filter,
+  MessageCircle,
   Users,
   Heart,
   Zap,
-  Shield,
+  Eye,
   Globe,
   Star,
   ArrowRight,
-  CheckCircle
+  CheckCircle,
+  Phone
 } from "lucide-react"
 import {
   Accordion,
@@ -48,9 +51,9 @@ export default function AboutPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#F9F6F1] via-[#FDF9F4] to-[#F5F1EC] dark:from-[#0A0A0A] dark:via-[#121212] dark:to-[#1A1A1A] transition-colors duration-500 overflow-hidden">
-      {/* Hero Section avec effet parallaxe */}
+      {/* Hero Section */}
       <div className="relative">
-        {/* Éléments décoratifs en arrière-plan */}
+        {/* Éléments décoratifs */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-20 left-10 w-32 h-32 bg-[#D29587]/10 rounded-full blur-3xl"></div>
           <div className="absolute top-40 right-20 w-48 h-48 bg-[#E6B8A2]/10 rounded-full blur-3xl"></div>
@@ -69,40 +72,62 @@ export default function AboutPage() {
           >
             <motion.div variants={itemVariants} className="space-y-6">
               <div className="inline-flex items-center bg-gradient-to-r from-[#D29587] to-[#E6B8A2] text-white px-6 py-2 rounded-full text-sm font-medium shadow-lg">
-                <Zap className="w-4 h-4 mr-2" />
-                La révolution du e-commerce sénégalais
+                <Eye className="w-4 h-4 mr-2" />
+                Le Google du shopping sénégalais
               </div>
 
               <h1 className="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#1E1E1E] to-[#4A4A4A] dark:from-[#FFFFFF] dark:to-[#B0B0B0] leading-tight">
-                Transforme ton
+                Trouve tout.
                 <br />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D29587] to-[#E6B8A2]">
-                  business
-                </span> en empire
+                  Contacte direct.
+                </span>
               </h1>
 
               <p className="text-xl md:text-2xl text-[#6B6B6B] dark:text-[#A0A0A0] max-w-4xl mx-auto leading-relaxed font-light">
-                Rejoins la première plateforme qui transforme les créatrices sénégalaises en entrepreneures digitales.
-                <strong className="font-semibold text-[#D29587]"> Plus de 10,000 vendeuses </strong>
-                nous font déjà confiance.
+                La première plateforme qui regroupe <strong className="font-semibold text-[#D29587]">tous les vendeurs du Sénégal</strong>
+                en un seul endroit. Cherche, filtre, trouve, contacte.
+                <br />Simple comme bonjour.
               </p>
             </motion.div>
 
-            {/* Stats en temps réel */}
+            {/* Comment ça marche - 3 étapes */}
             <motion.div
               variants={itemVariants}
-              className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto"
+              className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto"
             >
               {[
-                { icon: Users, number: "10K+", label: "Créatrices actives" },
-                { icon: ShoppingBag, number: "50K+", label: "Produits vendus" },
-                { icon: TrendingUp, number: "95%", label: "Satisfaction client" }
-              ].map((stat, index) => (
-                <div key={index} className="bg-white/80 dark:bg-[#1C1C1C]/80 backdrop-blur-lg rounded-2xl p-6 shadow-xl border border-white/20">
-                  <stat.icon className="w-8 h-8 text-[#D29587] mx-auto mb-4" />
-                  <div className="text-3xl font-bold text-[#1E1E1E] dark:text-[#E0E0E0]">{stat.number}</div>
-                  <div className="text-[#6B6B6B] dark:text-[#A0A0A0] text-sm">{stat.label}</div>
-                </div>
+                {
+                  icon: Search,
+                  number: "1",
+                  title: "Tu cherches",
+                  desc: "Filtre par prix, catégorie, localisation... trouve exactement ce que tu veux"
+                },
+                {
+                  icon: MessageCircle,
+                  number: "2",
+                  title: "Tu contactes",
+                  desc: "Un clic et hop ! Message WhatsApp pré-écrit avec toutes les infos du produit"
+                },
+                {
+                  icon: Heart,
+                  number: "3",
+                  title: "Tu négocies",
+                  desc: "Prix, livraison, rendez-vous... tu gères directement avec le vendeur"
+                }
+              ].map((step, index) => (
+                <motion.div
+                  key={index}
+                  whileHover={{ scale: 1.05 }}
+                  className="bg-white/80 dark:bg-[#1C1C1C]/80 backdrop-blur-lg rounded-2xl p-6 shadow-xl border border-white/20 relative"
+                >
+                  <div className="absolute -top-4 -left-4 w-8 h-8 bg-gradient-to-r from-[#D29587] to-[#E6B8A2] text-white rounded-full flex items-center justify-center font-bold text-sm">
+                    {step.number}
+                  </div>
+                  <step.icon className="w-8 h-8 text-[#D29587] mx-auto mb-4" />
+                  <div className="text-xl font-bold text-[#1E1E1E] dark:text-[#E0E0E0] mb-2">{step.title}</div>
+                  <div className="text-[#6B6B6B] dark:text-[#A0A0A0] text-sm">{step.desc}</div>
+                </motion.div>
               ))}
             </motion.div>
 
@@ -115,7 +140,7 @@ export default function AboutPage() {
                 <Link href="/dashboard/add">
                   <a className="bg-gradient-to-r from-[#D29587] to-[#E6B8A2] hover:from-[#c37f71] hover:to-[#d4a494] text-white px-8 py-4 rounded-full text-lg font-semibold shadow-2xl flex items-center gap-3 transition-all duration-300">
                     <Store className="w-5 h-5" />
-                    Créer ma boutique gratuitement
+                    Exposer mes produits gratuitement
                     <ArrowRight className="w-5 h-5" />
                   </a>
                 </Link>
@@ -123,8 +148,8 @@ export default function AboutPage() {
 
               <Link href="/boutiques">
                 <a className="text-[#D29587] hover:text-[#c37f71] font-semibold px-6 py-3 border-2 border-[#D29587] hover:border-[#c37f71] rounded-full transition-all duration-300 flex items-center gap-2">
-                  Explorer les boutiques
-                  <Globe className="w-4 h-4" />
+                  Commencer à chercher
+                  <Search className="w-4 h-4" />
                 </a>
               </Link>
             </motion.div>
@@ -132,10 +157,111 @@ export default function AboutPage() {
         </div>
       </div>
 
-      {/* Success Stories avec design cards moderne */}
+      {/* Le Problème/Solution */}
       <div className="max-w-7xl mx-auto px-6 py-24 space-y-32">
 
-        {/* Fatou's Story - Redesigned */}
+        {/* Problème actuel */}
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8 }}
+          className="text-center space-y-8"
+        >
+          <h2 className="text-4xl md:text-5xl font-bold text-[#1E1E1E] dark:text-[#E0E0E0]">
+            Le problème qu'on résout
+          </h2>
+
+          <div className="grid md:grid-cols-2 gap-12 max-w-5xl mx-auto">
+            {/* Côté Acheteur */}
+            <div className="bg-red-50 dark:bg-red-900/20 rounded-2xl p-8 border-l-4 border-red-500">
+              <h3 className="text-2xl font-bold text-red-600 mb-4">😫 Si tu achètes...</h3>
+              <ul className="space-y-3 text-[#6B6B6B] dark:text-[#A0A0A0]">
+                <li className="flex items-start gap-2">
+                  <span className="text-red-500 mt-1">×</span>
+                  Tu fouilles 50 stories Instagram pour trouver un produit
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-red-500 mt-1">×</span>
+                  Tu écris "prix ?" et on ne te répond jamais
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-red-500 mt-1">×</span>
+                  Tu ne sais jamais qui vend quoi près de chez toi
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-red-500 mt-1">×</span>
+                  Impossible de comparer les prix facilement
+                </li>
+              </ul>
+            </div>
+
+            {/* Côté Vendeur */}
+            <div className="bg-red-50 dark:bg-red-900/20 rounded-2xl p-8 border-l-4 border-red-500">
+              <h3 className="text-2xl font-bold text-red-600 mb-4">😩 Si tu vends...</h3>
+              <ul className="space-y-3 text-[#6B6B6B] dark:text-[#A0A0A0]">
+                <li className="flex items-start gap-2">
+                  <span className="text-red-500 mt-1">×</span>
+                  Tes produits se perdent dans le feed Instagram
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-red-500 mt-1">×</span>
+                  Tu passes ton temps à répondre aux mêmes questions
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-red-500 mt-1">×</span>
+                  Seuls tes abonnés voient ce que tu proposes
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-red-500 mt-1">×</span>
+                  Difficile de toucher de nouveaux clients
+                </li>
+              </ul>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Notre Solution */}
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8 }}
+          className="text-center space-y-8"
+        >
+          <h2 className="text-4xl md:text-5xl font-bold text-[#1E1E1E] dark:text-[#E0E0E0]">
+            Notre solution
+          </h2>
+
+          <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-3xl p-12 max-w-4xl mx-auto border border-green-200 dark:border-green-700">
+            <div className="text-6xl mb-6">💡</div>
+            <h3 className="text-3xl font-bold text-green-600 mb-6">Un catalogue géant de TOUT ce qui se vend au Sénégal</h3>
+
+            <div className="grid md:grid-cols-2 gap-8 text-left">
+              <div className="space-y-4">
+                <h4 className="font-bold text-[#1E1E1E] dark:text-[#E0E0E0] text-lg">✅ Pour les acheteurs :</h4>
+                <ul className="space-y-2 text-[#6B6B6B] dark:text-[#A0A0A0]">
+                  <li>• Compare 100 produits en 2 minutes</li>
+                  <li>• Filtre par prix, zone, catégorie</li>
+                  <li>• Contact direct avec message pré-écrit</li>
+                  <li>• Découvre des vendeurs près de chez toi</li>
+                </ul>
+              </div>
+
+              <div className="space-y-4">
+                <h4 className="font-bold text-[#1E1E1E] dark:text-[#E0E0E0] text-lg">✅ Pour les vendeurs :</h4>
+                <ul className="space-y-2 text-[#6B6B6B] dark:text-[#A0A0A0]">
+                  <li>• Vitrine permanente 24h/24</li>
+                  <li>• Nouveaux clients automatiquement</li>
+                  <li>• Zéro gestion de commandes</li>
+                  <li>• Tu gardes ton process WhatsApp habituel</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Success Stories adaptées */}
         <motion.div
           initial={{ opacity: 0, x: -60 }}
           whileInView={{ opacity: 1, x: 0 }}
@@ -156,50 +282,45 @@ export default function AboutPage() {
               />
               <div className="absolute -bottom-6 -right-6 bg-white dark:bg-[#1C1C1C] p-4 rounded-2xl shadow-xl">
                 <div className="flex items-center gap-2">
-                  <Star className="w-5 h-5 text-yellow-400 fill-current" />
-                  <span className="font-bold text-[#1E1E1E] dark:text-[#E0E0E0]">4.9/5</span>
-                  <span className="text-sm text-[#6B6B6B] dark:text-[#A0A0A0]">(127 avis)</span>
+                  <Eye className="w-5 h-5 text-[#D29587]" />
+                  <span className="font-bold text-[#1E1E1E] dark:text-[#E0E0E0]">+200%</span>
+                  <span className="text-sm text-[#6B6B6B] dark:text-[#A0A0A0]">de visibilité</span>
                 </div>
               </div>
             </div>
 
             <div className="space-y-6">
               <div className="inline-flex items-center bg-gradient-to-r from-green-500 to-emerald-500 text-white px-4 py-2 rounded-full text-sm font-medium">
-                <TrendingUp className="w-4 h-4 mr-2" />
-                Success Story
+                <Users className="w-4 h-4 mr-2" />
+                Témoignage Vendeur
               </div>
 
               <h2 className="text-4xl md:text-5xl font-bold text-[#1E1E1E] dark:text-[#E0E0E0]">
-                De WhatsApp à
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D29587] to-[#E6B8A2]"> 50 000 FCFA/mois</span>
+                "Je reçois des appels de
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D29587] to-[#E6B8A2]"> Touba à Ziguinchor</span>"
               </h2>
 
               <div className="space-y-4 text-[#6B6B6B] dark:text-[#A0A0A0] text-lg leading-relaxed">
                 <p>
-                  <strong className="text-[#D29587]">Fatou</strong> fabriquait de magnifiques savons artisanaux depuis sa cuisine.
-                  Bloquée par les DM perdus et les paiements compliqués, elle gagnait à peine de quoi couvrir ses matières premières.
+                  <strong className="text-[#D29587]">Fatou</strong> vendait uniquement à ses voisines à Pikine.
+                  Maintenant, grâce à notre plateforme, ses savons naturels sont vus partout au Sénégal.
                 </p>
                 <p>
-                  En 3 mois sur notre plateforme, elle a multiplié son chiffre d'affaires par 8 et livre maintenant dans tout Dakar.
-                  <strong className="text-green-600"> Sa boutique génère aujourd'hui plus que son ancien salaire.</strong>
+                  "Avant, je vendais 10 savons par semaine à mes connaissances.
+                  Maintenant je reçois 3-4 appels par jour de gens que je ne connais même pas !
+                  <strong className="text-green-600"> Mon téléphone n'arrête plus de sonner."</strong>
                 </p>
               </div>
 
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-500" />
-                  <span className="font-semibold">+800% de revenus</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-500" />
-                  <span className="font-semibold">127 clientes fidèles</span>
-                </div>
+              <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-xl border-l-4 border-green-500">
+                <p className="italic text-[#6B6B6B] dark:text-[#A0A0A0]">
+                  "C'est comme avoir une vitrine au marché Sandaga, mais qui ne ferme jamais !"
+                </p>
               </div>
             </div>
           </div>
         </motion.div>
 
-        {/* Zahra's Story - Redesigned */}
         <motion.div
           initial={{ opacity: 0, x: 60 }}
           whileInView={{ opacity: 1, x: 0 }}
@@ -210,40 +331,39 @@ export default function AboutPage() {
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div className="space-y-6 order-2 md:order-1">
               <div className="inline-flex items-center bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-full text-sm font-medium">
-                <Heart className="w-4 h-4 mr-2" />
-                Customer Love
+                <Search className="w-4 h-4 mr-2" />
+                Témoignage Acheteuse
               </div>
 
               <h2 className="text-4xl md:text-5xl font-bold text-[#1E1E1E] dark:text-[#E0E0E0]">
-                Fini les
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-pink-500"> "prix ?" </span>
-                sans réponse
+                "Fini de chercher
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-pink-500"> pendant des heures</span>"
               </h2>
 
               <div className="space-y-4 text-[#6B6B6B] dark:text-[#A0A0A0] text-lg leading-relaxed">
                 <p>
-                  <strong className="text-purple-500">Zahra</strong> passait des heures à chercher le hijab parfait sur Instagram.
-                  Stories floues, prix cachés, vendeurs qui ne répondent pas...
+                  <strong className="text-purple-500">Zahra</strong> cherchait un hijab sous 5 000 FCFA.
+                  En 5 minutes sur notre plateforme : 15 options, 8 vendeurs différents, tous les prix affichés.
                 </p>
                 <p>
-                  Maintenant, elle compare 50 boutiques en 5 minutes, lit les vrais avis,
-                  et reçoit ses commandes en 24h chrono.
-                  <strong className="text-purple-500"> "C'est devenu un plaisir de faire du shopping !"</strong>
+                  "J'ai filtré par prix maximum, par couleur, et hop !
+                  J'ai appelé 3 vendeurs, négocié, et trouvé exactement ce que je voulais.
+                  <strong className="text-purple-500"> Ça m'a pris moins de temps que de regarder 10 stories Instagram."</strong>
                 </p>
               </div>
 
-              <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 p-6 rounded-2xl border-l-4 border-purple-500">
-                <p className="italic text-[#6B6B6B] dark:text-[#A0A0A0]">
-                  "Avant je perdais 2h pour acheter un hijab. Maintenant, je trouve 10 options en 5 minutes et je commande directement.
-                  Cette plateforme a changé ma façon de faire du shopping !"
-                </p>
-                <div className="mt-3 flex items-center gap-2">
-                  <div className="flex text-yellow-400">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="w-4 h-4 fill-current" />
-                    ))}
-                  </div>
-                  <span className="text-sm font-semibold">- Zahra M., Cliente depuis 8 mois</span>
+              <div className="flex items-center gap-6">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-purple-500">5 min</div>
+                  <div className="text-sm text-[#6B6B6B] dark:text-[#A0A0A0]">de recherche</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-purple-500">15</div>
+                  <div className="text-sm text-[#6B6B6B] dark:text-[#A0A0A0]">options trouvées</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-purple-500">3</div>
+                  <div className="text-sm text-[#6B6B6B] dark:text-[#A0A0A0]">vendeurs contactés</div>
                 </div>
               </div>
             </div>
@@ -252,21 +372,21 @@ export default function AboutPage() {
               <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 to-transparent rounded-3xl transform -rotate-3"></div>
               <Image
                 src="/images/pexels-photo-6694860.jpeg"
-                alt="Zahra, cliente satisfaite"
+                alt="Zahra utilise son téléphone"
                 width={600}
                 height={500}
                 className="relative rounded-3xl shadow-2xl object-cover"
                 priority
               />
               <div className="absolute -top-6 -left-6 bg-gradient-to-r from-purple-500 to-pink-500 text-white p-4 rounded-2xl shadow-xl">
-                <div className="text-2xl font-bold">24h</div>
-                <div className="text-sm opacity-90">Livraison express</div>
+                <Phone className="w-8 h-8" />
+                <div className="text-xs opacity-90 mt-1">Contact direct</div>
               </div>
             </div>
           </div>
         </motion.div>
 
-        {/* Vision Section avec design futuriste */}
+        {/* Pourquoi ça marche */}
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -277,40 +397,30 @@ export default function AboutPage() {
           <div className="absolute inset-0 bg-gradient-to-r from-[#D29587]/5 via-transparent to-[#E6B8A2]/5 rounded-3xl"></div>
 
           <div className="relative z-10 space-y-8">
-            <div className="inline-flex items-center bg-gradient-to-r from-[#D29587] to-[#E6B8A2] text-white px-6 py-3 rounded-full text-base font-semibold shadow-lg">
-              <Globe className="w-5 h-5 mr-2" />
-              Notre Vision
-            </div>
-
             <h2 className="text-4xl md:text-6xl font-black text-[#1E1E1E] dark:text-[#E0E0E0] max-w-4xl mx-auto leading-tight">
-              Faire du Sénégal la
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D29587] to-[#E6B8A2]">
-                Silicon Valley
-              </span> de l'Afrique de l'Ouest
+              Pourquoi ça marche si bien ?
             </h2>
 
             <p className="text-xl text-[#6B6B6B] dark:text-[#A0A0A0] max-w-3xl mx-auto leading-relaxed">
-              Chaque créatrice sénégalaise mérite d'avoir accès aux mêmes outils que les plus grandes marques mondiales.
-              <strong className="text-[#D29587]"> Nous démocratisons le e-commerce</strong> pour que le talent soit la seule limite au succès.
+              Parce qu'on ne change pas vos habitudes. On les améliore juste.
             </p>
 
-            {/* Pourquoi nous choisir - Cards */}
             <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto mt-16">
               {[
                 {
-                  icon: Shield,
-                  title: "Paiements Sécurisés",
-                  desc: "Orange Money, Wave, virements - tous vos moyens de paiement préférés"
+                  icon: MessageCircle,
+                  title: "Tu gardes WhatsApp",
+                  desc: "On force personne à changer. WhatsApp reste ton outil de vente principal."
                 },
                 {
                   icon: Zap,
-                  title: "Setup en 5 minutes",
-                  desc: "Pas besoin d'être développeuse. Notre interface est si simple que ta grand-mère pourrait l'utiliser"
+                  title: "Zéro complications",
+                  desc: "Pas de gestion de stock, pas de paiements en ligne, pas de livraisons à organiser."
                 },
                 {
-                  icon: TrendingUp,
-                  title: "Growth garantie",
-                  desc: "Nos vendeurs voient en moyenne +300% d'augmentation de leurs ventes en 3 mois"
+                  icon: Eye,
+                  title: "Visibilité maximale",
+                  desc: "Tes produits sont vus par des milliers de personnes qui cherchent exactement ce que tu vends."
                 }
               ].map((feature, index) => (
                 <motion.div
@@ -327,7 +437,7 @@ export default function AboutPage() {
           </div>
         </motion.div>
 
-        {/* FAQ Section modernisée */}
+        {/* FAQ adaptée */}
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -340,27 +450,27 @@ export default function AboutPage() {
               Questions fréquentes
             </h2>
             <p className="text-[#6B6B6B] dark:text-[#A0A0A0] text-lg">
-              Tout ce que tu dois savoir avant de te lancer
+              On répond aux questions qu'on nous pose le plus souvent
             </p>
           </div>
 
           <Accordion type="single" collapsible className="w-full">
             {[
               {
-                question: "Est-ce vraiment gratuit de créer ma boutique ?",
-                answer: "Oui, 100% gratuit ! Tu peux créer ta boutique, ajouter tes produits et commencer à vendre sans payer un centime. Nous prenons seulement une petite commission (3%) sur tes ventes pour maintenir la plateforme."
+                question: "Comment ça marche exactement ?",
+                answer: "Simple : tu postes tes produits avec photos et prix. Les clients cherchent, trouvent ton produit, cliquent sur 'Contacter' et ça ouvre WhatsApp avec un message pré-écrit. Après, vous vous débrouillez comme d'habitude."
               },
               {
-                question: "Comment mes clients peuvent-ils payer ?",
-                answer: "Orange Money, Wave, virements bancaires, espèces à la livraison... Tous les moyens de paiement populaires au Sénégal sont acceptés. Tes clients choisissent ce qui leur convient."
+                question: "Je dois gérer les livraisons et paiements ?",
+                answer: "Non ! C'est justement ça qui est bien. Tu négocies prix, livraison et paiement directement avec ton client sur WhatsApp, comme tu as toujours fait. On est juste la vitrine."
               },
               {
-                question: "Qui peut vendre sur la plateforme ?",
-                answer: "Toute personne basée au Sénégal ! Que tu vendes des vêtements, de l'artisanat, de la nourriture, des services... Si c'est légal, tu peux le vendre chez nous."
+                question: "Ça coûte combien ?",
+                answer: "Créer ton catalogue et poster tes produits c'est 100% gratuit. Pour l'instant, on teste tout gratuitement pour améliorer la plateforme avec vos retours."
               },
               {
-                question: "Comment je récupère mon argent ?",
-                answer: "Dès qu'une vente est confirmée, l'argent est transféré sur ton compte Orange Money ou Wave en moins de 24h. Simple, rapide, sécurisé."
+                question: "Les gens vont vraiment me trouver ?",
+                answer: "Oui ! La plateforme grandit chaque jour. Les clients préfèrent chercher sur un seul site plutôt que de fouiller 50 comptes Instagram. Plus il y a de vendeurs, plus ça attire d'acheteurs."
               }
             ].map((faq, index) => (
               <AccordionItem key={index} value={`item-${index}`} className="border-b border-gray-200 dark:border-gray-700">
@@ -373,6 +483,30 @@ export default function AboutPage() {
               </AccordionItem>
             ))}
           </Accordion>
+        </motion.div>
+
+        {/* A propos du créateur */}
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8 }}
+          className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-3xl p-12 text-center"
+        >
+          <div className="text-6xl mb-6">🎓</div>
+          <h2 className="text-3xl font-bold text-[#1E1E1E] dark:text-[#E0E0E0] mb-6">
+            Créé par un étudiant sénégalais, pour les Sénégalais
+          </h2>
+          <p className="text-lg text-[#6B6B6B] dark:text-[#A0A0A0] max-w-3xl mx-auto leading-relaxed">
+            Cette plateforme a été développée par un étudiant en mathématiques de 19 ans qui en avait marre
+            de voir sa mère galérer à vendre ses gâteaux sur WhatsApp.
+            <br /><br />
+            <strong className="text-[#D29587]">L'idée est simple :</strong> si on peut commander un taxi avec une app,
+            pourquoi on ne peut pas trouver facilement qui vend quoi près de chez nous ?
+            <br /><br />
+            Pas de grosses promesses, pas de révolution. Juste une solution pratique,
+            made in Sénégal, qui marche.
+          </p>
         </motion.div>
 
         {/* Final CTA avec urgence */}
@@ -407,7 +541,7 @@ export default function AboutPage() {
             </motion.div>
 
             <div className="text-white/80 text-sm">
-              ⚡ Setup en moins de 5 minutes • 🎯 Première vente sous 48h • 💰 Commission seulement sur les ventes
+              ⚡ Setup en moins de 5 minutes • 🎯 Booster ses ventes • 💰 100% gratuit!
             </div>
           </div>
         </motion.div>
