@@ -177,7 +177,7 @@ export default function FilteredProducts({ products, userId }: { products: Produ
                   Ouvre ta boutique gratuitement et commence à vendre en quelques clics. C’est simple, rapide et sans engagement.
                 </p>
                 <Link
-                  href="/dashboard/add"
+                  href="/dashboard/products"
                   onClick={dismissOnboarding}
                   className="inline-block px-6 py-3 bg-[#D29587] dark:bg-[#FBCFC2] text-white dark:text-black font-semibold rounded-full hover:bg-[#bb7d72] dark:hover:bg-[#f3b9a9] transition shadow"
                 >

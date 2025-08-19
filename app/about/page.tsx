@@ -493,8 +493,7 @@ export default function AboutPage() {
             Créé par un étudiant sénégalais, pour les Sénégalais
           </h2>
           <p className="text-lg text-[#6B6B6B] dark:text-[#A0A0A0] max-w-3xl mx-auto leading-relaxed">
-            Cette plateforme a été développée par un étudiant en mathématiques de 19 ans qui en avait marre
-            de voir sa mère galérer à vendre ses gâteaux sur WhatsApp.
+            Cette plateforme a été développée par un étudiant en mathématiques de 19 ans qui veut revolutionner le e-commerce sénégalais!.
             <br /><br />
             <strong className="text-[#D29587]">L'idée est simple :</strong> si on peut commander un taxi avec une app,
             pourquoi on ne peut pas trouver facilement qui vend quoi près de chez nous ?
