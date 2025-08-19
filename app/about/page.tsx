@@ -81,7 +81,7 @@ export default function AboutPage() {
 
               <p className="text-xl md:text-2xl text-[#6B6B6B] dark:text-[#A0A0A0] max-w-4xl mx-auto leading-relaxed font-light">
                 La première plateforme qui regroupe <strong className="font-semibold text-[#D29587]">tous les vendeurs du Sénégal</strong>
-                en un seul endroit. Cherche, filtre, trouve, contacte.
+                 en un seul endroit. Cherche, filtre, trouve, contacte.
                 <br />Simple comme bonjour.
               </p>
             </motion.div>
