@@ -45,9 +45,9 @@ export default function ProductImageCarousel({
     <div className="w-full space-y-6">
       {/* SLIDE PRINCIPAL */}
       <Swiper
-        loop={true}
+        loop
         spaceBetween={10}
-        navigation={true}
+        navigation
         autoplay={{ delay: 4000, disableOnInteraction: false }}
         thumbs={{ swiper: thumbsSwiper }}
         modules={[FreeMode, Navigation, Thumbs, Autoplay]}
@@ -55,12 +55,12 @@ export default function ProductImageCarousel({
       >
         {images.map((img, index) => (
           <SwiperSlide key={index}>
-            <div className="relative w-full h-[600px] rounded-3xl overflow-hidden">
+            <div className="relative w-full h-[600px] rounded-3xl overflow-hidden cursor-pointer">
               <Image
                 src={img || '/placeholder.jpg'}
                 alt={`${productTitle} - Image ${index + 1}`}
                 fill
-                className="object-cover"
+                className="object-cover transition-transform duration-500 ease-in-out hover:scale-105"
                 priority={index === 0}
                 quality={90}
               />
@@ -98,8 +98,8 @@ export default function ProductImageCarousel({
           onSwiper={setThumbsSwiper}
           spaceBetween={10}
           slidesPerView={6}
-          freeMode={true}
-          watchSlidesProgress={true}
+          freeMode
+          watchSlidesProgress
           modules={[FreeMode, Thumbs]}
           className="!px-2"
         >
@@ -124,12 +124,13 @@ export default function ProductImageCarousel({
 
       {/* MODAL ZOOM FULLSCREEN */}
       {isZoomed && (
-        <div className="fixed inset-0 z-50 bg-black/95 flex flex-col">
+        <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center transition-opacity duration-300">
+          {/* BOUTON FERMER */}
           <button
             onClick={closeZoom}
-            className="absolute top-6 right-6 bg-white/20 hover:bg-white/30 text-white p-3 rounded-full z-50 transition-all hover:scale-110"
+            className="absolute top-6 right-6 z-[100] bg-white/20 hover:bg-white/30 p-3 rounded-full transition-all hover:scale-110"
           >
-            <FaTimes className="text-xl" />
+            <FaTimes className="text-xl text-white" />
           </button>
 
           <Swiper
@@ -138,7 +139,7 @@ export default function ProductImageCarousel({
             navigation
             loop
             modules={[Navigation, FreeMode]}
-            className="flex-1"
+            className="w-full h-full max-w-[90vw] max-h-[90vh]"
           >
             {images.map((img, index) => (
               <SwiperSlide key={index} className="flex items-center justify-center">
@@ -147,7 +148,7 @@ export default function ProductImageCarousel({
                   alt={`${productTitle} - Zoom Image ${index + 1}`}
                   width={1200}
                   height={1200}
-                  className="object-contain max-h-screen"
+                  className="object-contain max-h-screen transition-transform duration-500 ease-in-out"
                   priority={index === zoomIndex}
                 />
               </SwiperSlide>
