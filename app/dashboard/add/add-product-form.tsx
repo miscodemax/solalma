@@ -53,9 +53,13 @@ export default function AddProductForm({ userId }: Props) {
     setForm((prev) => ({ ...prev, whatsappNumber: val }))
   }
 
-  // Fonction pour ajouter une nouvelle image
-  const handleAddImage = (url: string) => {
-    setImages((prev) => [...prev, url])
+  // Fonction pour ajouter de nouvelles images (peut être plusieurs à la fois)
+  const handleAddImages = (urls: string[]) => {
+    setImages((prev) => {
+      const newImages = [...prev, ...urls]
+      // Limiter à 5 images maximum
+      return newImages.slice(0, 5)
+    })
   }
 
   // Fonction pour supprimer une image
@@ -179,10 +183,11 @@ export default function AddProductForm({ userId }: Props) {
             <div className="space-y-6">
               {/* Uploader d'image */}
               <div className="flex flex-col items-center">
-                <ImageUploader onUpload={handleAddImage} />
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 text-center">
-                  Ajoutez jusqu'à 5 images. La première image sera l'image principale.
-                </p>
+                <ImageUploader
+                  onUpload={handleAddImages}
+                  maxImages={5}
+                  currentImageCount={images.length}
+                />
               </div>
 
               {/* Aperçu des images */}
