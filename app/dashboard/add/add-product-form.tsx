@@ -30,9 +30,9 @@ export default function AddProductForm({ userId }: Props) {
     title: '',
     price: '',
     description: '',
-    images: [] as string[], // tableau d’URLs
     whatsappNumber: '',
     category: categories[0].value,
+    images: [] as string[], // tableau pour toutes les images
   })
 
   const [loading, setLoading] = useState(false)
@@ -52,6 +52,10 @@ export default function AddProductForm({ userId }: Props) {
     setForm((prev) => ({ ...prev, whatsappNumber: val }))
   }
 
+  const handleImageUpload = (url: string) => {
+    setForm((prev) => ({ ...prev, images: [...prev.images, url] }))
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
@@ -65,30 +69,53 @@ export default function AddProductForm({ userId }: Props) {
     }
 
     if (form.images.length === 0) {
-      setError("Veuillez d'abord téléverser au moins une image.")
+      setError('Veuillez téléverser au moins une image.')
       return
     }
 
     setLoading(true)
 
-    const { error } = await supabase.from('product').insert({
-      title: form.title.trim(),
-      price: parseFloat(form.price),
-      description: form.description.trim(),
-      images: form.images, // on enregistre le tableau d’URLs
-      user_id: userId,
-      whatsapp_number: fullNumber,
-      category: form.category,
-    })
+    // 1️⃣ Insérer le produit avec la première image
+    const { data: product, error: productError } = await supabase
+      .from('product')
+      .insert({
+        title: form.title.trim(),
+        price: parseFloat(form.price),
+        description: form.description.trim(),
+        image_url: form.images[0], // première image comme image principale
+        user_id: userId,
+        whatsapp_number: fullNumber,
+        category: form.category,
+      })
+      .select('id')
+      .single()
+
+    if (productError) {
+      setError(productError.message)
+      setLoading(false)
+      return
+    }
+
+    // 2️⃣ Insérer les images supplémentaires dans product_images
+    const extraImages = form.images.slice(1)
+    if (extraImages.length > 0) {
+      const { error: imagesError } = await supabase.from('product_images').insert(
+        extraImages.map((url) => ({
+          product_id: product.id,
+          image_url: url,
+        }))
+      )
+
+      if (imagesError) {
+        setError(imagesError.message)
+        setLoading(false)
+        return
+      }
+    }
 
     setLoading(false)
-
-    if (error) {
-      setError(error.message)
-    } else {
-      setSuccess(true)
-      setTimeout(() => router.push('/dashboard/products'), 1000)
-    }
+    setSuccess(true)
+    setTimeout(() => router.push('/dashboard/products'), 1000)
   }
 
   return (
@@ -100,62 +127,41 @@ export default function AddProductForm({ userId }: Props) {
             variant="outline"
             size="lg"
             onClick={() => router.back()}
-            className="mb-4 border-[#D29587] text-[#D29587] font-semibold hover:bg-[#F7ECEA] hover:dark:bg-[#1a1a1a] transition-all duration-200 px-6 py-3"
+            className="mb-4 border-[#D29587] text-[#D29587] font-semibold hover:bg-[#F7ECEA] hover:dark:bg-[#1a1a1a]"
           >
             ← Retour
           </Button>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
             Ajouter un produit
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base">
-            Remplissez les informations pour mettre votre produit en vente
-          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-8 sm:space-y-10">
-          {/* Messages d'erreur/succès */}
-          {error && (
-            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4">
-              <p className="text-red-700 dark:text-red-400 text-center font-medium">{error}</p>
-            </div>
-          )}
-          {success && (
-            <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4">
-              <p className="text-green-700 dark:text-green-400 text-center font-medium">
-                ✅ Produit ajouté avec succès !
-              </p>
-            </div>
-          )}
+          {/* Messages */}
+          {error && <p className="text-red-500">{error}</p>}
+          {success && <p className="text-green-500">✅ Produit ajouté avec succès !</p>}
 
-          {/* Section Photos */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 sm:p-8">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-4 sm:mb-6">
-              📸 Photos du produit
-            </h2>
+          {/* Images */}
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 sm:p-8">
+            <h2 className="text-lg sm:text-xl font-semibold mb-4 sm:mb-6">📸 Photos du produit</h2>
             <div className="flex flex-col items-center gap-6">
-              <ImageUploader
-                onUpload={(urls) =>
-                  setForm((prev) => ({ ...prev, images: [...prev.images, ...urls] }))
-                }
-              />
+              <ImageUploader onUpload={handleImageUpload} />
               {form.images.length > 0 && (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 w-full">
-                  {form.images.map((url, idx) => (
-                    <div key={idx} className="relative w-full aspect-square">
-                      <Image
-                        src={url}
-                        alt={`Image ${idx + 1}`}
-                        fill
-                        className="object-cover rounded-xl border border-gray-200 dark:border-gray-600 shadow-sm"
-                      />
-                    </div>
+                  {form.images.map((img, idx) => (
+                    <Image
+                      key={idx}
+                      src={img}
+                      alt={`Image ${idx + 1}`}
+                      width={200}
+                      height={200}
+                      className="rounded-xl object-cover border shadow-sm"
+                    />
                   ))}
                 </div>
               )}
             </div>
           </div>
-
-          {/* ... tes autres sections (informations, prix, contact) restent identiques ... */}
           {/* Section Informations générales */}
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 sm:p-8">
             <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-6 sm:mb-8">
@@ -313,26 +319,15 @@ export default function AddProductForm({ userId }: Props) {
               </div>
             </div>
           </div>
-          {/* Bouton de soumission */}
-          <div className="sticky bottom-0 bg-gray-50 dark:bg-gray-900 pb-4 pt-6 -mx-4 px-4 sm:static sm:bg-transparent sm:dark:bg-transparent sm:pb-0 sm:pt-0 sm:mx-0 sm:px-0">
+
+          <div>
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-[#D29587] text-white font-semibold py-4 px-6 text-lg rounded-xl hover:bg-[#bb7d72] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg"
+              className="w-full bg-[#D29587] text-white font-semibold py-4 px-6 text-lg rounded-xl hover:bg-[#bb7d72]"
             >
-              {loading ? (
-                <div className="flex items-center justify-center gap-3">
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Ajout en cours...
-                </div>
-              ) : (
-                'Publier mon produit'
-              )}
+              {loading ? 'Ajout en cours...' : 'Publier mon produit'}
             </button>
-
-            <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-4">
-              {success ? 'Redirection dans un instant…' : "En publiant, vous acceptez nos conditions d'utilisation ✨"}
-            </p>
           </div>
         </form>
       </div>
