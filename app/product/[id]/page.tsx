@@ -66,15 +66,9 @@ export default async function ProductDetailPage({ params }: Props) {
     },
   })
 
-  const { data: userData } = await supabase.auth.getUser()
 
-  if (!userData?.user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center dark:bg-black">
-        <AuthModal />
-      </div>
-    )
-  }
+
+
 
   const {
     data: product,

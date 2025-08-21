@@ -29,6 +29,7 @@ export default async function ProductsPage() {
       </div>
     )
   }
+   
 
   const { data: products, error: productsError } = await supabase
     .from("product")
