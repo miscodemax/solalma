@@ -382,8 +382,8 @@ export default async function FavoritesPage() {
                       ].map((feature, idx) => (
                         <div key={idx} className="space-y-3">
                           <div className={`w-16 h-16 bg-gradient-to-r ${feature.color === 'green' ? 'from-green-500 to-emerald-600' :
-                              feature.color === 'blue' ? 'from-blue-500 to-indigo-600' :
-                                'from-purple-500 to-pink-600'
+                            feature.color === 'blue' ? 'from-blue-500 to-indigo-600' :
+                              'from-purple-500 to-pink-600'
                             } rounded-2xl flex items-center justify-center mx-auto`}>
                             <feature.icon className="text-2xl text-white" />
                           </div>
@@ -466,27 +466,7 @@ export default async function FavoritesPage() {
         )}
       </div>
 
-      {/* Custom CSS for animations */}
-      <style jsx>{`
-        @keyframes fade-in-up {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        
-        .animate-fade-in-up {
-          animation: fade-in-up 0.6s ease-out forwards;
-        }
-        
-        .animation-delay-200 {
-          animation-delay: 200ms;
-        }
-      `}</style>
+
     </main>
   )
 }
