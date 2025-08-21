@@ -162,7 +162,7 @@ Lien produit: https://sangse.shop/product/${product.id}`
               {/* Container principal de l'image */}
               <div className="relative w-full h-[600px] rounded-3xl overflow-hidden shadow-2xl bg-white/50 backdrop-blur-sm border border-white/20">
                 <Image
-                  src={product.image_url[0] || "/placeholder.jpg"}
+                  src={product.image_url || "/placeholder.jpg"}
                   alt={product.title}
                   fill
                   className="object-cover transition-all duration-1000 ease-out group-hover:scale-110"
