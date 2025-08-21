@@ -12,7 +12,7 @@ import { FaWhatsapp, FaCheckCircle, FaClock, FaHeart, FaMapMarkerAlt, FaUserChec
 import { HiSparkles, HiPhone, HiShare } from "react-icons/hi2"
 import type { Metadata } from "next"
 import BackButton from "@/app/composants/back-button"
-
+import ProductImageCarousel from "@/app/composants/ProductImageCarousel"
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const res = await fetch(`${supabaseUrl}/rest/v1/product?id=eq.${params.id}`, {
@@ -66,10 +66,6 @@ export default async function ProductDetailPage({ params }: Props) {
     },
   })
 
-
-
-
-
   const {
     data: product,
     error: productError,
@@ -78,16 +74,30 @@ export default async function ProductDetailPage({ params }: Props) {
     .select("*")
     .eq("id", Number(params.id))
     .single()
+
+  // Récupérer les images supplémentaires
+  const { data: productImages } = await supabase
+    .from("product_images")
+    .select("image_url, order_index")
+    .eq("product_id", Number(params.id))
+    .order("order_index", { ascending: true })
+
   const {
     data: allProducts,
   } = await supabase
     .from("product")
     .select("*")
-    .eq("user_id", product.user_id)
+    .eq("user_id", product?.user_id)
 
   if (productError || !product) {
     notFound()
   }
+
+  // Construire le tableau de toutes les images
+  const allImages = [
+    product.image_url, // Image principale en premier
+    ...(productImages?.map(img => img.image_url) || [])
+  ].filter(Boolean) // Filtrer les valeurs null/undefined
 
   const isNew =
     product.created_at &&
@@ -110,11 +120,6 @@ export default async function ProductDetailPage({ params }: Props) {
     .select("username, avatar_url, bio")
     .eq("id", product.user_id)
     .single()
-
-  // Debug logs pour identifier le problème
-  console.log("Product user_id:", product.user_id)
-  console.log("Profile data:", profile)
-  console.log("Profile error:", profileError)
 
   const averageRating =
     allRatings && allRatings.length > 0
@@ -153,59 +158,13 @@ Lien produit: https://sangse.shop/product/${product.id}`
         </nav>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
-          {/* Section Image avec effets créatifs */}
+          {/* Section Images avec Carousel */}
           <div className="space-y-6">
-            <div className="relative group">
-              {/* Effet de halo coloré autour de l'image */}
-              <div className="absolute -inset-4 bg-gradient-to-r from-[#D29587]/20 via-[#E6B8A2]/20 to-[#D29587]/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-
-              {/* Container principal de l'image */}
-              <div className="relative w-full h-[600px] rounded-3xl overflow-hidden shadow-2xl bg-white/50 backdrop-blur-sm border border-white/20">
-                <Image
-                  src={product.image_url || "/placeholder.jpg"}
-                  alt={product.title}
-                  fill
-                  className="object-cover transition-all duration-1000 ease-out group-hover:scale-110"
-                  priority
-                />
-
-                {/* Overlay gradiant subtil */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-
-                {/* Badges flottants repositionnés */}
-                <div className="absolute top-6 left-6 flex flex-col gap-3">
-                  {isNew && (
-                    <div className="flex items-center bg-gradient-to-r from-green-400 to-emerald-500 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg animate-bounce">
-                      <HiSparkles className="mr-2 text-base" />
-                      Nouveau
-                    </div>
-                  )}
-
-                  <div className="flex items-center bg-gradient-to-r from-[#D29587] to-[#E6B8A2] text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg">
-                    <FaUserCheck className="mr-2" />
-                    Contact direct
-                  </div>
-                </div>
-
-                {/* Bouton coeur repositionné */}
-                <div className="absolute top-6 right-6">
-                  <button className="bg-white/90 backdrop-blur-md p-3 rounded-full shadow-lg hover:bg-white hover:scale-110 transition-all duration-300 group">
-                    <FaHeart className="text-gray-400 group-hover:text-red-500 transition-colors text-lg" />
-                  </button>
-                </div>
-
-                {/* Indicateur de disponibilité */}
-                <div className="absolute bottom-6 left-6 bg-green-500/90 backdrop-blur-md text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg">
-                  <div className="flex items-center">
-                    <div className="w-2 h-2 bg-green-300 rounded-full mr-2 animate-pulse"></div>
-                    Disponible
-                  </div>
-                </div>
-              </div>
-
-              {/* Effet de reflet sous l'image */}
-              <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 w-3/4 h-8 bg-gradient-to-r from-transparent via-[#D29587]/10 to-transparent blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-            </div>
+            <ProductImageCarousel
+              images={allImages}
+              productTitle={product.title}
+              isNew={isNew}
+            />
 
             {/* Zone de partage moderne */}
             <div className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-lg p-6 rounded-2xl border border-white/30 shadow-xl">
@@ -485,7 +444,6 @@ ${product.description?.slice(0, 100)}...
                       className="object-cover transition-transform duration-700 group-hover:scale-110"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
                   </div>
 
                   <div className="p-6">
