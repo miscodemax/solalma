@@ -128,7 +128,7 @@ export default function ProductImageCarousel({
           {/* BOUTON FERMER */}
           <button
             onClick={closeZoom}
-            className="absolute top-6 right-6 z-[100] bg-white/20 hover:bg-white/30 p-3 rounded-full transition-all hover:scale-110"
+            className="absolute top-5/12 right-6 z-[100] bg-white/20 hover:bg-white/30 p-3 rounded-full transition-all hover:scale-110"
           >
             <FaTimes className="text-xl text-white" />
           </button>
