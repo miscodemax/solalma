@@ -115,10 +115,9 @@ export default function AddProductForm({ userId }: Props) {
 
       // Si il y a plus d'une image, insérer les images supplémentaires dans product_images
       if (images.length > 1) {
-        const additionalImages = images.slice(1).map((imageUrl, index) => ({
+        const additionalImages = images.slice(1).map((imageUrl) => ({
           product_id: productData.id,
           image_url: imageUrl,
-          order_index: index + 1, // L'image principale a l'index 0
         }))
 
         const { error: imagesError } = await supabase

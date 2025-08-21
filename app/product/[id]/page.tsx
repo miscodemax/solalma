@@ -78,9 +78,8 @@ export default async function ProductDetailPage({ params }: Props) {
   // Récupérer les images supplémentaires
   const { data: productImages } = await supabase
     .from("product_images")
-    .select("image_url, order_index")
+    .select("image_url")
     .eq("product_id", Number(params.id))
-    .order("order_index", { ascending: true })
 
   const {
     data: allProducts,
