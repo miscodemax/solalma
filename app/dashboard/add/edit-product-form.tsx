@@ -13,7 +13,7 @@ type Props = {
     title: string
     price: number
     description: string
-    images: string[]   // 👈 maintenant un tableau
+    images: string[]
     whatsapp_number?: string
     category?: string
   }
@@ -31,7 +31,7 @@ export default function EditProductForm({ product }: Props) {
   const [title, setTitle] = useState(product.title)
   const [price, setPrice] = useState(product.price.toString())
   const [description, setDescription] = useState(product.description)
-  const [images, setImages] = useState<string[]>(product.images || []) // 👈 tableau
+  const [images, setImages] = useState<string[]>(product.images || [])
   const [whatsappNumber, setWhatsappNumber] = useState(product.whatsapp_number || '')
   const [category, setCategory] = useState(product.category || categories[0].value)
   const [loading, setLoading] = useState(false)
@@ -59,7 +59,7 @@ export default function EditProductForm({ product }: Props) {
         title: title.trim(),
         price: parseFloat(price),
         description: description.trim(),
-        images, // 👈 envoie le tableau
+        images,
         whatsapp_number: whatsappNumber,
         category,
       })
@@ -95,20 +95,20 @@ export default function EditProductForm({ product }: Props) {
       >
         {error && <p className="text-red-500 text-sm">{error}</p>}
 
-        {/* Section images */}
+        {/* Image Section */}
         <div className="flex flex-col items-center gap-6">
           <ImageUploader
-            onUpload={(urls) => setImages((prev) => [...prev, ...urls])} // 👈 ajout multiple
+            onUpload={(urls) => setImages((prev) => [...prev, ...urls])}
           />
           {images.length > 0 && (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 w-full">
               {images.map((url, idx) => (
-                <div key={idx} className="relative w-full aspect-square group">
+                <div key={idx} className="relative w-full aspect-square group rounded-xl overflow-hidden border border-[#E6E3DF] dark:border-gray-700 shadow-sm">
                   <Image
                     src={url}
                     alt={`Image ${idx + 1}`}
                     fill
-                    className="object-cover rounded-xl border border-[#E6E3DF] dark:border-gray-700 shadow-sm"
+                    className="object-cover rounded-xl transition-transform duration-300 group-hover:scale-105"
                   />
                   <button
                     type="button"
@@ -123,7 +123,7 @@ export default function EditProductForm({ product }: Props) {
           )}
         </div>
 
-        {/* Infos du produit */}
+        {/* Product Info */}
         <div className="space-y-4">
           <input
             type="text"
@@ -133,7 +133,6 @@ export default function EditProductForm({ product }: Props) {
             className="w-full px-4 py-3 border border-[#DAD5CD] dark:border-gray-700 dark:bg-[#2a2a2a] dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D29587] transition"
             required
           />
-
           <input
             type="number"
             placeholder="Prix (en FCFA)"
@@ -144,7 +143,6 @@ export default function EditProductForm({ product }: Props) {
             min={0}
             step="0.01"
           />
-
           <textarea
             placeholder="Description détaillée..."
             value={description}
@@ -152,7 +150,6 @@ export default function EditProductForm({ product }: Props) {
             className="w-full px-4 py-3 border border-[#DAD5CD] dark:border-gray-700 dark:bg-[#2a2a2a] dark:text-white rounded-xl h-32 resize-none focus:outline-none focus:ring-2 focus:ring-[#D29587] transition"
             required
           />
-
           <input
             type="tel"
             placeholder="Numéro WhatsApp (+221...)"
@@ -163,13 +160,12 @@ export default function EditProductForm({ product }: Props) {
             title="Entrez un numéro WhatsApp valide, avec indicatif pays"
             required
           />
-
           <div className="relative">
             <label
               htmlFor="category"
               className={`absolute left-4 top-3 text-sm transition-all duration-200 ${category
-                  ? 'text-xs -top-2 bg-white dark:bg-[#1a1a1a] px-1 text-[#D29587]'
-                  : 'text-[#A6A6A6] dark:text-gray-400'
+                ? 'text-xs -top-2 bg-white dark:bg-[#1a1a1a] px-1 text-[#D29587]'
+                : 'text-[#A6A6A6] dark:text-gray-400'
                 }`}
             >
               Catégorie
