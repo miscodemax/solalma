@@ -1,507 +1,242 @@
-// app/product/[id]/page.tsx
-import { cookies } from "next/headers"
-import { createServerClient } from "@supabase/ssr"
-import { supabaseUrl, supabaseKey } from "../../../lib/supabase"
-import Image from "next/image"
-import Link from "next/link"
-import { notFound } from "next/navigation"
-import dayjs from "dayjs"
-import RatingSeller from "@/app/composants/ratingseller"
-import CopyButton from "@/app/composants/sharebutton"
-import { FaWhatsapp, FaCheckCircle, FaClock, FaHeart, FaMapMarkerAlt, FaUserCheck } from "react-icons/fa"
-import { HiSparkles, HiPhone, HiShare } from "react-icons/hi2"
-import type { Metadata } from "next"
-import BackButton from "@/app/composants/back-button"
-import AuthModal from "@/app/composants/auth-modal"
+'use client'
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const res = await fetch(`${supabaseUrl}/rest/v1/product?id=eq.${params.id}`, {
-    headers: {
-      apikey: supabaseKey,
-      Authorization: `Bearer ${supabaseKey}`,
-    },
-    cache: "no-store",
-  })
+import { useState } from 'react'
+import Image from 'next/image'
+import { FaChevronLeft, FaChevronRight, FaExpand, FaTimes, FaHeart, FaUserCheck } from 'react-icons/fa'
+import { HiSparkles } from 'react-icons/hi2'
 
-  const [product] = await res.json()
-
-  if (!product) return {}
-
-  return {
-    title: product.title,
-    description: `Découvrez ${product.title} pour ${product.price} FCFA - Contactez directement le vendeur !`,
-    openGraph: {
-      title: product.title,
-      description: `Découvrez ${product.title} pour ${product.price} FCFA - Contactez directement le vendeur !`,
-      url: `https://sangse.shop/product/${product.id}`,
-      images: [
-        {
-          url: product.image_url || "https://sangse.shop/placeholder.jpg",
-          width: 1200,
-          height: 630,
-          alt: product.title,
-        },
-      ],
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: product.title,
-      description: `Découvrez ${product.title} pour ${product.price} FCFA - Contactez directement le vendeur !`,
-      images: [product.image_url || "https://sangse.shop/placeholder.jpg"],
-    },
-  }
+interface ProductGalleryProps {
+  images: string[]
+  productTitle: string
+  isNew?: boolean
 }
 
-type Props = {
-  params: {
-    id: string
-  }
-}
+export default function ProductGallery({ images, productTitle, isNew }: ProductGalleryProps) {
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [isZoomOpen, setIsZoomOpen] = useState(false)
 
-export default async function ProductDetailPage({ params }: Props) {
-  const cookieStore = await cookies()
-  const supabase = createServerClient(supabaseUrl, supabaseKey, {
-    cookies: {
-      get: (name) => cookieStore.get(name)?.value,
-    },
-  })
-
-
-
-
-
-  const {
-    data: product,
-    error: productError,
-  } = await supabase
-    .from("product")
-    .select("*")
-    .eq("id", Number(params.id))
-    .single()
-  const {
-    data: allProducts,
-  } = await supabase
-    .from("product")
-    .select("*")
-    .eq("user_id", product.user_id)
-
-  if (productError || !product) {
-    notFound()
+  const nextImage = () => {
+    setCurrentImageIndex((prev) => (prev + 1) % images.length)
   }
 
-  const isNew =
-    product.created_at &&
-    dayjs(product.created_at).isAfter(dayjs().subtract(7, "day"))
+  const prevImage = () => {
+    setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length)
+  }
 
-  const { data: similarProducts } = await supabase
-    .from("product")
-    .select("id, title, price, image_url")
-    .eq("category", product.category)
-    .neq("id", product.id)
-    .limit(4)
-
-  const { data: allRatings } = await supabase
-    .from('ratings_sellers')
-    .select('rating')
-    .eq('seller_id', Number(params.id))
-
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("username, avatar_url, bio")
-    .eq("id", product.user_id)
-    .single()
-
-  // Debug logs pour identifier le problème
-  console.log("Product user_id:", product.user_id)
-  console.log("Profile data:", profile)
-  console.log("Profile error:", profileError)
-
-  const averageRating =
-    allRatings && allRatings.length > 0
-      ? allRatings.reduce((a, b) => a + b.rating, 0) / allRatings.length
-      : null
-
-  const ratingCount = allRatings?.length || 0
-  const sellerId = product.user_id
-
-  const whatsappClean = product.whatsapp_number?.replace(/\D/g, "")
-  const prefilledMessage = `Salut ! Je suis intéressé(e) par "${product.title}" à ${product.price.toLocaleString()} FCFA. Est-ce encore disponible ? 
-
-Lien produit: https://sangse.shop/product/${product.id}`
-  const whatsappLink = whatsappClean
-    ? `https://wa.me/${whatsappClean}?text=${encodeURIComponent(prefilledMessage)}`
-    : null
+  const goToImage = (index: number) => {
+    setCurrentImageIndex(index)
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#F9F6F1] via-[#FDF9F4] to-[#F5F1EC] dark:from-[#0A0A0A] dark:via-[#121212] dark:to-[#1A1A1A]">
-      {/* Éléments décoratifs flottants */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-64 h-64 bg-[#D29587]/5 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-32 right-16 w-80 h-80 bg-[#E6B8A2]/5 rounded-full blur-3xl animate-pulse delay-1000"></div>
-      </div>
+    <>
+      <div className="space-y-4">
+        {/* Image principale avec navigation */}
+        <div className="relative group">
+          {/* Effet de halo coloré autour de l'image */}
+          <div className="absolute -inset-4 bg-gradient-to-r from-[#D29587]/20 via-[#E6B8A2]/20 to-[#D29587]/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 py-8">
-        <BackButton />
+          {/* Container principal de l'image */}
+          <div className="relative w-full h-[600px] rounded-3xl overflow-hidden shadow-2xl bg-white/50 backdrop-blur-sm border border-white/20">
+            <Image
+              src={images[currentImageIndex]}
+              alt={`${productTitle} - Image ${currentImageIndex + 1}`}
+              fill
+              className="object-cover transition-all duration-700 ease-out group-hover:scale-105"
+              priority
+            />
 
-        {/* Breadcrumb moderne */}
-        <nav className="flex items-center space-x-2 text-sm text-gray-500 mb-8">
-          <Link href="/" className="hover:text-[#D29587] transition-colors font-medium">🏠 Accueil</Link>
-          <span className="text-[#D29587]">›</span>
-          <span className="bg-[#D29587]/10 text-[#D29587] px-3 py-1 rounded-full font-medium">
-            {product.category || "Produit"}
-          </span>
-        </nav>
+            {/* Overlay gradiant subtil */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
-          {/* Section Image avec effets créatifs */}
-          <div className="space-y-6">
-            <div className="relative group">
-              {/* Effet de halo coloré autour de l'image */}
-              <div className="absolute -inset-4 bg-gradient-to-r from-[#D29587]/20 via-[#E6B8A2]/20 to-[#D29587]/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-
-              {/* Container principal de l'image */}
-              <div className="relative w-full h-[600px] rounded-3xl overflow-hidden shadow-2xl bg-white/50 backdrop-blur-sm border border-white/20">
-                <Image
-                  src={product.image_url || "/placeholder.jpg"}
-                  alt={product.title}
-                  fill
-                  className="object-cover transition-all duration-1000 ease-out group-hover:scale-110"
-                  priority
-                />
-
-                {/* Overlay gradiant subtil */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-
-                {/* Badges flottants repositionnés */}
-                <div className="absolute top-6 left-6 flex flex-col gap-3">
-                  {isNew && (
-                    <div className="flex items-center bg-gradient-to-r from-green-400 to-emerald-500 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg animate-bounce">
-                      <HiSparkles className="mr-2 text-base" />
-                      Nouveau
-                    </div>
-                  )}
-
-                  <div className="flex items-center bg-gradient-to-r from-[#D29587] to-[#E6B8A2] text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg">
-                    <FaUserCheck className="mr-2" />
-                    Contact direct
-                  </div>
+            {/* Badges flottants */}
+            <div className="absolute top-6 left-6 flex flex-col gap-3">
+              {isNew && (
+                <div className="flex items-center bg-gradient-to-r from-green-400 to-emerald-500 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg animate-bounce">
+                  <HiSparkles className="mr-2 text-base" />
+                  Nouveau
                 </div>
+              )}
 
-                {/* Bouton coeur repositionné */}
-                <div className="absolute top-6 right-6">
-                  <button className="bg-white/90 backdrop-blur-md p-3 rounded-full shadow-lg hover:bg-white hover:scale-110 transition-all duration-300 group">
-                    <FaHeart className="text-gray-400 group-hover:text-red-500 transition-colors text-lg" />
-                  </button>
-                </div>
-
-                {/* Indicateur de disponibilité */}
-                <div className="absolute bottom-6 left-6 bg-green-500/90 backdrop-blur-md text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg">
-                  <div className="flex items-center">
-                    <div className="w-2 h-2 bg-green-300 rounded-full mr-2 animate-pulse"></div>
-                    Disponible
-                  </div>
-                </div>
+              <div className="flex items-center bg-gradient-to-r from-[#D29587] to-[#E6B8A2] text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg">
+                <FaUserCheck className="mr-2" />
+                Contact direct
               </div>
-
-              {/* Effet de reflet sous l'image */}
-              <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 w-3/4 h-8 bg-gradient-to-r from-transparent via-[#D29587]/10 to-transparent blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
             </div>
 
-            {/* Zone de partage moderne */}
-            <div className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-lg p-6 rounded-2xl border border-white/30 shadow-xl">
-              <h3 className="font-bold text-gray-800 dark:text-gray-200 mb-4 flex items-center text-lg">
-                <HiShare className="mr-3 text-[#D29587] text-xl" />
-                Partager ce produit
-              </h3>
+            {/* Boutons d'action */}
+            <div className="absolute top-6 right-6 flex flex-col gap-3">
+              {/* Bouton coeur */}
+              <button className="bg-white/90 backdrop-blur-md p-3 rounded-full shadow-lg hover:bg-white hover:scale-110 transition-all duration-300 group">
+                <FaHeart className="text-gray-400 group-hover:text-red-500 transition-colors text-lg" />
+              </button>
 
-              <div className="grid grid-cols-2 gap-4">
-                <a
-                  href={`https://wa.me/?text=${encodeURIComponent(
-                    `🔥 Regarde ce ${product.title} à ${product.price.toLocaleString()} FCFA sur Sangse.shop ! 
-                    
-${product.description?.slice(0, 100)}...
+              {/* Bouton zoom */}
+              <button
+                onClick={() => setIsZoomOpen(true)}
+                className="bg-white/90 backdrop-blur-md p-3 rounded-full shadow-lg hover:bg-white hover:scale-110 transition-all duration-300 group"
+              >
+                <FaExpand className="text-gray-600 group-hover:text-[#D29587] transition-colors text-lg" />
+              </button>
+            </div>
 
-👉 https://sangse.shop/product/${product.id}`
-                  )}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-6 py-4 rounded-xl font-semibold flex items-center justify-center gap-3 transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl"
+            {/* Navigation arrows - Affichées seulement s'il y a plusieurs images */}
+            {images.length > 1 && (
+              <>
+                <button
+                  onClick={prevImage}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 backdrop-blur-md p-3 rounded-full shadow-lg hover:bg-white hover:scale-110 transition-all duration-300 opacity-0 group-hover:opacity-100"
                 >
-                  <FaWhatsapp className="text-xl" />
-                  Partager
-                </a>
+                  <FaChevronLeft className="text-gray-700 text-lg" />
+                </button>
 
-                <CopyButton
-                  text={`https://sangse.shop/product/${product.id}`}
-                  platform="📋 Copier"
-                />
+                <button
+                  onClick={nextImage}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 backdrop-blur-md p-3 rounded-full shadow-lg hover:bg-white hover:scale-110 transition-all duration-300 opacity-0 group-hover:opacity-100"
+                >
+                  <FaChevronRight className="text-gray-700 text-lg" />
+                </button>
+              </>
+            )}
+
+            {/* Indicateur du nombre d'images */}
+            {images.length > 1 && (
+              <div className="absolute bottom-6 left-6 bg-black/70 backdrop-blur-md text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg">
+                {currentImageIndex + 1} / {images.length}
+              </div>
+            )}
+
+            {/* Indicateur de disponibilité */}
+            <div className="absolute bottom-6 right-6 bg-green-500/90 backdrop-blur-md text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg">
+              <div className="flex items-center">
+                <div className="w-2 h-2 bg-green-300 rounded-full mr-2 animate-pulse"></div>
+                Disponible
               </div>
             </div>
           </div>
 
-          {/* Section Informations repensée */}
-          <div className="space-y-8">
-            {/* En-tête produit avec effets */}
-            <div className="space-y-6">
-              <div>
-                <h1 className="text-4xl lg:text-5xl font-black text-gray-900 dark:text-white leading-tight mb-4">
-                  {product.title}
-                </h1>
+          {/* Effet de reflet sous l'image */}
+          <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 w-3/4 h-8 bg-gradient-to-r from-transparent via-[#D29587]/10 to-transparent blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+        </div>
 
-                <div className="flex flex-wrap items-center gap-3 mb-6">
-                  <span className="inline-flex items-center bg-gradient-to-r from-[#D29587]/20 to-[#E6B8A2]/20 text-[#D29587] px-4 py-2 rounded-full text-sm font-bold border border-[#D29587]/30">
-                    📁 {product.category || "Non spécifiée"}
-                  </span>
-
-                  {product.location && (
-                    <span className="inline-flex items-center bg-blue-50 text-blue-600 px-4 py-2 rounded-full text-sm font-medium">
-                      <FaMapMarkerAlt className="mr-2" />
-                      {product.location}
-                    </span>
-                  )}
-
-                  <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
-                    <FaClock className="inline mr-1" />
-                    {dayjs(product.created_at).format('DD/MM/YYYY')}
-                  </span>
-                </div>
-              </div>
-
-              {/* Prix avec effet dramatique */}
-              <div className="relative bg-gradient-to-br from-[#D29587]/10 via-[#E6B8A2]/10 to-[#D29587]/5 p-8 rounded-3xl border-2 border-[#D29587]/20 shadow-2xl">
-                <div className="absolute -top-3 left-6 bg-[#D29587] text-white px-4 py-1 rounded-full text-sm font-bold">
-                  💰 Prix
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-5xl lg:text-6xl font-black text-[#D29587] mb-2">
-                      {product.price.toLocaleString()}
-                      <span className="text-2xl font-semibold ml-2">FCFA</span>
-                    </p>
-                    <p className="text-green-600 font-medium flex items-center">
-                      <FaCheckCircle className="mr-2" />
-                      Prix négociable au contact
-                    </p>
-                  </div>
-
-                  <div className="text-right">
-                    <div className="bg-gradient-to-r from-orange-400 to-red-400 text-white px-6 py-3 rounded-2xl font-bold text-sm shadow-lg">
-                      🔥 CONTACT
-                      <br />
-                      DIRECT
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Carte vendeur redessinée - toujours affichée */}
-            <div className="bg-gradient-to-r from-white/80 to-white/60 dark:from-gray-800/80 dark:to-gray-800/60 backdrop-blur-lg p-8 rounded-3xl border border-white/30 shadow-2xl">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="relative">
-                  <Image
-                    src={profile?.avatar_url || "/placeholder-avatar.jpg"}
-                    alt={profile?.username || "Vendeur"}
-                    width={64}
-                    height={64}
-                    className="rounded-full border-4 border-[#D29587]/30 object-cover shadow-lg"
-                  />
-                  <div className="absolute -bottom-1 -right-1 bg-green-500 w-6 h-6 rounded-full border-2 border-white flex items-center justify-center">
-                    <FaCheckCircle className="text-white text-xs" />
-                  </div>
-                </div>
-
-                <div className="flex-1">
-                  <h3 className="font-bold text-xl text-gray-800 dark:text-gray-200">
-                    {profile?.username || "Vendeur vérifié"}
-                  </h3>
-
-                  {sellerId && (
-                    <p className="text-xs text-gray-500 mt-1">
-                      ID: {sellerId}
-                    </p>
-                  )}
-                </div>
-
-                {sellerId ? (
-                  <Link
-                    href={`/profile/${sellerId}`}
-                    className="bg-[#D29587] hover:bg-[#bb6b5f] text-white px-6 py-3 rounded-xl font-medium text-sm transition-all duration-300 hover:scale-105 shadow-lg flex items-center gap-2"
-                  >
-                    🏪 Voir boutique
-                  </Link>
-                ) : (
-                  <div className="bg-gray-300 text-gray-500 px-6 py-3 rounded-xl font-medium text-sm">
-                    Boutique indisponible
-                  </div>
-                )}
-              </div>
-
-              {profile?.bio && (
-                <div className="mb-6 text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700/50 p-4 rounded-xl">
-                  📝 {profile.bio.slice(0, 120)}{profile.bio.length > 120 ? '...' : ''}
-                </div>
-              )}
-
-              {sellerId && (
-                <RatingSeller
-                  sellerId={sellerId}
-                  initialAverage={averageRating}
-                  initialCount={ratingCount}
+        {/* Miniatures - Affichées seulement s'il y a plusieurs images */}
+        {images.length > 1 && (
+          <div className="flex gap-3 overflow-x-auto pb-2">
+            {images.map((image, index) => (
+              <button
+                key={index}
+                onClick={() => goToImage(index)}
+                className={`relative flex-shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden transition-all duration-300 ${index === currentImageIndex
+                    ? 'ring-3 ring-[#D29587] ring-offset-2 ring-offset-white scale-110 shadow-lg'
+                    : 'hover:scale-105 opacity-70 hover:opacity-100'
+                  }`}
+              >
+                <Image
+                  src={image}
+                  alt={`${productTitle} - Miniature ${index + 1}`}
+                  fill
+                  className="object-cover"
                 />
-              )}
 
-              {/* Bouton alternatif vers la boutique */}
-              {sellerId && (
-                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
-                  <Link
-                    href={`/profile/${sellerId}`}
-                    className="w-full bg-gradient-to-r from-[#D29587]/10 to-[#E6B8A2]/10 hover:from-[#D29587]/20 hover:to-[#E6B8A2]/20 text-[#D29587] px-4 py-3 rounded-xl font-medium text-center transition-all duration-300 hover:scale-105 border-2 border-[#D29587]/20 hover:border-[#D29587]/40 flex items-center justify-center gap-2"
-                  >
-                    🛍️ Voir tous ses produits
-                    <span className="text-xs bg-[#D29587]/20 px-2 py-1 rounded-full">
-                      +{allProducts && (allProducts.length - 1)}
-                    </span>
-                  </Link>
-                </div>
-              )}
+                {/* Overlay pour l'image active */}
+                {index === currentImageIndex && (
+                  <div className="absolute inset-0 bg-[#D29587]/20"></div>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Indicateurs en points (style moderne) */}
+        {images.length > 1 && (
+          <div className="flex justify-center gap-2 pt-2">
+            {images.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => goToImage(index)}
+                className={`w-2 h-2 rounded-full transition-all duration-300 ${index === currentImageIndex
+                    ? 'bg-[#D29587] w-8'
+                    : 'bg-gray-300 hover:bg-gray-400'
+                  }`}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Modal de zoom plein écran */}
+      {isZoomOpen && (
+        <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="relative w-full h-full flex items-center justify-center">
+            {/* Bouton fermer */}
+            <button
+              onClick={() => setIsZoomOpen(false)}
+              className="absolute top-6 right-6 bg-white/10 backdrop-blur-md text-white p-3 rounded-full hover:bg-white/20 transition-all duration-300 z-10"
+            >
+              <FaTimes className="text-xl" />
+            </button>
+
+            {/* Image en plein écran */}
+            <div className="relative w-full h-full max-w-6xl max-h-[90vh]">
+              <Image
+                src={images[currentImageIndex]}
+                alt={`${productTitle} - Vue agrandie`}
+                fill
+                className="object-contain"
+                quality={100}
+              />
             </div>
 
-            {/* Boutons de contact repensés */}
-            <div className="space-y-6">
-              <div className="text-center">
-                <h3 className="font-black text-2xl text-gray-800 dark:text-gray-200 mb-2">
-                  💬 Prêt(e) à discuter ?
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400">
-                  Contactez directement le vendeur pour négocier
-                </p>
-              </div>
+            {/* Navigation dans le modal - si plusieurs images */}
+            {images.length > 1 && (
+              <>
+                <button
+                  onClick={prevImage}
+                  className="absolute left-6 top-1/2 -translate-y-1/2 bg-white/10 backdrop-blur-md text-white p-4 rounded-full hover:bg-white/20 transition-all duration-300"
+                >
+                  <FaChevronLeft className="text-2xl" />
+                </button>
 
-              <div className="grid grid-cols-1 gap-4">
-                {whatsappLink ? (
-                  <a
-                    href={whatsappLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group relative overflow-hidden bg-gradient-to-r from-green-500 via-green-600 to-emerald-600 text-white font-bold text-lg px-8 py-6 rounded-2xl transition-all duration-300 hover:scale-105 shadow-2xl hover:shadow-3xl"
+                <button
+                  onClick={nextImage}
+                  className="absolute right-6 top-1/2 -translate-y-1/2 bg-white/10 backdrop-blur-md text-white p-4 rounded-full hover:bg-white/20 transition-all duration-300"
+                >
+                  <FaChevronRight className="text-2xl" />
+                </button>
+              </>
+            )}
+
+            {/* Indicateur de position dans le modal */}
+            {images.length > 1 && (
+              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur-md text-white px-6 py-3 rounded-full text-lg font-medium">
+                {currentImageIndex + 1} / {images.length}
+              </div>
+            )}
+
+            {/* Miniatures en bas du modal */}
+            {images.length > 1 && images.length <= 10 && (
+              <div className="absolute bottom-20 left-1/2 -translate-x-1/2 flex gap-2 bg-black/30 backdrop-blur-md p-3 rounded-2xl">
+                {images.map((image, index) => (
+                  <button
+                    key={index}
+                    onClick={() => goToImage(index)}
+                    className={`relative w-12 h-12 rounded-lg overflow-hidden transition-all duration-300 ${index === currentImageIndex
+                        ? 'ring-2 ring-white scale-110'
+                        : 'opacity-60 hover:opacity-100 hover:scale-105'
+                      }`}
                   >
-                    <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                    <div className="relative flex items-center justify-center gap-4">
-                      <FaWhatsapp className="text-2xl animate-pulse" />
-                      <div className="text-center">
-                        <div>Discuter sur WhatsApp</div>
-                        <div className="text-sm opacity-90">Message pré-écrit inclus</div>
-                      </div>
-                    </div>
-                  </a>
-                ) : (
-                  <div className="bg-gray-100 dark:bg-gray-800 text-gray-500 font-bold text-lg px-8 py-6 rounded-2xl text-center">
-                    ❌ WhatsApp non disponible
-                  </div>
-                )}
-
-                {product.whatsapp_number && (
-                  <a
-                    href={`tel:${product.whatsapp_number}`}
-                    className="group bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold text-lg px-8 py-6 rounded-2xl transition-all duration-300 hover:scale-105 shadow-xl hover:shadow-2xl"
-                  >
-                    <div className="flex items-center justify-center gap-4">
-                      <HiPhone className="text-2xl group-hover:animate-bounce" />
-                      <div className="text-center">
-                        <div>Appeler maintenant</div>
-                        <div className="text-sm opacity-90">{product.whatsapp_number}</div>
-                      </div>
-                    </div>
-                  </a>
-                )}
-              </div>
-
-              {/* Assurance et confiance */}
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-6 rounded-2xl border border-blue-200 dark:border-blue-800">
-                <h4 className="font-bold text-blue-800 dark:text-blue-300 mb-3 text-center">
-                  🛡️ Achat en toute confiance
-                </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                  <div className="flex items-center text-blue-700 dark:text-blue-300">
-                    <FaCheckCircle className="mr-2 text-green-500" />
-                    Discussion directe avec le vendeur
-                  </div>
-                  <div className="flex items-center text-blue-700 dark:text-blue-300">
-                    <FaCheckCircle className="mr-2 text-green-500" />
-                    Négociation libre du prix
-                  </div>
-                  <div className="flex items-center text-blue-700 dark:text-blue-300">
-                    <FaCheckCircle className="mr-2 text-green-500" />
-                    Arrangement livraison à convenir
-                  </div>
-                  <div className="flex items-center text-blue-700 dark:text-blue-300">
-                    <FaCheckCircle className="mr-2 text-green-500" />
-                    Paiement selon vos préférences
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Description si disponible */}
-            {product.description && (
-              <div className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-lg p-8 rounded-3xl border border-white/30 shadow-xl">
-                <h3 className="font-black text-xl text-gray-800 dark:text-gray-200 mb-4 flex items-center">
-                  📝 Description détaillée
-                </h3>
-                <div className="text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-line text-lg">
-                  {product.description}
-                </div>
+                    <Image
+                      src={image}
+                      alt={`Miniature ${index + 1}`}
+                      fill
+                      className="object-cover"
+                    />
+                  </button>
+                ))}
               </div>
             )}
           </div>
         </div>
-
-        {/* Section produits similaires moderne */}
-        {similarProducts && similarProducts.length > 0 && (
-          <section className="mt-24">
-            <div className="text-center mb-12">
-              <h2 className="text-4xl lg:text-5xl font-black text-gray-900 dark:text-white mb-4">
-                Découvrez aussi
-              </h2>
-              <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-                D'autres pépites qui pourraient vous intéresser
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-              {similarProducts.map((p) => (
-                <Link
-                  key={p.id}
-                  href={`/product/${p.id}`}
-                  className="group bg-white/70 dark:bg-gray-900/70 backdrop-blur-lg rounded-3xl shadow-xl border border-white/30 overflow-hidden hover:scale-105 hover:shadow-2xl transition-all duration-500"
-                >
-                  <div className="relative h-64 overflow-hidden">
-                    <Image
-                      src={p.image_url || "/placeholder.jpg"}
-                      alt={p.title}
-                      fill
-                      className="object-cover transition-transform duration-700 group-hover:scale-110"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-                  </div>
-
-                  <div className="p-6">
-                    <h3 className="font-bold text-gray-900 dark:text-gray-100 text-lg line-clamp-2 mb-3 group-hover:text-[#D29587] transition-colors">
-                      {p.title}
-                    </h3>
-                    <p className="text-[#D29587] font-black text-xl">
-                      {p.price.toLocaleString()} FCFA
-                    </p>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </section>
-        )}
-      </div>
-    </div>
+      )}
+    </>
   )
 }

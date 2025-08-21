@@ -30,7 +30,7 @@ export default function AddProductForm({ userId }: Props) {
     title: '',
     price: '',
     description: '',
-    imageUrl: '',
+    images: [] as string[], // tableau d’URLs
     whatsappNumber: '',
     category: categories[0].value,
   })
@@ -64,8 +64,8 @@ export default function AddProductForm({ userId }: Props) {
       return
     }
 
-    if (!form.imageUrl) {
-      setError('Veuillez d\'abord téléverser une image.')
+    if (form.images.length === 0) {
+      setError("Veuillez d'abord téléverser au moins une image.")
       return
     }
 
@@ -75,7 +75,7 @@ export default function AddProductForm({ userId }: Props) {
       title: form.title.trim(),
       price: parseFloat(form.price),
       description: form.description.trim(),
-      image_url: form.imageUrl,
+      images: form.images, // on enregistre le tableau d’URLs
       user_id: userId,
       whatsapp_number: fullNumber,
       category: form.category,
@@ -94,7 +94,7 @@ export default function AddProductForm({ userId }: Props) {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-4 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
-        {/* Header avec bouton retour */}
+        {/* Header */}
         <div className="mb-6 sm:mb-8">
           <Button
             variant="outline"
@@ -133,21 +133,29 @@ export default function AddProductForm({ userId }: Props) {
               📸 Photos du produit
             </h2>
             <div className="flex flex-col items-center gap-6">
-              <ImageUploader onUpload={(url) => setForm((prev) => ({ ...prev, imageUrl: url }))} />
-              {form.imageUrl && (
-                <div className="w-full max-w-md">
-                  <Image
-                    src={form.imageUrl}
-                    alt="Aperçu du produit"
-                    width={400}
-                    height={400}
-                    className="w-full rounded-xl object-cover border border-gray-200 dark:border-gray-600 shadow-sm"
-                  />
+              <ImageUploader
+                onUpload={(urls) =>
+                  setForm((prev) => ({ ...prev, images: [...prev.images, ...urls] }))
+                }
+              />
+              {form.images.length > 0 && (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 w-full">
+                  {form.images.map((url, idx) => (
+                    <div key={idx} className="relative w-full aspect-square">
+                      <Image
+                        src={url}
+                        alt={`Image ${idx + 1}`}
+                        fill
+                        className="object-cover rounded-xl border border-gray-200 dark:border-gray-600 shadow-sm"
+                      />
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
           </div>
 
+          {/* ... tes autres sections (informations, prix, contact) restent identiques ... */}
           {/* Section Informations générales */}
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 sm:p-8">
             <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-6 sm:mb-8">
@@ -305,7 +313,6 @@ export default function AddProductForm({ userId }: Props) {
               </div>
             </div>
           </div>
-
           {/* Bouton de soumission */}
           <div className="sticky bottom-0 bg-gray-50 dark:bg-gray-900 pb-4 pt-6 -mx-4 px-4 sm:static sm:bg-transparent sm:dark:bg-transparent sm:pb-0 sm:pt-0 sm:mx-0 sm:px-0">
             <button
@@ -324,7 +331,7 @@ export default function AddProductForm({ userId }: Props) {
             </button>
 
             <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-4">
-              {success ? 'Redirection dans un instant…' : 'En publiant, vous acceptez nos conditions d\'utilisation ✨'}
+              {success ? 'Redirection dans un instant…' : "En publiant, vous acceptez nos conditions d'utilisation ✨"}
             </p>
           </div>
         </form>

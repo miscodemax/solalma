@@ -13,7 +13,7 @@ type Props = {
     title: string
     price: number
     description: string
-    image_url: string
+    images: string[]   // 👈 maintenant un tableau
     whatsapp_number?: string
     category?: string
   }
@@ -31,11 +31,12 @@ export default function EditProductForm({ product }: Props) {
   const [title, setTitle] = useState(product.title)
   const [price, setPrice] = useState(product.price.toString())
   const [description, setDescription] = useState(product.description)
-  const [imageUrl, setImageUrl] = useState(product.image_url)
+  const [images, setImages] = useState<string[]>(product.images || []) // 👈 tableau
   const [whatsappNumber, setWhatsappNumber] = useState(product.whatsapp_number || '')
   const [category, setCategory] = useState(product.category || categories[0].value)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
   const router = useRouter()
   const supabase = createClient()
 
@@ -46,8 +47,9 @@ export default function EditProductForm({ product }: Props) {
     if (!title.trim()) return setError('Le titre est requis.')
     if (!price || isNaN(Number(price)) || Number(price) <= 0) return setError('Prix invalide.')
     if (!description.trim()) return setError('La description est requise.')
-    if (!whatsappNumber.match(/^\+?\d{7,15}$/)) return setError('Numéro WhatsApp invalide.')
+    if (!/^\+?\d{7,15}$/.test(whatsappNumber)) return setError('Numéro WhatsApp invalide.')
     if (!category) return setError('Veuillez choisir une catégorie.')
+    if (images.length === 0) return setError('Ajoutez au moins une image.')
 
     setLoading(true)
 
@@ -57,7 +59,7 @@ export default function EditProductForm({ product }: Props) {
         title: title.trim(),
         price: parseFloat(price),
         description: description.trim(),
-        image_url: imageUrl,
+        images, // 👈 envoie le tableau
         whatsapp_number: whatsappNumber,
         category,
       })
@@ -70,6 +72,10 @@ export default function EditProductForm({ product }: Props) {
     } else {
       router.push('/dashboard/products')
     }
+  }
+
+  const handleRemoveImage = (idx: number) => {
+    setImages((prev) => prev.filter((_, i) => i !== idx))
   }
 
   return (
@@ -89,19 +95,35 @@ export default function EditProductForm({ product }: Props) {
       >
         {error && <p className="text-red-500 text-sm">{error}</p>}
 
-        <div className="w-full flex flex-col items-center gap-4">
-          <ImageUploader onUpload={setImageUrl} />
-          {imageUrl && (
-            <Image
-              src={imageUrl}
-              alt="Aperçu"
-              width={300}
-              height={300}
-              className="rounded-xl object-cover border border-[#E6E3DF] dark:border-gray-700"
-            />
+        {/* Section images */}
+        <div className="flex flex-col items-center gap-6">
+          <ImageUploader
+            onUpload={(urls) => setImages((prev) => [...prev, ...urls])} // 👈 ajout multiple
+          />
+          {images.length > 0 && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 w-full">
+              {images.map((url, idx) => (
+                <div key={idx} className="relative w-full aspect-square group">
+                  <Image
+                    src={url}
+                    alt={`Image ${idx + 1}`}
+                    fill
+                    className="object-cover rounded-xl border border-[#E6E3DF] dark:border-gray-700 shadow-sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveImage(idx)}
+                    className="absolute top-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full opacity-0 group-hover:opacity-100 transition"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
           )}
         </div>
 
+        {/* Infos du produit */}
         <div className="space-y-4">
           <input
             type="text"
@@ -145,11 +167,10 @@ export default function EditProductForm({ product }: Props) {
           <div className="relative">
             <label
               htmlFor="category"
-              className={`absolute left-4 top-3 text-sm transition-all duration-200 ${
-                category
+              className={`absolute left-4 top-3 text-sm transition-all duration-200 ${category
                   ? 'text-xs -top-2 bg-white dark:bg-[#1a1a1a] px-1 text-[#D29587]'
                   : 'text-[#A6A6A6] dark:text-gray-400'
-              }`}
+                }`}
             >
               Catégorie
             </label>
@@ -186,10 +207,6 @@ export default function EditProductForm({ product }: Props) {
         >
           {loading ? 'Modification en cours...' : 'Modifier le produit'}
         </button>
-
-        <p className="text-center text-xs text-[#A6A6A6] dark:text-gray-500 italic mt-4">
-          Mise à jour réussie, inchallah 🙌
-        </p>
       </form>
     </div>
   )
