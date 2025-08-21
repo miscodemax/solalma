@@ -10,6 +10,7 @@ export default function ImageUploader({
     onUpload: (urls: string[]) => void
 }) {
     const [uploading, setUploading] = useState(false)
+    const [error, setError] = useState('')
     const supabase = createClient()
 
     const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -17,7 +18,7 @@ export default function ImageUploader({
         if (!files || files.length === 0) return
 
         setUploading(true)
-
+        setError('')
         const uploadedUrls: string[] = []
 
         for (const file of Array.from(files)) {
@@ -25,28 +26,30 @@ export default function ImageUploader({
             const fileName = `${Date.now()}-${Math.random()
                 .toString(36)
                 .substring(2, 8)}.${fileExt}`
-            const filePath = fileName
 
-            const { error } = await supabase.storage
+            const { error: uploadError } = await supabase.storage
                 .from('product')
-                .upload(filePath, file)
+                .upload(fileName, file)
 
-            if (error) {
-                alert('Erreur upload : ' + error.message)
+            if (uploadError) {
+                setError(uploadError.message)
                 setUploading(false)
                 return
             }
 
-            const { data } = supabase.storage.from('product').getPublicUrl(filePath)
+            const { data } = supabase.storage.from('product').getPublicUrl(fileName)
             uploadedUrls.push(data.publicUrl)
         }
 
         onUpload(uploadedUrls)
         setUploading(false)
+
+        // reset input pour pouvoir réuploader la même image
+        e.target.value = ''
     }
 
     return (
-        <div className="w-full">
+        <div className="w-full space-y-2">
             <label
                 htmlFor="upload-image"
                 className="group cursor-pointer flex items-center justify-center w-full h-44 rounded-xl border-2 border-dashed border-[#DAD5CD] bg-[#F9F6F1] hover:bg-[#f0ece6] transition relative"
@@ -71,6 +74,8 @@ export default function ImageUploader({
                 disabled={uploading}
                 className="hidden"
             />
+
+            {error && <p className="text-sm text-red-500">{error}</p>}
         </div>
     )
 }
