@@ -7,7 +7,7 @@ type Product = {
     title: string;
     description: string;
     price: number;
-    image_url: string | null;
+    image_url: string | string[] | null; // Support pour array ou string
     user_id: string;
     likes?: number;
 };
@@ -19,6 +19,32 @@ export default async function ProductCard({
     product: Product;
     userId?: string;
 }) {
+    // Extraire la première image du tableau ou utiliser l'image unique
+    const getFirstImage = (imageUrl: string | string[] | null): string => {
+        if (!imageUrl) return "/placeholder.jpg";
+
+        if (Array.isArray(imageUrl)) {
+            // Si c'est un tableau, prendre la première image non-vide
+            const firstValidImage = imageUrl.find(img => img && img.trim() !== '');
+            return firstValidImage || "/placeholder.jpg";
+        }
+
+        // Si c'est une string, l'utiliser directement
+        return imageUrl || "/placeholder.jpg";
+    };
+
+    // Compter le nombre total d'images pour l'indicateur
+    const getImageCount = (imageUrl: string | string[] | null): number => {
+        if (!imageUrl) return 0;
+        if (Array.isArray(imageUrl)) {
+            return imageUrl.filter(img => img && img.trim() !== '').length;
+        }
+        return 1;
+    };
+
+    const firstImage = getFirstImage(product.image_url);
+    const imageCount = getImageCount(product.image_url);
+
     return (
         <div className="group relative w-full h-[480px] flex flex-col overflow-hidden rounded-3xl bg-white dark:bg-[#121212] border border-gray-100 dark:border-[#2a2a2a] shadow-[0_4px_24px_0_rgba(0,0,0,0.06)] dark:shadow-[0_4px_32px_0_rgba(0,0,0,0.4)] hover:shadow-[0_12px_48px_0_rgba(0,0,0,0.12)] dark:hover:shadow-[0_12px_48px_0_rgba(0,0,0,0.6)] transition-all duration-500 ease-out hover:-translate-y-1 hover:scale-[1.02]">
 
@@ -31,7 +57,7 @@ export default async function ProductCard({
             <div className="relative w-full h-[280px] overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 dark:from-[#1e1e1e] dark:to-[#2a2a2a]">
                 <Link href={`/product/${product.id}`} className="block w-full h-full">
                     <Image
-                        src={product.image_url || "/placeholder.jpg"}
+                        src={firstImage}
                         alt={product.title}
                         fill
                         className="object-cover transition-all duration-700 ease-out group-hover:scale-105"
@@ -42,6 +68,16 @@ export default async function ProductCard({
                     {/* Overlay subtle pour améliorer la lisibilité sans cacher l'image */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 </Link>
+
+                {/* Indicateur du nombre d'images - nouveau badge */}
+                {imageCount > 1 && (
+                    <div className="absolute top-3 left-3 backdrop-blur-md bg-black/70 text-white rounded-xl px-2.5 py-1 text-xs font-bold shadow-md border border-white/20 flex items-center gap-1">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        {imageCount}
+                    </div>
+                )}
 
                 {/* Like button - glassmorphism subtil */}
                 <div className="absolute top-3 right-3 backdrop-blur-md bg-white/90 dark:bg-black/70 border border-white/50 dark:border-gray-600/30 rounded-xl px-2.5 py-1.5 flex items-center gap-1.5 shadow-sm transition-all duration-300 hover:bg-white dark:hover:bg-black/80 hover:scale-105">
@@ -55,7 +91,7 @@ export default async function ProductCard({
 
                 {/* Badge premium plus élégant */}
                 {product.price > 50000 && (
-                    <div className="absolute top-3 left-3 bg-gradient-to-r from-amber-400 to-amber-500 text-amber-900 rounded-xl px-2.5 py-1 text-xs font-bold shadow-md border border-amber-300">
+                    <div className="absolute top-14 left-3 bg-gradient-to-r from-amber-400 to-amber-500 text-amber-900 rounded-xl px-2.5 py-1 text-xs font-bold shadow-md border border-amber-300">
                         ✨ Premium
                     </div>
                 )}
@@ -66,7 +102,7 @@ export default async function ProductCard({
                         href={`/product/${product.id}`}
                         className="flex-1 backdrop-blur-md bg-white/95 dark:bg-black/85 border border-white/60 dark:border-gray-600/30 rounded-xl px-4 py-2 text-sm font-semibold text-gray-900 dark:text-white text-center shadow-lg hover:bg-white dark:hover:bg-black transition-all duration-200 hover:scale-[1.02]"
                     >
-                        Voir détails
+                        {imageCount > 1 ? `Voir ${imageCount} photos` : 'Voir détails'}
                     </Link>
                     <button className="backdrop-blur-md bg-white/95 dark:bg-black/85 border border-white/60 dark:border-gray-600/30 rounded-xl px-3 py-2 shadow-lg hover:bg-white dark:hover:bg-black transition-all duration-200 hover:scale-[1.02]">
                         <svg className="w-4 h-4 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -115,10 +151,20 @@ export default async function ProductCard({
                         </Link>
                     </div>
 
-                    {/* Stats bar */}
+                    {/* Stats bar avec info images */}
                     <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 pt-2 border-t border-gray-100 dark:border-gray-700">
                         <span className="font-mono">#{product.id.toString().padStart(4, '0')}</span>
                         <div className="flex items-center gap-3">
+                            {/* Indicateur d'images multiples dans les stats */}
+                            {imageCount > 1 && (
+                                <span className="flex items-center gap-1 text-[#D29587]">
+                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                    {imageCount}
+                                </span>
+                            )}
+
                             {product.likes && product.likes > 0 && (
                                 <span className="flex items-center gap-1">
                                     <svg className="w-3 h-3 text-red-400" fill="currentColor" viewBox="0 0 20 20">
