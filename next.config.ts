@@ -8,6 +8,8 @@ const nextConfig: NextConfig = {
   },
   images: {
     domains: ['icons.veryicon.com', "bdeahexcoljgxdpbxvve.supabase.co", 'via.placeholder.com', 'images.unsplash.com', 'cdn.pixabay.com', 'placekitten.com', "bdeahexcoljgxdpbxvve.supabase.co"],
+    unoptimized: true, // désactive complètement l’optimisation
+
   },
 }
 
