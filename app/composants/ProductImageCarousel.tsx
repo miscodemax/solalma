@@ -187,8 +187,8 @@ export default function ProductImageCarousel({
             <SwiperSlide key={index} className="cursor-pointer">
               <div
                 className={`relative w-full aspect-square rounded-lg overflow-hidden border-2 transition-all duration-200 ${currentSlide === index
-                    ? 'border-blue-500 shadow-md scale-105'
-                    : 'border-gray-200 hover:border-gray-300 dark:border-gray-600 dark:hover:border-gray-500'
+                  ? 'border-blue-500 shadow-md scale-105'
+                  : 'border-gray-200 hover:border-gray-300 dark:border-gray-600 dark:hover:border-gray-500'
                   }`}
                 onClick={() => mainSwiperRef.current?.slideTo(index)}
               >
@@ -224,7 +224,7 @@ export default function ProductImageCarousel({
               </h3>
               <button
                 onClick={closeZoom}
-                className="bg-white/20 hover:bg-white/30 p-3 rounded-full transition-all hover:scale-110"
+                className="bg-white/20 top-60 right-6 hover:bg-white/30 p-3 rounded-full transition-all hover:scale-110"
               >
                 <FaTimes className="text-white text-xl" />
               </button>
@@ -250,7 +250,7 @@ export default function ProductImageCarousel({
                       alt={`${productTitle || 'Produit'} - Zoom ${index + 1}`}
                       width={1000}
                       height={1000}
-                      className="object-contain max-h-full max-w-full"
+                      className="object-contain max-h-full max-w-full mt-28"
                       priority={index === zoomIndex}
                       quality={95}
                       unoptimized
