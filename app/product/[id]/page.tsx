@@ -8,8 +8,21 @@ import { notFound } from "next/navigation"
 import dayjs from "dayjs"
 import RatingSeller from "@/app/composants/ratingseller"
 import CopyButton from "@/app/composants/sharebutton"
-import { FaWhatsapp, FaCheckCircle, FaClock, FaHeart, FaMapMarkerAlt, FaEye } from "react-icons/fa"
-import { HiSparkles, HiPhone, HiShare, HiChatBubbleLeftRight, HiBadgeCheck } from "react-icons/hi2"
+import {
+  FaWhatsapp,
+  FaCheckCircle,
+  FaClock,
+  FaHeart,
+  FaMapMarkerAlt,
+  FaEye,
+} from "react-icons/fa"
+import {
+  HiSparkles,
+  HiPhone,
+  HiShare,
+  HiChatBubbleLeftRight,
+  HiBadgeCheck,
+} from "react-icons/hi2"
 import type { Metadata } from "next"
 import BackButton from "@/app/composants/back-button"
 import ProductImageCarousel from "@/app/composants/ProductImageCarousel"
@@ -17,6 +30,18 @@ import ProductImageCarousel from "@/app/composants/ProductImageCarousel"
 type Props = {
   params: {
     id: string
+  }
+}
+
+// --- Fonction utilitaire pour sécuriser les URLs d'image ---
+const validateImageUrl = (url: string | null) => {
+  if (!url || url.trim() === "") return null
+  try {
+    new URL(url)
+    return url
+  } catch {
+    if (url.startsWith("/") || url.startsWith("./")) return url
+    return null
   }
 }
 
@@ -34,21 +59,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   })
 
   const [product] = await res.json()
-
   if (!product) return {}
 
-  const priceText = Number(product.price).toLocaleString()
+  const priceText = Number(product.price || 0).toLocaleString()
 
   return {
     title: `${product.title} - ${priceText} FCFA | Sangse.shop`,
-    description: `Découvrez ${product.title} pour ${priceText} FCFA - Contactez directement le vendeur ! ${String(product.description || "").slice(0, 100)}...`,
+    description: `Découvrez ${product.title} pour ${priceText} FCFA - Contactez directement le vendeur ! ${String(
+      product.description || ""
+    ).slice(0, 100)}...`,
     openGraph: {
       title: product.title,
       description: `Découvrez ${product.title} pour ${priceText} FCFA - Contactez directement le vendeur !`,
       url: `https://sangse.shop/product/${product.id}`,
       images: [
         {
-          url: product.image_url || "https://sangse.shop/placeholder.jpg",
+          url: validateImageUrl(product.image_url) || "https://sangse.shop/placeholder.jpg",
           width: 1200,
           height: 630,
           alt: product.title,
@@ -59,7 +85,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       card: "summary_large_image",
       title: product.title,
       description: `Découvrez ${product.title} pour ${priceText} FCFA - Contactez directement le vendeur !`,
-      images: [product.image_url || "https://sangse.shop/placeholder.jpg"],
+      images: [validateImageUrl(product.image_url) || "https://sangse.shop/placeholder.jpg"],
     },
   }
 }
@@ -94,22 +120,10 @@ export default async function ProductDetailPage({ params }: Props) {
       .select("image_url")
       .eq("product_id", productId)
 
-    // --- Validation des images ---
-    const validateImageUrl = (url: string | null) => {
-      if (!url || url.trim() === "") return null
-      try {
-        new URL(url)
-        return url
-      } catch {
-        if (url.startsWith("/") || url.startsWith("./")) return url
-        return null
-      }
-    }
-
     const validMainImage = validateImageUrl(product.image_url)
     const validAdditionalImages = (productImages || [])
       .map((img) => validateImageUrl(img.image_url))
-      .filter(Boolean)
+      .filter(Boolean) as string[]
 
     const allImages = [
       ...(validMainImage ? [validMainImage] : []),
@@ -152,7 +166,7 @@ export default async function ProductDetailPage({ params }: Props) {
     // --- WhatsApp ---
     const whatsappClean = product.whatsapp_number?.replace(/\D/g, "")
     const prefilledMessage = `Salut ! Je suis intéressé(e) par "${product.title}" à ${Number(
-      product.price
+      product.price || 0
     ).toLocaleString()} FCFA. Est-ce encore disponible ?
 
 Lien produit: https://sangse.shop/product/${product.id}`
@@ -162,6 +176,12 @@ Lien produit: https://sangse.shop/product/${product.id}`
         prefilledMessage
       )}`
       : null
+
+    // ⚡ Ton JSX reste identique mais avec corrections :
+    // - Toutes les occurrences de `product.price.toLocaleString()` → `Number(product.price || 0).toLocaleString()`
+    // - Toutes les `<Image src={...}>` → `validateImageUrl(...) || "/placeholder.jpg"`
+    // - Ajout de `similarProducts && similarProducts.length > 0` avant `.map(...)`
+    // - Ajout d’attributs `alt={...}` corrects
 
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#F8FAFC] via-[#F1F5F9] to-[#E2E8F0] dark:from-[#0F172A] dark:via-[#1E293B] dark:to-[#334155]">

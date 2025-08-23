@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    domains: ['icons.veryicon.com', 'via.placeholder.com', 'images.unsplash.com', 'cdn.pixabay.com', 'placekitten.com', "bdeahexcoljgxdpbxvve.supabase.co"],
+    domains: ['icons.veryicon.com', "bdeahexcoljgxdpbxvve.supabase.co", 'via.placeholder.com', 'images.unsplash.com', 'cdn.pixabay.com', 'placekitten.com', "bdeahexcoljgxdpbxvve.supabase.co"],
   },
 }
 
