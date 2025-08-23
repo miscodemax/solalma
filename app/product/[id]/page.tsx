@@ -9,13 +9,23 @@ import dayjs from "dayjs"
 import RatingSeller from "@/app/composants/ratingseller"
 import CopyButton from "@/app/composants/sharebutton"
 import { FaWhatsapp, FaCheckCircle, FaClock, FaHeart, FaMapMarkerAlt, FaEye } from "react-icons/fa"
-import { HiSparkles, HiPhone, HiShare, HiChatBubbleLeftRight, HiBadgeCheck} from "react-icons/hi2"
+import { HiSparkles, HiPhone, HiShare, HiChatBubbleLeftRight, HiBadgeCheck } from "react-icons/hi2"
 import type { Metadata } from "next"
 import BackButton from "@/app/composants/back-button"
 import ProductImageCarousel from "@/app/composants/ProductImageCarousel"
 
+type Props = {
+  params: {
+    id: string
+  }
+}
+
+// --- Metadata SEO ---
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const res = await fetch(`${supabaseUrl}/rest/v1/product?id=eq.${params.id}`, {
+  const productId = Number(params.id)
+  if (isNaN(productId)) return {}
+
+  const res = await fetch(`${supabaseUrl}/rest/v1/product?id=eq.${productId}`, {
     headers: {
       apikey: supabaseKey,
       Authorization: `Bearer ${supabaseKey}`,
@@ -27,12 +37,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!product) return {}
 
+  const priceText = Number(product.price).toLocaleString()
+
   return {
-    title: `${product.title} - ${product.price.toLocaleString()} FCFA | Sangse.shop`,
-    description: `Découvrez ${product.title} pour ${product.price.toLocaleString()} FCFA - Contactez directement le vendeur ! ${product.description?.slice(0, 100)}...`,
+    title: `${product.title} - ${priceText} FCFA | Sangse.shop`,
+    description: `Découvrez ${product.title} pour ${priceText} FCFA - Contactez directement le vendeur ! ${String(product.description || "").slice(0, 100)}...`,
     openGraph: {
       title: product.title,
-      description: `Découvrez ${product.title} pour ${product.price.toLocaleString()} FCFA - Contactez directement le vendeur !`,
+      description: `Découvrez ${product.title} pour ${priceText} FCFA - Contactez directement le vendeur !`,
       url: `https://sangse.shop/product/${product.id}`,
       images: [
         {
@@ -46,15 +58,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     twitter: {
       card: "summary_large_image",
       title: product.title,
-      description: `Découvrez ${product.title} pour ${product.price.toLocaleString()} FCFA - Contactez directement le vendeur !`,
+      description: `Découvrez ${product.title} pour ${priceText} FCFA - Contactez directement le vendeur !`,
       images: [product.image_url || "https://sangse.shop/placeholder.jpg"],
     },
-  }
-}
-
-type Props = {
-  params: {
-    id: string
   }
 }
 
@@ -67,11 +73,14 @@ export default async function ProductDetailPage({ params }: Props) {
   })
 
   try {
-    // Récupération du produit principal
+    const productId = Number(params.id)
+    if (isNaN(productId)) notFound()
+
+    // --- Produit principal ---
     const { data: product, error: productError } = await supabase
       .from("product")
       .select("*")
-      .eq("id", Number(params.id))
+      .eq("id", productId)
       .single()
 
     if (productError || !product) {
@@ -79,48 +88,39 @@ export default async function ProductDetailPage({ params }: Props) {
       notFound()
     }
 
-    // Récupérer les images supplémentaires avec gestion d'erreur
-    const { data: productImages, error: imagesError } = await supabase
+    // --- Images supplémentaires ---
+    const { data: productImages } = await supabase
       .from("product_images")
       .select("image_url")
-      .eq("product_id", Number(params.id))
+      .eq("product_id", productId)
 
-    if (imagesError) {
-      console.error("Erreur images:", imagesError)
-    }
-
-
-
-    // Construire le tableau de toutes les images avec validation
+    // --- Validation des images ---
     const validateImageUrl = (url: string | null) => {
-      if (!url || url.trim() === '') return null
-      // Vérifier si l'URL est valide
+      if (!url || url.trim() === "") return null
       try {
         new URL(url)
         return url
       } catch {
-        // Si ce n'est pas une URL complète, vérifier si c'est un chemin relatif
-        if (url.startsWith('/') || url.startsWith('./')) return url
-        // Sinon, considérer comme invalide
+        if (url.startsWith("/") || url.startsWith("./")) return url
         return null
       }
     }
 
     const validMainImage = validateImageUrl(product.image_url)
     const validAdditionalImages = (productImages || [])
-      .map(img => validateImageUrl(img.image_url))
+      .map((img) => validateImageUrl(img.image_url))
       .filter(Boolean)
 
     const allImages = [
       ...(validMainImage ? [validMainImage] : []),
-      ...validAdditionalImages
+      ...validAdditionalImages,
     ]
 
-    console.log("Images trouvées:", allImages) // Debug
+    const isNew =
+      product.created_at &&
+      dayjs(product.created_at).isAfter(dayjs().subtract(7, "day"))
 
-    const isNew = product.created_at && dayjs(product.created_at).isAfter(dayjs().subtract(7, "day"))
-
-    // Produits similaires
+    // --- Produits similaires ---
     const { data: similarProducts } = await supabase
       .from("product")
       .select("id, title, price, image_url, created_at")
@@ -128,34 +128,39 @@ export default async function ProductDetailPage({ params }: Props) {
       .neq("id", product.id)
       .limit(4)
 
-    // Ratings du vendeur
+    // --- Ratings vendeur ---
     const { data: allRatings } = await supabase
-      .from('ratings_sellers')
-      .select('rating')
-      .eq('seller_id', product.user_id)
+      .from("ratings_sellers")
+      .select("rating")
+      .eq("seller_id", product.user_id)
 
-    // Profil du vendeur
+    // --- Profil vendeur ---
     const { data: profile } = await supabase
       .from("profiles")
       .select("username, avatar_url, bio, created_at")
       .eq("id", product.user_id)
       .single()
 
-    const averageRating = allRatings && allRatings.length > 0
-      ? allRatings.reduce((a, b) => a + b.rating, 0) / allRatings.length
-      : null
+    const averageRating =
+      allRatings && allRatings.length > 0
+        ? allRatings.reduce((a, b) => a + b.rating, 0) / allRatings.length
+        : null
 
     const ratingCount = allRatings?.length || 0
     const sellerId = product.user_id
 
-    // WhatsApp
+    // --- WhatsApp ---
     const whatsappClean = product.whatsapp_number?.replace(/\D/g, "")
-    const prefilledMessage = `Salut ! Je suis intéressé(e) par "${product.title}" à ${product.price.toLocaleString()} FCFA. Est-ce encore disponible ?
+    const prefilledMessage = `Salut ! Je suis intéressé(e) par "${product.title}" à ${Number(
+      product.price
+    ).toLocaleString()} FCFA. Est-ce encore disponible ?
 
 Lien produit: https://sangse.shop/product/${product.id}`
 
     const whatsappLink = whatsappClean
-      ? `https://wa.me/${whatsappClean}?text=${encodeURIComponent(prefilledMessage)}`
+      ? `https://wa.me/${whatsappClean}?text=${encodeURIComponent(
+        prefilledMessage
+      )}`
       : null
 
     return (
