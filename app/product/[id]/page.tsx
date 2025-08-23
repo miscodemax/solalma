@@ -8,8 +8,8 @@ import { notFound } from "next/navigation"
 import dayjs from "dayjs"
 import RatingSeller from "@/app/composants/ratingseller"
 import CopyButton from "@/app/composants/sharebutton"
-import { FaWhatsapp, FaCheckCircle, FaClock, FaHeart, FaMapMarkerAlt, FaUserCheck, FaShieldAlt, FaShippingFast, FaStar, FaEye } from "react-icons/fa"
-import { HiSparkles, HiPhone, HiShare, HiBadgeCheck, HiChatBubbleLeftRight } from "react-icons/hi2"
+import { FaWhatsapp, FaCheckCircle, FaClock, FaHeart, FaMapMarkerAlt, FaEye } from "react-icons/fa"
+import { HiSparkles, HiPhone, HiShare, HiChatBubbleLeftRight, HiBadgeCheck} from "react-icons/hi2"
 import type { Metadata } from "next"
 import BackButton from "@/app/composants/back-button"
 import ProductImageCarousel from "@/app/composants/ProductImageCarousel"
@@ -89,11 +89,7 @@ export default async function ProductDetailPage({ params }: Props) {
       console.error("Erreur images:", imagesError)
     }
 
-    // Récupération des autres produits du vendeur
-    const { data: allProducts } = await supabase
-      .from("product")
-      .select("*")
-      .eq("user_id", product?.user_id)
+
 
     // Construire le tableau de toutes les images avec validation
     const validateImageUrl = (url: string | null) => {
