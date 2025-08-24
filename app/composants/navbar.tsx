@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import {
   HomeIcon, ShoppingCart, User,
-  Info, Menu, X, LogOut, Heart
+  Info, Menu, X, LogOut, Heart, ShoppingBag
 } from 'lucide-react'
 import { ThemeToggle } from './theme-toggle'
 import TextLogo from './textLogo'
@@ -94,7 +94,9 @@ export default function Navbar({ products }: { products: Product[] }) {
         {/* Logo + mobile menu + theme */}
         <div className="flex items-center justify-between w-full md:w-auto">
           <Link href="/" className="flex items-center gap-1 text-xl font-bold text-[#6366F1] group">
-            <span className="transition-transform group-hover:scale-110">🌸</span>
+            <span className="transition-transform group-hover:scale-110 text-[#D29587] dark:text-[#FBCFC2]">
+              <ShoppingBag size={18} />
+            </span>
             <TextLogo />
           </Link>
           <div className="flex items-center gap-3 md:hidden">
