@@ -1,64 +1,21 @@
-// app/product/[id]/page.tsx
 import { cookies } from "next/headers"
 import { createServerClient } from "@supabase/ssr"
-import { supabaseUrl, supabaseKey } from "../../../lib/supabase"
+import { supabaseUrl, supabaseKey } from "@/lib/supabase"
 import Image from "next/image"
 import Link from "next/link"
-import { notFound } from "next/navigation"
-import dayjs from "dayjs"
-import RatingSeller from "@/app/composants/ratingseller"
 import CopyButton from "@/app/composants/sharebutton"
-import { FaWhatsapp, FaCheckCircle, FaClock, FaHeart, FaMapMarkerAlt, FaUserCheck } from "react-icons/fa"
-import { HiSparkles, HiPhone, HiShare } from "react-icons/hi2"
-import type { Metadata } from "next"
+import { FaWhatsapp, FaStar, FaBox } from "react-icons/fa"
+import { HiBadgeCheck, HiTrendingUp } from "react-icons/hi"
+import { Metadata } from "next"
 import BackButton from "@/app/composants/back-button"
-import ProductImageCarousel from "@/app/composants/ProductImageCarousel"
+import { Suspense } from "react"
+import ProductGallery from "@/app/composants/productgallery"
+import Loader from "@/app/loading"
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const res = await fetch(`${supabaseUrl}/rest/v1/product?id=eq.${params.id}`, {
-    headers: {
-      apikey: supabaseKey,
-      Authorization: `Bearer ${supabaseKey}`,
-    },
-    cache: "no-store",
-  })
 
-  const [product] = await res.json()
 
-  if (!product) return {}
 
-  return {
-    title: product.title,
-    description: `Découvrez ${product.title} pour ${product.price} FCFA - Contactez directement le vendeur !`,
-    openGraph: {
-      title: product.title,
-      description: `Découvrez ${product.title} pour ${product.price} FCFA - Contactez directement le vendeur !`,
-      url: `https://sangse.shop/product/${product.id}`,
-      images: [
-        {
-          url: product.image_url || "https://sangse.shop/placeholder.jpg",
-          width: 1200,
-          height: 630,
-          alt: product.title,
-        },
-      ],
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: product.title,
-      description: `Découvrez ${product.title} pour ${product.price} FCFA - Contactez directement le vendeur !`,
-      images: [product.image_url || "https://sangse.shop/placeholder.jpg"],
-    },
-  }
-}
-
-type Props = {
-  params: {
-    id: string
-  }
-}
-
-export default async function ProductDetailPage({ params }: Props) {
+export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const cookieStore = await cookies()
   const supabase = createServerClient(supabaseUrl, supabaseKey, {
     cookies: {
@@ -66,399 +23,282 @@ export default async function ProductDetailPage({ params }: Props) {
     },
   })
 
-  const {
-    data: product,
-    error: productError,
-  } = await supabase
-    .from("product")
-    .select("*")
-    .eq("id", Number(params.id))
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("username, avatar_url, bio")
+    .eq("id", params.id)
     .single()
 
-  // Récupérer les images supplémentaires
-  const { data: productImages } = await supabase
-    .from("product_images")
-    .select("image_url")
-    .eq("product_id", Number(params.id))
+  const title = profile?.username
+    ? `Découvre la boutique de ${profile.username} sur Sangse.shop`
+    : "Profil vendeur - Sangse.shop"
 
-  const {
-    data: allProducts,
-  } = await supabase
-    .from("product")
-    .select("*")
-    .eq("user_id", product?.user_id)
+  const description = profile?.bio || "Voici ma boutique sur Sangse 🌸Tu peux commander tous mes produits ici, c'est rapide et sécurisé.Tu peux même te connecter avec Google en 1 clic."
+  const image = profile?.avatar_url || "https://sangse.shop/default-avatar.png"
+  const url = `https://sangse.shop/profile/${params.id}`
 
-  if (productError || !product) {
-    notFound()
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url,
+      siteName: "Sangse.shop",
+      images: [
+        {
+          url: image,
+          width: 600,
+          height: 600,
+          alt: profile?.username || "Avatar vendeur",
+        },
+      ],
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [image],
+    },
   }
+}
 
-  // Construire le tableau de toutes les images
-  const allImages = [
-    product.image_url, // Image principale en premier
-    ...(productImages?.map(img => img.image_url) || [])
-  ].filter(Boolean) // Filtrer les valeurs null/undefined
 
-  const isNew =
-    product.created_at &&
-    dayjs(product.created_at).isAfter(dayjs().subtract(7, "day"))
 
-  const { data: similarProducts } = await supabase
-    .from("product")
-    .select("id, title, price, image_url")
-    .eq("category", product.category)
-    .neq("id", product.id)
-    .limit(4)
 
-  const { data: allRatings } = await supabase
-    .from('ratings_sellers')
-    .select('rating')
-    .eq('seller_id', Number(params.id))
+// Client-side filter logic
+
+
+export default async function UserProfilePage({ params }: { params: { id: string } }) {
+  const cookieStore = await cookies()
+  const supabase = createServerClient(supabaseUrl, supabaseKey, {
+    cookies: {
+      get: (name) => cookieStore.get(name)?.value,
+    },
+  })
+
+  const { id } = params
 
   const { data: profile } = await supabase
     .from("profiles")
     .select("username, avatar_url, bio")
-    .eq("id", product.user_id)
+    .eq("id", id)
     .single()
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  const { data: allProducts } = await supabase
+    .from("product")
+    .select("*")
+    .eq("user_id", id)
+    .order("created_at", { ascending: false })
+
+  const { data: ratingsData } = await supabase
+    .from("ratings_sellers")
+    .select("rating")
+    .eq("seller_id", id)
+
+  const ratings = ratingsData?.map((r) => r.rating) || []
   const averageRating =
-    allRatings && allRatings.length > 0
-      ? allRatings.reduce((a, b) => a + b.rating, 0) / allRatings.length
-      : null
+    ratings.length > 0 ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1) : null
 
-  const ratingCount = allRatings?.length || 0
-  const sellerId = product.user_id
+  const getBadge = () => {
+    if (!averageRating) return null
+    const rating = parseFloat(averageRating)
+    if (rating >= 4.5) return { label: "Vendeur d'Or", icon: "🥇", color: "from-yellow-400 to-yellow-600" }
+    if (rating >= 4.0) return { label: "Vendeur Fiable", icon: "🥈", color: "from-gray-300 to-gray-500" }
+    if (rating >= 3.5) return { label: "Bon Vendeur", icon: "🥉", color: "from-orange-300 to-orange-500" }
+    return null
+  }
 
-  const whatsappClean = product.whatsapp_number?.replace(/\D/g, "")
-  const prefilledMessage = `Salut ! Je suis intéressé(e) par "${product.title}" à ${product.price.toLocaleString()} FCFA. Est-ce encore disponible ? 
+  const renderStars = (rating: number) => {
+    return Array.from({ length: 5 }, (_, i) => (
+      <FaStar
+        key={i}
+        className={`w-4 h-4 ${i < Math.floor(rating) ? 'text-yellow-400' : 'text-gray-300 dark:text-gray-600'
+          }`}
+      />
+    ))
+  }
 
-Lien produit: https://sangse.shop/product/${product.id}`
-  const whatsappLink = whatsappClean
-    ? `https://wa.me/${whatsappClean}?text=${encodeURIComponent(prefilledMessage)}`
-    : null
+  const products = allProducts || []
+  const badge = getBadge()
+  const totalProducts = products.length
+  const isOwner = user?.id === id
+
+  if (!profile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="w-20 h-20 mx-auto bg-red-100 rounded-full flex items-center justify-center">
+            <span className="text-2xl">😕</span>
+          </div>
+          <p className="text-lg font-semibold text-red-600">Profil introuvable</p>
+          <Link href="/" className="inline-block bg-[#D29587] text-white px-6 py-3 rounded-xl">
+            Retour à l accueil
+          </Link>
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#FAFAFA] via-[#F5E6CC]/20 to-[#A8D5BA]/10 dark:from-[#0A0A0A] dark:via-[#121212] dark:to-[#1A1A1A]">
-      {/* Éléments décoratifs flottants - Palette Sangse */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-64 h-64 bg-[#A8D5BA]/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-32 right-16 w-80 h-80 bg-[#FFD6BA]/8 rounded-full blur-3xl animate-pulse delay-1000"></div>
-      </div>
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 space-y-6">
+      <BackButton />
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 py-8">
-        <BackButton />
-
-        {/* Breadcrumb moderne - Palette Sangse */}
-        <nav className="flex items-center space-x-2 text-sm text-[#374151] mb-8">
-          <Link href="/" className="hover:text-[#6366F1] transition-colors font-medium">🏠 Accueil</Link>
-          <span className="text-[#6366F1]">›</span>
-          <span className="bg-[#A8D5BA]/20 text-[#6366F1] px-3 py-1 rounded-full font-medium">
-            {product.category || "Produit"}
-          </span>
-        </nav>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
-          {/* Section Images avec Carousel */}
-          <div className="space-y-6">
-            <ProductImageCarousel
-              images={allImages}
-              productTitle={product.title}
-              isNew={isNew}
-            />
-
-            {/* Zone de partage moderne - Palette Sangse */}
-            <div className="bg-white/80 dark:bg-gray-900/70 backdrop-blur-lg p-6 rounded-2xl border border-[#E5E7EB] shadow-xl">
-              <h3 className="font-bold text-[#374151] dark:text-gray-200 mb-4 flex items-center text-lg">
-                <HiShare className="mr-3 text-[#6366F1] text-xl" />
-                Partager ce produit
-              </h3>
-
-              <div className="grid grid-cols-2 gap-4">
-                <a
-                  href={`https://wa.me/?text=${encodeURIComponent(
-                    `🔥 Regarde ce ${product.title} à ${product.price.toLocaleString()} FCFA sur Sangse.shop ! 
-                    
-${product.description?.slice(0, 100)}...
-
-👉 https://sangse.shop/product/${product.id}`
-                  )}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-6 py-4 rounded-xl font-semibold flex items-center justify-center gap-3 transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl"
-                >
-                  <FaWhatsapp className="text-xl" />
-                  Partager
-                </a>
-
-                <CopyButton
-                  text={`https://sangse.shop/product/${product.id}`}
-                  platform="📋 Copier"
-                />
-              </div>
+      {/* Header Premium */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-pink-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900 shadow-xl border border-pink-100 dark:border-gray-700">
+        {/* Badge flottant si vendeur premium */}
+        {badge && (
+          <div className="absolute top-4 right-4 z-10">
+            <div className={`bg-gradient-to-r ${badge.color} text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1`}>
+              <span>{badge.icon}</span>
+              <span>{badge.label}</span>
             </div>
           </div>
+        )}
 
-          {/* Section Informations repensée - Palette Sangse */}
-          <div className="space-y-8">
-            {/* En-tête produit avec effets */}
-            <div className="space-y-6">
-              <div>
-                <h1 className="text-4xl lg:text-5xl font-black text-[#374151] dark:text-white leading-tight mb-4">
-                  {product.title}
-                </h1>
-
-                <div className="flex flex-wrap items-center gap-3 mb-6">
-                  <span className="inline-flex items-center bg-[#A8D5BA]/20 text-[#6366F1] px-4 py-2 rounded-full text-sm font-bold border border-[#A8D5BA]/40">
-                    📁 {product.category || "Non spécifiée"}
-                  </span>
-
-                  {product.location && (
-                    <span className="inline-flex items-center bg-[#F5E6CC]/30 text-[#6366F1] px-4 py-2 rounded-full text-sm font-medium">
-                      <FaMapMarkerAlt className="mr-2" />
-                      {product.location}
-                    </span>
-                  )}
-
-                  <span className="text-sm text-[#374151] bg-[#E5E7EB] px-3 py-1 rounded-full">
-                    <FaClock className="inline mr-1" />
-                    {dayjs(product.created_at).format('DD/MM/YYYY')}
-                  </span>
-                </div>
-              </div>
-
-              {/* Prix avec effet dramatique - Palette Sangse */}
-              <div className="relative bg-gradient-to-br from-[#A8D5BA]/15 via-[#F5E6CC]/10 to-[#FFD6BA]/8 p-8 rounded-3xl border-2 border-[#A8D5BA]/30 shadow-2xl">
-                <div className="absolute -top-3 left-6 bg-[#6366F1] text-white px-4 py-1 rounded-full text-sm font-bold">
-                  💰 Prix
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-5xl lg:text-6xl font-black text-[#6366F1] mb-2">
-                      {product.price.toLocaleString()}
-                      <span className="text-2xl font-semibold ml-2">FCFA</span>
-                    </p>
-                    <p className="text-[#A8D5BA] font-medium flex items-center">
-                      <FaCheckCircle className="mr-2" />
-                      Prix négociable au contact
-                    </p>
-                  </div>
-
-                  <div className="text-right">
-                    <div className="bg-gradient-to-r from-[#FFD6BA] to-[#6366F1] text-white px-6 py-3 rounded-2xl font-bold text-sm shadow-lg">
-                      🔥 CONTACT
-                      <br />
-                      DIRECT
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Carte vendeur redessinée - Palette Sangse */}
-            <div className="bg-gradient-to-r from-white/90 to-[#F5E6CC]/20 dark:from-gray-800/80 dark:to-gray-800/60 backdrop-blur-lg p-8 rounded-3xl border border-[#E5E7EB] shadow-2xl">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="relative">
-                  <Image
-                    src={profile?.avatar_url || "/placeholder-avatar.jpg"}
-                    alt={profile?.username || "Vendeur"}
-                    width={64}
-                    height={64}
-                    className="rounded-full border-4 border-[#A8D5BA]/40 object-cover shadow-lg"
-                  />
-                  <div className="absolute -bottom-1 -right-1 bg-[#A8D5BA] w-6 h-6 rounded-full border-2 border-white flex items-center justify-center">
-                    <FaCheckCircle className="text-white text-xs" />
-                  </div>
-                </div>
-
-                <div className="flex-1">
-                  <h3 className="font-bold text-xl text-[#374151] dark:text-gray-200">
-                    {profile?.username || "Vendeur vérifié"}
-                  </h3>
-
-                  {sellerId && (
-                    <p className="text-xs text-[#374151]/60 mt-1">
-                      ID: {sellerId}
-                    </p>
-                  )}
-                </div>
-
-                {sellerId ? (
-                  <Link
-                    href={`/profile/${sellerId}`}
-                    className="bg-[#6366F1] hover:bg-[#5855eb] text-white px-6 py-3 rounded-xl font-medium text-sm transition-all duration-300 hover:scale-105 shadow-lg flex items-center gap-2"
-                  >
-                    🏪 Voir boutique
-                  </Link>
-                ) : (
-                  <div className="bg-[#E5E7EB] text-[#374151] px-6 py-3 rounded-xl font-medium text-sm">
-                    Boutique indisponible
+        <div className="p-6 sm:p-8">
+          <div className="flex flex-col sm:flex-row items-center gap-6">
+            {/* Avatar avec statut en ligne */}
+            <div className="relative">
+              <div className="relative w-32 h-32 sm:w-36 sm:h-36 shrink-0">
+                <Image
+                  src={profile.avatar_url || "/default-avatar.png"}
+                  alt={`Boutique de ${profile.username}`}
+                  fill
+                  className="rounded-full object-cover border-4 border-white dark:border-gray-700 shadow-lg"
+                />
+                {/* Indicateur vérifié si badge */}
+                {badge && (
+                  <div className="absolute -bottom-2 -right-2 bg-green-500 rounded-full p-2 border-4 border-white dark:border-gray-800">
+                    <HiBadgeCheck className="w-4 h-4 text-white" />
                   </div>
                 )}
               </div>
-
-              {profile?.bio && (
-                <div className="mb-6 text-[#374151] dark:text-gray-300 bg-[#F5E6CC]/20 dark:bg-gray-700/50 p-4 rounded-xl">
-                  📝 {profile.bio.slice(0, 120)}{profile.bio.length > 120 ? '...' : ''}
-                </div>
-              )}
-
-              {sellerId && (
-                <RatingSeller
-                  sellerId={sellerId}
-                  initialAverage={averageRating}
-                  initialCount={ratingCount}
-                />
-              )}
-
-              {/* Bouton alternatif vers la boutique */}
-              {sellerId && (
-                <div className="mt-4 pt-4 border-t border-[#E5E7EB] dark:border-gray-600">
-                  <Link
-                    href={`/profile/${sellerId}`}
-                    className="w-full bg-[#A8D5BA]/15 hover:bg-[#A8D5BA]/25 text-[#6366F1] px-4 py-3 rounded-xl font-medium text-center transition-all duration-300 hover:scale-105 border-2 border-[#A8D5BA]/30 hover:border-[#A8D5BA]/50 flex items-center justify-center gap-2"
-                  >
-                    🛍️ Voir tous ses produits
-                    <span className="text-xs bg-[#A8D5BA]/30 px-2 py-1 rounded-full">
-                      +{allProducts && (allProducts.length - 1)}
-                    </span>
-                  </Link>
-                </div>
-              )}
             </div>
 
-            {/* Boutons de contact repensés - Palette Sangse */}
-            <div className="space-y-6">
-              <div className="text-center">
-                <h3 className="font-black text-2xl text-[#374151] dark:text-gray-200 mb-2">
-                  💬 Prêt(e) à discuter ?
-                </h3>
-                <p className="text-[#374151]/70 dark:text-gray-400">
-                  Contactez directement le vendeur pour négocier
+            {/* Infos vendeur */}
+            <div className="flex-1 text-center sm:text-left space-y-3">
+              <div>
+                <h1 className="text-3xl font-black text-gray-900 dark:text-white mb-2">
+                  {profile.username}
+                </h1>
+                <p className="text-gray-600 dark:text-gray-300 text-base leading-relaxed">
+                  {profile.bio || "✨ Passionnée de mode, je partage mes coups de cœur avec vous !"}
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 gap-4">
-                {whatsappLink ? (
-                  <a
-                    href={whatsappLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group relative overflow-hidden bg-gradient-to-r from-green-500 via-green-600 to-emerald-600 text-white font-bold text-lg px-8 py-6 rounded-2xl transition-all duration-300 hover:scale-105 shadow-2xl hover:shadow-3xl"
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                    <div className="relative flex items-center justify-center gap-4">
-                      <FaWhatsapp className="text-2xl animate-pulse" />
-                      <div className="text-center">
-                        <div>Discuter sur WhatsApp</div>
-                        <div className="text-sm opacity-90">Message pré-écrit inclus</div>
-                      </div>
-                    </div>
-                  </a>
-                ) : (
-                  <div className="bg-[#E5E7EB] dark:bg-gray-800 text-[#374151] font-bold text-lg px-8 py-6 rounded-2xl text-center">
-                    ❌ WhatsApp non disponible
-                  </div>
-                )}
-
-                {product.whatsapp_number && (
-                  <a
-                    href={`tel:${product.whatsapp_number}`}
-                    className="group bg-gradient-to-r from-[#6366F1] to-[#5855eb] text-white font-bold text-lg px-8 py-6 rounded-2xl transition-all duration-300 hover:scale-105 shadow-xl hover:shadow-2xl"
-                  >
-                    <div className="flex items-center justify-center gap-4">
-                      <HiPhone className="text-2xl group-hover:animate-bounce" />
-                      <div className="text-center">
-                        <div>Appeler maintenant</div>
-                        <div className="text-sm opacity-90">{product.whatsapp_number}</div>
-                      </div>
-                    </div>
-                  </a>
-                )}
-              </div>
-
-              {/* Assurance et confiance - Palette Sangse */}
-              <div className="bg-gradient-to-r from-[#F5E6CC]/30 to-[#A8D5BA]/20 dark:from-blue-900/20 dark:to-indigo-900/20 p-6 rounded-2xl border border-[#A8D5BA]/30 dark:border-blue-800">
-                <h4 className="font-bold text-[#6366F1] dark:text-blue-300 mb-3 text-center">
-                  🛡️ Achat en toute confiance
-                </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                  <div className="flex items-center text-[#374151] dark:text-blue-300">
-                    <FaCheckCircle className="mr-2 text-[#A8D5BA]" />
-                    Discussion directe avec le vendeur
-                  </div>
-                  <div className="flex items-center text-[#374151] dark:text-blue-300">
-                    <FaCheckCircle className="mr-2 text-[#A8D5BA]" />
-                    Négociation libre du prix
-                  </div>
-                  <div className="flex items-center text-[#374151] dark:text-blue-300">
-                    <FaCheckCircle className="mr-2 text-[#A8D5BA]" />
-                    Arrangement livraison à convenir
-                  </div>
-                  <div className="flex items-center text-[#374151] dark:text-blue-300">
-                    <FaCheckCircle className="mr-2 text-[#A8D5BA]" />
-                    Paiement selon vos préférences
-                  </div>
+              {/* Stats en ligne */}
+              <div className="flex flex-wrap justify-center sm:justify-start gap-4 text-sm">
+                <div className="flex items-center gap-2 bg-white/50 dark:bg-gray-800/50 px-3 py-2 rounded-xl">
+                  <FaBox className="text-[#D29587]" />
+                  <span className="font-semibold">{totalProducts}</span>
+                  <span className="text-gray-600 dark:text-gray-400">articles</span>
                 </div>
+
+                {ratings.length > 0 && (
+                  <div className="flex items-center gap-2 bg-white/50 dark:bg-gray-800/50 px-3 py-2 rounded-xl">
+                    <div className="flex items-center gap-1">
+                      {renderStars(parseFloat(averageRating!))}
+                    </div>
+                    <span className="font-semibold">{averageRating}</span>
+                    <span className="text-gray-600 dark:text-gray-400">({ratings.length} avis)</span>
+                  </div>
+                )}
+
+                {!ratings.length && (
+                  <div className="flex items-center gap-2 bg-white/50 dark:bg-gray-800/50 px-3 py-2 rounded-xl">
+                    <HiTrendingUp className="text-blue-500" />
+                    <span className="text-gray-600 dark:text-gray-400">Nouveau vendeur</span>
+                  </div>
+                )}
               </div>
             </div>
+          </div>
 
-            {/* Description si disponible - Palette Sangse */}
-            {product.description && (
-              <div className="bg-white/80 dark:bg-gray-900/70 backdrop-blur-lg p-8 rounded-3xl border border-[#E5E7EB] shadow-xl">
-                <h3 className="font-black text-xl text-[#374151] dark:text-gray-200 mb-4 flex items-center">
-                  📝 Description détaillée
-                </h3>
-                <div className="text-[#374151] dark:text-gray-300 leading-relaxed whitespace-pre-line text-lg">
-                  {product.description}
-                </div>
-              </div>
-            )}
+          {/* Actions principales */}
+          <div className="mt-6 pt-6 border-t border-pink-100 dark:border-gray-700">
+            <div className="flex flex-wrap justify-center sm:justify-start gap-3">
+
+              <Link
+                href={`https://wa.me/?text=${encodeURIComponent(
+                  `🔗 Découvre la boutique de ${profile.username} sur Sangse.shop : https://sangse.shop/profile/${id}`
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-xl flex items-center gap-2 font-semibold shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
+              >
+                <FaWhatsapp className="w-5 h-5" />
+                Partager sur WhatsApp
+              </Link>
+
+              <CopyButton
+                text={`https://sangse.shop/profile/${id}`}
+                platform="Copier le lien"
+              />
+
+              {isOwner && (
+                <>
+                  <Link
+                    href="/profile/update"
+                    className="bg-[#D29587] hover:bg-[#bb7e70] text-white px-6 py-3 rounded-xl flex items-center gap-2 font-semibold shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
+                  >
+                    ✏️ Modifier profil
+                  </Link>
+                  <Link
+                    href="/dashboard/products"
+                    className="bg-purple-500 hover:bg-purple-600 text-white px-6 py-3 rounded-xl flex items-center gap-2 font-semibold shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
+                  >
+                    📦 Gérer produits
+                  </Link>
+                </>
+              )}
+            </div>
           </div>
         </div>
-
-        {/* Section produits similaires moderne - Palette Sangse */}
-        {similarProducts && similarProducts.length > 0 && (
-          <section className="mt-24">
-            <div className="text-center mb-12">
-              <h2 className="text-4xl lg:text-5xl font-black text-[#374151] dark:text-white mb-4">
-                Découvrez aussi
-              </h2>
-              <p className="text-xl text-[#374151]/70 dark:text-gray-400 max-w-2xl mx-auto">
-                D'autres pépites qui pourraient vous intéresser
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-              {similarProducts.map((p) => (
-                <Link
-                  key={p.id}
-                  href={`/product/${p.id}`}
-                  className="group bg-white/80 dark:bg-gray-900/70 backdrop-blur-lg rounded-3xl shadow-xl border border-[#E5E7EB] overflow-hidden hover:scale-105 hover:shadow-2xl transition-all duration-500"
-                >
-                  <div className="relative h-64 overflow-hidden">
-                    <Image
-                      src={p.image_url || "/placeholder.jpg"}
-                      alt={p.title}
-                      fill
-                      className="object-cover transition-transform duration-700 group-hover:scale-110"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  </div>
-
-                  <div className="p-6">
-                    <h3 className="font-bold text-[#374151] dark:text-gray-100 text-lg line-clamp-2 mb-3 group-hover:text-[#6366F1] transition-colors">
-                      {p.title}
-                    </h3>
-                    <p className="text-[#6366F1] font-black text-xl">
-                      {p.price.toLocaleString()} FCFA
-                    </p>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </section>
-        )}
       </div>
+
+      {/* Section Produits améliorée */}
+      <section className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+            <div className="w-1 h-8 bg-gradient-to-b from-[#D29587] to-purple-500 rounded-full"></div>
+            Ma Collection
+          </h2>
+          {totalProducts > 0 && (
+            <span className="bg-[#D29587] text-white px-3 py-1 rounded-full text-sm font-semibold">
+              {totalProducts} articles
+            </span>
+          )}
+        </div>
+        <Suspense fallback={<Loader />}>
+          {/* Filtrage par catégorie/prix */}
+          <ProductGallery products={products} userId={user?.id} />
+        </Suspense>
+      </section>
+
+      {/* Call to action pour visiteurs */}
+      {!isOwner && products.length > 0 && (
+        <div className="bg-gradient-to-r from-[#D29587] to-purple-500 rounded-3xl p-6 text-center text-white">
+          <h3 className="text-xl font-bold mb-2">💝 Un coup de cœur ?</h3>
+          <p className="mb-4 opacity-90">Contactez {profile.username} directement via WhatsApp pour commander</p>
+          <a
+            href={`https://wa.me/?text=${encodeURIComponent(
+              `Bonjour ${profile.username} ! J'ai vu votre boutique sur Sangse.shop et j'aimerais en savoir plus sur vos articles 😊`
+            )}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 bg-white text-[#D29587] px-6 py-3 rounded-xl font-bold hover:bg-gray-100 transition-colors"
+          >
+            <FaWhatsapp className="w-5 h-5" />
+            Contacter maintenant
+          </a>
+        </div>
+      )}
     </div>
   )
 }
