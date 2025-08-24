@@ -234,7 +234,7 @@ export default function ProductImageCarousel({
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 40 }}
               transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }} // cubic-bezier style smooth
-              className="relative bg-[#FAFAFA] dark:bg-gray-900 rounded-2xl shadow-2xl max-w-4xl max-h-[80vh] overflow-hidden"
+              className="relative mt-6 bg-[#FAFAFA] dark:bg-gray-900 rounded-2xl shadow-2xl max-w-4xl max-h-[80vh] overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
               {/* BOUTON FERMER */}
