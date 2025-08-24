@@ -83,7 +83,7 @@ export default function ProductImageCarousel({
             return (
               <SwiperSlide key={index}>
                 <div
-                  className="relative w-full aspect-square bg-white dark:bg-gray-100 cursor-pointer overflow-hidden"
+                  className="relative w-full aspect-[4/5] bg-white dark:bg-gray-100 cursor-pointer overflow-hidden"
                   onClick={() => openZoom(index)}
                 >
                   {!showError ? (
@@ -106,7 +106,7 @@ export default function ProductImageCarousel({
 
                   {/* BADGE NOUVEAU */}
                   {isNew && (
-                    <div className="absolute top-3 left-3 z-20 flex items-center bg-gradient-to-r from-emerald-400 to-teal-500 text-white px-3 py-1.5 rounded-full text-xs font-semibold shadow-md">
+                    <div className="absolute top-3 left-3 z-20 flex items-center bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-3 py-1.5 rounded-full text-xs font-semibold shadow-md">
                       <HiSparkles className="mr-1.5 text-sm" />
                       Nouveau
                     </div>
@@ -121,7 +121,7 @@ export default function ProductImageCarousel({
                       }}
                       className="bg-white/95 backdrop-blur-sm p-2.5 rounded-full shadow-md hover:scale-110 transition-all duration-200"
                     >
-                      <FaHeart className={`text-sm transition-colors ${isLiked ? 'text-red-500' : 'text-gray-400 hover:text-red-400'}`} />
+                      <FaHeart className={`text-sm transition-colors ${isLiked ? 'text-blue-500' : 'text-gray-400 hover:text-blue-400'}`} />
                     </button>
                     <button
                       onClick={(e) => {
@@ -187,7 +187,7 @@ export default function ProductImageCarousel({
             <SwiperSlide key={index} className="cursor-pointer">
               <div
                 className={`relative w-full aspect-square rounded-lg overflow-hidden border-2 transition-all duration-200 ${currentSlide === index
-                  ? 'border-blue-500 shadow-md scale-105'
+                  ? 'border-indigo-500 shadow-md scale-105'
                   : 'border-gray-200 hover:border-gray-300 dark:border-gray-600 dark:hover:border-gray-500'
                   }`}
                 onClick={() => mainSwiperRef.current?.slideTo(index)}
