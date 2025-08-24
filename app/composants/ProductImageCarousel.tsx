@@ -65,7 +65,7 @@ export default function ProductImageCarousel({
   const prevSlide = () => mainSwiperRef.current?.slidePrev()
 
   return (
-    <div className="w-full max-w-[500px] mx-auto space-y-4">
+    <div className="w-full space-y-4">
       {/* CARROUSEL PRINCIPAL */}
       <div className="relative group">
         <Swiper
@@ -75,7 +75,7 @@ export default function ProductImageCarousel({
           thumbs={{ swiper: thumbsSwiper && !thumbsSwiper.destroyed ? thumbsSwiper : null }}
           onSlideChange={(swiper) => setCurrentSlide(swiper.realIndex)}
           modules={[FreeMode, Navigation, Thumbs, Pagination]}
-          className="rounded-2xl shadow-lg overflow-hidden"
+          className="rounded-2xl shadow-lg overflow-hidden w-full"
           pagination={{ clickable: true, dynamicBullets: true }}
         >
           {validImages.map((img, index) => {
@@ -95,7 +95,7 @@ export default function ProductImageCarousel({
                       priority={index === 0}
                       quality={85}
                       onError={() => handleImageError(index)}
-                      sizes="(max-width: 768px) 100vw, 500px"
+                      sizes="100vw"
                       unoptimized
                     />
                   ) : (
@@ -215,71 +215,88 @@ export default function ProductImageCarousel({
 
       {/* MODAL ZOOM */}
       {isZoomed && (
-        <div className="fixed inset-0 z-[9999] bg-black/95 flex items-center justify-center">
-          {/* HEADER */}
-          <div className="absolute top-0 left-0 right-0 z-[10000] bg-gradient-to-b from-black/80 to-transparent p-6">
-            <div className="flex justify-between items-center">
-              <h3 className="text-white font-medium text-lg truncate pr-4">
-                {productTitle || 'Produit'}
-              </h3>
-              <button
-                onClick={closeZoom}
-                className="bg-white/20 top-60 right-6 hover:bg-white/30 p-3 rounded-full transition-all hover:scale-110"
-              >
-                <FaTimes className="text-white text-xl" />
-              </button>
-            </div>
-          </div>
-
-          {/* SWIPER ZOOM */}
-          <Swiper
-            initialSlide={zoomIndex}
-            spaceBetween={20}
-            navigation={{ nextEl: '.swiper-button-next-zoom', prevEl: '.swiper-button-prev-zoom' }}
-            loop={validImages.length > 1}
-            modules={[Navigation]}
-            className="w-full h-full max-w-[95vw] max-h-[95vh]"
+        <div
+          className={`fixed inset-0 z-[9999] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 transition-all duration-300 ${isZoomed ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+            }`}
+          onClick={closeZoom}
+        >
+          <div
+            className={`relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-4xl max-h-[90vh] overflow-hidden transform transition-all duration-300 ${isZoomed ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
+              }`}
+            onClick={(e) => e.stopPropagation()}
           >
-            {validImages.map((img, index) => {
-              const showError = imageErrors[index]
-              return (
-                <SwiperSlide key={index} className="flex items-center justify-center p-16">
-                  {!showError ? (
-                    <Image
-                      src={img || '/placeholder.jpg'}
-                      alt={`${productTitle || 'Produit'} - Zoom ${index + 1}`}
-                      width={1000}
-                      height={1000}
-                      className="object-contain max-h-full max-w-full mt-28"
-                      priority={index === zoomIndex}
-                      quality={95}
-                      unoptimized
-                    />
-                  ) : (
-                    <div className="bg-gray-800 rounded-lg p-12 text-center">
-                      <p className="text-gray-400">Image non disponible</p>
-                    </div>
-                  )}
-                </SwiperSlide>
-              )
-            })}
-          </Swiper>
+            {/* BOUTON FERMER */}
+            <button
+              onClick={closeZoom}
+              className="absolute top-4 right-4 z-[10000] bg-black/20 hover:bg-black/30 p-2 rounded-full transition-all hover:scale-110 backdrop-blur-sm"
+            >
+              <FaTimes className="text-white text-lg" />
+            </button>
 
-          {/* FLECHES ZOOM */}
-          {validImages.length > 1 && (
-            <>
-              <button className="swiper-button-prev-zoom absolute left-6 top-1/2 -translate-y-1/2 z-[10000] bg-white/20 hover:bg-white/30 p-4 rounded-full transition-all hover:scale-110">
-                <FaChevronLeft className="text-white text-xl" />
-              </button>
-              <button className="swiper-button-next-zoom absolute right-6 top-1/2 -translate-y-1/2 z-[10000] bg-white/20 hover:bg-white/30 p-4 rounded-full transition-all hover:scale-110">
-                <FaChevronRight className="text-white text-xl" />
-              </button>
-            </>
-          )}
+            {/* SWIPER ZOOM */}
+            <div className="w-full h-full min-h-[400px] max-h-[80vh]">
+              <Swiper
+                initialSlide={zoomIndex}
+                spaceBetween={20}
+                navigation={{
+                  nextEl: '.swiper-button-next-zoom',
+                  prevEl: '.swiper-button-prev-zoom'
+                }}
+                loop={validImages.length > 1}
+                modules={[Navigation]}
+                className="w-full h-full"
+              >
+                {validImages.map((img, index) => {
+                  const showError = imageErrors[index]
+                  return (
+                    <SwiperSlide key={index} className="flex items-center justify-center p-8">
+                      {!showError ? (
+                        <div className="relative w-full h-full max-w-3xl max-h-[70vh]">
+                          <Image
+                            src={img || '/placeholder.jpg'}
+                            alt={`${productTitle || 'Produit'} - Zoom ${index + 1}`}
+                            fill
+                            className="object-contain"
+                            priority={index === zoomIndex}
+                            quality={95}
+                            sizes="(max-width: 768px) 90vw, 800px"
+                            unoptimized
+                          />
+                        </div>
+                      ) : (
+                        <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-12 text-center">
+                          <p className="text-gray-500 dark:text-gray-400">Image non disponible</p>
+                        </div>
+                      )}
+                    </SwiperSlide>
+                  )
+                })}
+              </Swiper>
 
-          {/* FOOTER */}
-          <div className="absolute bottom-0 left-0 right-0 z-[10000] bg-gradient-to-t from-black/80 to-transparent p-6 text-center text-white/80 text-sm">
-            Image {zoomIndex + 1} sur {validImages.length}
+              {/* FLECHES ZOOM */}
+              {validImages.length > 1 && (
+                <>
+                  <button className="swiper-button-prev-zoom absolute left-4 top-1/2 -translate-y-1/2 z-[10000] bg-black/20 hover:bg-black/30 p-3 rounded-full transition-all hover:scale-110 backdrop-blur-sm">
+                    <FaChevronLeft className="text-white text-lg" />
+                  </button>
+                  <button className="swiper-button-next-zoom absolute right-4 top-1/2 -translate-y-1/2 z-[10000] bg-black/20 hover:bg-black/30 p-3 rounded-full transition-all hover:scale-110 backdrop-blur-sm">
+                    <FaChevronRight className="text-white text-lg" />
+                  </button>
+                </>
+              )}
+            </div>
+
+            {/* TITRE ET INDICATEUR */}
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-6">
+              <div className="flex justify-between items-center text-white">
+                <h3 className="font-medium text-lg truncate pr-4">
+                  {productTitle || 'Produit'}
+                </h3>
+                <span className="text-sm opacity-80">
+                  {zoomIndex + 1} / {validImages.length}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       )}
