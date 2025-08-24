@@ -1,5 +1,8 @@
 'use client'
 
+
+
+import { motion, AnimatePresence } from "framer-motion"
 import { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
 import { Swiper, SwiperSlide } from 'swiper/react'
@@ -213,87 +216,118 @@ export default function ProductImageCarousel({
         </Swiper>
       )}
 
+
+
       {/* MODAL ZOOM - Palette Sangse */}
-      {isZoomed && (
-        <div
-          className={`fixed inset-0 z-[9999] bg-[#374151]/70 backdrop-blur-sm flex items-center justify-center p-4 transition-all duration-300 ${isZoomed ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
-            }`}
-          onClick={closeZoom}
-        >
-          <div
-            className={`relative bg-[#FAFAFA] dark:bg-gray-900 rounded-2xl shadow-2xl max-w-4xl max-h-[80vh] overflow-hidden transform transition-all duration-300 ${isZoomed ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
-              }`}
-            onClick={(e) => e.stopPropagation()}
+      <AnimatePresence>
+        {isZoomed && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="fixed inset-0 z-[9999] bg-[#374151]/70 backdrop-blur-sm flex items-center justify-center p-4"
+            onClick={closeZoom}
           >
-            {/* BOUTON FERMER - Palette Sangse */}
-            <button
-              onClick={closeZoom}
-              className="absolute top-10 right-4 z-[10000] bg-[#374151]/80 hover:bg-[#374151]/90 p-2 rounded-full transition-all hover:scale-110 backdrop-blur-sm"
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 40 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 40 }}
+              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }} // cubic-bezier style smooth
+              className="relative bg-[#FAFAFA] dark:bg-gray-900 rounded-2xl shadow-2xl max-w-4xl max-h-[80vh] overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
             >
-              <FaTimes className="text-white text-lg" />
-            </button>
-
-            {/* SWIPER ZOOM */}
-            <div className="w-full h-full min-h-[400px] max-h-[80vh]">
-              <Swiper
-                initialSlide={zoomIndex}
-                spaceBetween={20}
-                navigation={{
-                  nextEl: '.swiper-button-next-zoom',
-                  prevEl: '.swiper-button-prev-zoom',
-                }}
-                loop={validImages.length > 1}
-                modules={[Navigation]}
-                className="w-full h-full"
-                onSlideChange={(swiper) => setZoomIndex(swiper.realIndex)}
+              {/* BOUTON FERMER */}
+              <motion.button
+                whileHover={{ scale: 1.15, rotate: 90 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={closeZoom}
+                className="absolute top-10 right-4 z-[10000] bg-[#374151]/80 hover:bg-[#374151]/90 p-2 rounded-full backdrop-blur-sm"
               >
-                {validImages.map((img, index) => (
-                  <SwiperSlide
-                    key={index}
-                    className="flex items-center justify-center p-8"
-                  >
-                    <div className="relative w-full h-[70vh] max-w-3xl">
-                      <Image
-                        src={img || '/placeholder.jpg'}
-                        alt={`${productTitle || 'Produit'} - Zoom ${index + 1}`}
-                        fill
-                        className="object-contain"
-                        priority={index === zoomIndex}
-                        quality={95}
-                        sizes="(max-width: 768px) 90vw, 800px"
-                      />
-                    </div>
-                  </SwiperSlide>
-                ))}
-              </Swiper>
+                <FaTimes className="text-white text-lg" />
+              </motion.button>
 
-              {/* FLECHES ZOOM - Palette Sangse */}
-              {validImages.length > 1 && (
-                <>
-                  <button className="swiper-button-prev-zoom absolute left-4 top-1/2 -translate-y-1/2 z-[10000] bg-[#374151]/80 hover:bg-[#374151]/90 p-3 rounded-full transition-all hover:scale-110 backdrop-blur-sm">
-                    <FaChevronLeft className="text-white text-lg" />
-                  </button>
-                  <button className="swiper-button-next-zoom absolute right-4 top-1/2 -translate-y-1/2 z-[10000] bg-[#374151]/80 hover:bg-[#374151]/90 p-3 rounded-full transition-all hover:scale-110 backdrop-blur-sm">
-                    <FaChevronRight className="text-white text-lg" />
-                  </button>
-                </>
-              )}
-            </div>
+              {/* SWIPER */}
+              <div className="w-full h-full min-h-[400px] max-h-[80vh]">
+                <Swiper
+                  initialSlide={zoomIndex}
+                  spaceBetween={20}
+                  navigation={{
+                    nextEl: ".swiper-button-next-zoom",
+                    prevEl: ".swiper-button-prev-zoom",
+                  }}
+                  loop={validImages.length > 1}
+                  modules={[Navigation]}
+                  className="w-full h-full"
+                  onSlideChange={(swiper) => setZoomIndex(swiper.realIndex)}
+                >
+                  {validImages.map((img, index) => (
+                    <SwiperSlide
+                      key={index}
+                      className="flex items-center justify-center p-8"
+                    >
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.1, duration: 0.4 }}
+                        className="relative w-full h-[70vh] max-w-3xl"
+                      >
+                        <Image
+                          src={img || "/placeholder.jpg"}
+                          alt={`${productTitle || "Produit"} - Zoom ${index + 1}`}
+                          fill
+                          className="object-contain"
+                          priority={index === zoomIndex}
+                          quality={95}
+                          sizes="(max-width: 768px) 90vw, 800px"
+                        />
+                      </motion.div>
+                    </SwiperSlide>
+                  ))}
+                </Swiper>
 
-            {/* TITRE ET INDICATEUR - Palette Sangse */}
-            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#374151]/80 to-transparent p-6">
-              <div className="flex justify-between items-center text-white">
-                <h3 className="font-medium text-lg truncate pr-4">
-                  {productTitle || 'Produit'}
-                </h3>
-                <span className="text-sm opacity-80">
-                  {zoomIndex + 1} / {validImages.length}
-                </span>
+                {/* FLECHES */}
+                {validImages.length > 1 && (
+                  <>
+                    <motion.button
+                      whileHover={{ scale: 1.2, x: -2 }}
+                      whileTap={{ scale: 0.9 }}
+                      className="swiper-button-prev-zoom absolute left-4 top-1/2 -translate-y-1/2 z-[10000] bg-[#374151]/80 hover:bg-[#374151]/90 p-3 rounded-full backdrop-blur-sm"
+                    >
+                      <FaChevronLeft className="text-white text-lg" />
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.2, x: 2 }}
+                      whileTap={{ scale: 0.9 }}
+                      className="swiper-button-next-zoom absolute right-4 top-1/2 -translate-y-1/2 z-[10000] bg-[#374151]/80 hover:bg-[#374151]/90 p-3 rounded-full backdrop-blur-sm"
+                    >
+                      <FaChevronRight className="text-white text-lg" />
+                    </motion.button>
+                  </>
+                )}
               </div>
-            </div>
-          </div>
-        </div>
-      )}
+
+              {/* TITRE ET INDICATEUR */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2, duration: 0.4 }}
+                className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#374151]/80 to-transparent p-6"
+              >
+                <div className="flex justify-between items-center text-white">
+                  <h3 className="font-medium text-lg truncate pr-4">
+                    {productTitle || "Produit"}
+                  </h3>
+                  <span className="text-sm opacity-80">
+                    {zoomIndex + 1} / {validImages.length}
+                  </span>
+                </div>
+              </motion.div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
     </div>
   )
 }
