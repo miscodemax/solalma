@@ -83,7 +83,7 @@ export default function ProductImageCarousel({
             return (
               <SwiperSlide key={index}>
                 <div
-                  className="relative w-full aspect-[4/5] bg-white dark:bg-gray-100 cursor-pointer overflow-hidden"
+                  className="relative w-full aspect-[4/3] bg-white dark:bg-gray-100 cursor-pointer overflow-hidden"
                   onClick={() => openZoom(index)}
                 >
                   {!showError ? (
@@ -91,11 +91,11 @@ export default function ProductImageCarousel({
                       src={img || '/placeholder.jpg'}
                       alt={`${productTitle || 'Produit'} - Image ${index + 1}`}
                       fill
-                      className="object-contain transition-transform duration-300 hover:scale-105"
+                      className="object-cover transition-transform duration-300 hover:scale-105"
                       priority={index === 0}
                       quality={85}
                       onError={() => handleImageError(index)}
-                      sizes="100vw"
+                      sizes="(max-width: 768px) 100vw, 600px"
                       unoptimized
                     />
                   ) : (
@@ -103,6 +103,8 @@ export default function ProductImageCarousel({
                       <p className="text-xs text-gray-500">Image non disponible</p>
                     </div>
                   )}
+
+
 
                   {/* BADGE NOUVEAU */}
                   {isNew && (
@@ -198,8 +200,7 @@ export default function ProductImageCarousel({
                     alt={`${productTitle || 'Produit'} - Miniature ${index + 1}`}
                     fill
                     className="object-cover"
-                    height="60px"
-                    width='80px'
+                    sizes='60px'
                     onError={() => handleImageError(index)}
                     unoptimized
                   />
@@ -246,24 +247,26 @@ export default function ProductImageCarousel({
                 loop={validImages.length > 1}
                 modules={[Navigation]}
                 className="w-full h-full"
+                onSlideChange={(swiper) => setZoomIndex(swiper.realIndex)} // 🔑 Correction ici
               >
+
                 {validImages.map((img, index) => {
                   return (
                     <SwiperSlide key={index} className="flex items-center justify-center p-8">
-                      
-                        <div className="relative w-full h-full max-w-3xl max-h-[70vh]">
-                          <Image
-                            src={img || '/placeholder.jpg'}
-                            alt={`${productTitle || 'Produit'} - Zoom ${index + 1}`}
-                            fill
-                            className="object-contain"
-                            priority={index === zoomIndex}
-                            quality={95}
-                            sizes="(max-width: 768px) 90vw, 800px"
-                            unoptimized
-                          />
-                        </div>
-                     
+
+                      <div className="relative w-full h-full max-w-3xl max-h-[70vh]">
+                        <Image
+                          src={img || '/placeholder.jpg'}
+                          alt={`${productTitle || 'Produit'} - Zoom ${index + 1}`}
+                          fill
+                          className="object-contain"
+                          priority={index === zoomIndex}
+                          quality={95}
+                          sizes="(max-width: 768px) 90vw, 800px"
+                          unoptimized
+                        />
+                      </div>
+
                     </SwiperSlide>
                   )
                 })}
