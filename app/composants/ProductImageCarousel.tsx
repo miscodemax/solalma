@@ -242,34 +242,31 @@ export default function ProductImageCarousel({
                 spaceBetween={20}
                 navigation={{
                   nextEl: '.swiper-button-next-zoom',
-                  prevEl: '.swiper-button-prev-zoom'
+                  prevEl: '.swiper-button-prev-zoom',
                 }}
                 loop={validImages.length > 1}
                 modules={[Navigation]}
                 className="w-full h-full"
-                onSlideChange={(swiper) => setZoomIndex(swiper.realIndex)} // 🔑 Correction ici
+                onSlideChange={(swiper) => setZoomIndex(swiper.realIndex)}
               >
-
-                {validImages.map((img, index) => {
-                  return (
-                    <SwiperSlide key={index} className="flex items-center justify-center p-8">
-
-                      <div className="relative w-full h-full max-w-3xl max-h-[70vh]">
-                        <Image
-                          src={img || '/placeholder.jpg'}
-                          alt={`${productTitle || 'Produit'} - Zoom ${index + 1}`}
-                          fill
-                          className="object-contain"
-                          priority={index === zoomIndex}
-                          quality={95}
-                          sizes="(max-width: 768px) 90vw, 800px"
-                          unoptimized
-                        />
-                      </div>
-
-                    </SwiperSlide>
-                  )
-                })}
+                {validImages.map((img, index) => (
+                  <SwiperSlide
+                    key={index}
+                    className="flex items-center justify-center p-8"
+                  >
+                    <div className="relative w-full h-[70vh] max-w-3xl">
+                      <Image
+                        src={img || '/placeholder.jpg'}
+                        alt={`${productTitle || 'Produit'} - Zoom ${index + 1}`}
+                        fill
+                        className="object-contain"
+                        priority={index === zoomIndex}
+                        quality={95}
+                        sizes="(max-width: 768px) 90vw, 800px"
+                      />
+                    </div>
+                  </SwiperSlide>
+                ))}
               </Swiper>
 
               {/* FLECHES ZOOM */}
