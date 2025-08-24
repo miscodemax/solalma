@@ -83,7 +83,7 @@ export default function ProductImageCarousel({
             return (
               <SwiperSlide key={index}>
                 <div
-                  className="relative w-full aspect-[4/3] bg-white dark:bg-gray-100 cursor-pointer overflow-hidden"
+                  className="relative w-full aspect-[4/3] bg-[#FAFAFA] dark:bg-gray-100 cursor-pointer overflow-hidden"
                   onClick={() => openZoom(index)}
                 >
                   {!showError ? (
@@ -99,16 +99,14 @@ export default function ProductImageCarousel({
                       unoptimized
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-200">
-                      <p className="text-xs text-gray-500">Image non disponible</p>
+                    <div className="w-full h-full flex items-center justify-center bg-[#E5E7EB] dark:bg-gray-200">
+                      <p className="text-xs text-[#374151]">Image non disponible</p>
                     </div>
                   )}
 
-
-
-                  {/* BADGE NOUVEAU */}
+                  {/* BADGE NOUVEAU - Palette Sangse */}
                   {isNew && (
-                    <div className="absolute top-3 left-3 z-20 flex items-center bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-3 py-1.5 rounded-full text-xs font-semibold shadow-md">
+                    <div className="absolute top-3 left-3 z-20 flex items-center bg-gradient-to-r from-[#A8D5BA] to-[#6366F1] text-white px-3 py-1.5 rounded-full text-xs font-semibold shadow-md">
                       <HiSparkles className="mr-1.5 text-sm" />
                       Nouveau
                     </div>
@@ -123,7 +121,7 @@ export default function ProductImageCarousel({
                       }}
                       className="bg-white/95 backdrop-blur-sm p-2.5 rounded-full shadow-md hover:scale-110 transition-all duration-200"
                     >
-                      <FaHeart className={`text-sm transition-colors ${isLiked ? 'text-blue-500' : 'text-gray-400 hover:text-blue-400'}`} />
+                      <FaHeart className={`text-sm transition-colors ${isLiked ? 'text-[#FFD6BA]' : 'text-[#E5E7EB] hover:text-[#6366F1]'}`} />
                     </button>
                     <button
                       onClick={(e) => {
@@ -132,11 +130,11 @@ export default function ProductImageCarousel({
                       }}
                       className="bg-white/95 backdrop-blur-sm p-2.5 rounded-full shadow-md hover:scale-110 transition-all duration-200"
                     >
-                      <FaExpand className="text-gray-600 text-sm" />
+                      <FaExpand className="text-[#374151] text-sm" />
                     </button>
                   </div>
 
-                  {/* FLECHES */}
+                  {/* FLECHES - Palette Sangse */}
                   {validImages.length > 1 && (
                     <>
                       <button
@@ -146,7 +144,7 @@ export default function ProductImageCarousel({
                         }}
                         className="absolute left-3 top-1/2 -translate-y-1/2 z-20 bg-white/90 hover:bg-white p-2.5 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110"
                       >
-                        <FaChevronLeft className="text-gray-700 text-sm" />
+                        <FaChevronLeft className="text-[#374151] text-sm" />
                       </button>
                       <button
                         onClick={(e) => {
@@ -155,7 +153,7 @@ export default function ProductImageCarousel({
                         }}
                         className="absolute right-3 top-1/2 -translate-y-1/2 z-20 bg-white/90 hover:bg-white p-2.5 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110"
                       >
-                        <FaChevronRight className="text-gray-700 text-sm" />
+                        <FaChevronRight className="text-[#374151] text-sm" />
                       </button>
                     </>
                   )}
@@ -167,13 +165,13 @@ export default function ProductImageCarousel({
 
         {/* INDICATEUR */}
         {validImages.length > 1 && (
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 bg-black/60 text-white px-3 py-1 rounded-full text-xs font-medium">
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 bg-[#374151]/80 text-white px-3 py-1 rounded-full text-xs font-medium">
             {currentSlide + 1} / {validImages.length}
           </div>
         )}
       </div>
 
-      {/* MINIATURES */}
+      {/* MINIATURES - Palette Sangse */}
       {validImages.length > 1 && (
         <Swiper
           onSwiper={setThumbsSwiper}
@@ -189,8 +187,8 @@ export default function ProductImageCarousel({
             <SwiperSlide key={index} className="cursor-pointer">
               <div
                 className={`relative w-full aspect-square rounded-lg overflow-hidden border-2 transition-all duration-200 ${currentSlide === index
-                  ? 'border-indigo-500 shadow-md scale-105'
-                  : 'border-gray-200 hover:border-gray-300 dark:border-gray-600 dark:hover:border-gray-500'
+                  ? 'border-[#6366F1] shadow-md scale-105'
+                  : 'border-[#E5E7EB] hover:border-[#A8D5BA] dark:border-gray-600 dark:hover:border-gray-500'
                   }`}
                 onClick={() => mainSwiperRef.current?.slideTo(index)}
               >
@@ -205,8 +203,8 @@ export default function ProductImageCarousel({
                     unoptimized
                   />
                 ) : (
-                  <div className="w-full h-full bg-gray-100 dark:bg-gray-200 flex items-center justify-center">
-                    <p className="text-gray-400 text-xs">X</p>
+                  <div className="w-full h-full bg-[#E5E7EB] dark:bg-gray-200 flex items-center justify-center">
+                    <p className="text-[#374151] text-xs">X</p>
                   </div>
                 )}
               </div>
@@ -215,22 +213,22 @@ export default function ProductImageCarousel({
         </Swiper>
       )}
 
-      {/* MODAL ZOOM */}
+      {/* MODAL ZOOM - Palette Sangse */}
       {isZoomed && (
         <div
-          className={`fixed inset-0 z-[9999] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 transition-all duration-300 ${isZoomed ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+          className={`fixed inset-0 z-[9999] bg-[#374151]/70 backdrop-blur-sm flex items-center justify-center p-4 transition-all duration-300 ${isZoomed ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
             }`}
           onClick={closeZoom}
         >
           <div
-            className={`relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-4xl max-h-[60vh] overflow-hidden transform transition-all duration-300 ${isZoomed ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
+            className={`relative bg-[#FAFAFA] dark:bg-gray-900 rounded-2xl shadow-2xl max-w-4xl max-h-[60vh] overflow-hidden transform transition-all duration-300 ${isZoomed ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
               }`}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* BOUTON FERMER */}
+            {/* BOUTON FERMER - Palette Sangse */}
             <button
               onClick={closeZoom}
-              className="absolute top-16 right-4 z-[10000] bg-black/20 hover:bg-black/30 p-2 rounded-full transition-all hover:scale-110 backdrop-blur-sm"
+              className="absolute top-16 right-4 z-[10000] bg-[#374151]/80 hover:bg-[#374151]/90 p-2 rounded-full transition-all hover:scale-110 backdrop-blur-sm"
             >
               <FaTimes className="text-white text-lg" />
             </button>
@@ -269,21 +267,21 @@ export default function ProductImageCarousel({
                 ))}
               </Swiper>
 
-              {/* FLECHES ZOOM */}
+              {/* FLECHES ZOOM - Palette Sangse */}
               {validImages.length > 1 && (
                 <>
-                  <button className="swiper-button-prev-zoom absolute left-4 top-1/2 -translate-y-1/2 z-[10000] bg-black/20 hover:bg-black/30 p-3 rounded-full transition-all hover:scale-110 backdrop-blur-sm">
+                  <button className="swiper-button-prev-zoom absolute left-4 top-1/2 -translate-y-1/2 z-[10000] bg-[#374151]/80 hover:bg-[#374151]/90 p-3 rounded-full transition-all hover:scale-110 backdrop-blur-sm">
                     <FaChevronLeft className="text-white text-lg" />
                   </button>
-                  <button className="swiper-button-next-zoom absolute right-4 top-1/2 -translate-y-1/2 z-[10000] bg-black/20 hover:bg-black/30 p-3 rounded-full transition-all hover:scale-110 backdrop-blur-sm">
+                  <button className="swiper-button-next-zoom absolute right-4 top-1/2 -translate-y-1/2 z-[10000] bg-[#374151]/80 hover:bg-[#374151]/90 p-3 rounded-full transition-all hover:scale-110 backdrop-blur-sm">
                     <FaChevronRight className="text-white text-lg" />
                   </button>
                 </>
               )}
             </div>
 
-            {/* TITRE ET INDICATEUR */}
-            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-6">
+            {/* TITRE ET INDICATEUR - Palette Sangse */}
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#374151]/80 to-transparent p-6">
               <div className="flex justify-between items-center text-white">
                 <h3 className="font-medium text-lg truncate pr-4">
                   {productTitle || 'Produit'}

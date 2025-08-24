@@ -47,7 +47,7 @@ export default function LikeButton({ productId, userId }: { productId: number; u
     <button
       onClick={toggleLike}
       aria-label={liked ? "Retirer des favoris" : "Ajouter aux favoris"}
-      className="focus:outline-none focus-visible:ring-2 focus-visible:ring-[#D29587] rounded-full transition-all"
+      className="focus:outline-none focus-visible:ring-2 focus-visible:ring-[#6366F1] rounded-full transition-all"
     >
       <AnimatePresence initial={false} mode="wait">
         {liked ? (
@@ -57,7 +57,7 @@ export default function LikeButton({ productId, userId }: { productId: number; u
             animate={{ scale: 1.2, opacity: 1 }}
             exit={{ scale: 0.8, opacity: 0 }}
             transition={{ type: "spring", stiffness: 400, damping: 15 }}
-            className="text-[#D29587] text-xl"
+            className="text-[#FFD6BA] text-xl"
           >
             <AiFillHeart />
           </motion.div>
@@ -68,7 +68,7 @@ export default function LikeButton({ productId, userId }: { productId: number; u
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.8, opacity: 0 }}
             transition={{ type: "spring", stiffness: 400, damping: 15 }}
-            className="text-gray-400 hover:text-[#D29587] text-xl"
+            className="text-[#E5E7EB] hover:text-[#6366F1] text-xl"
           >
             <AiOutlineHeart />
           </motion.div>

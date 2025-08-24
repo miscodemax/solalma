@@ -11,11 +11,11 @@ export default function BackButton() {
     <Button
       onClick={() => router.back()}
       variant="outline"
-      className="flex items-center gap-2 px-4 py-2 rounded-full text-sm hover:bg-pink-100 transition-colors duration-200"
+      className="flex items-center gap-2 px-4 py-2 rounded-full text-sm hover:bg-[#A8D5BA]/10 transition-colors duration-200 border-[#A8D5BA]/40 bg-[#FAFAFA]/80 backdrop-blur-sm"
       aria-label="Retour en arrière"
     >
-      <ArrowLeft size={18} className="text-pink-600" />
-      <span className="text-pink-600 font-medium">Retour</span>
+      <ArrowLeft size={18} className="text-[#6366F1]" />
+      <span className="text-[#6366F1] font-medium">Retour</span>
     </Button>
   );
 }
