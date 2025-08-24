@@ -429,7 +429,7 @@ export default async function FavoritesPage() {
                     animationFillMode: 'forwards'
                   }}
                 >
-                  <ProductCard product={product} userId={id} />
+                  <ProductCard product={products} userId={id} />
                 </div>
               ))}
             </div>
