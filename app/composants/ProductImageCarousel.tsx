@@ -223,14 +223,14 @@ export default function ProductImageCarousel({
           onClick={closeZoom}
         >
           <div
-            className={`relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-4xl max-h-[90vh] overflow-hidden transform transition-all duration-300 ${isZoomed ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
+            className={`relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-4xl max-h-[60vh] overflow-hidden transform transition-all duration-300 ${isZoomed ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
               }`}
             onClick={(e) => e.stopPropagation()}
           >
             {/* BOUTON FERMER */}
             <button
               onClick={closeZoom}
-              className="absolute top-4 right-4 z-[10000] bg-black/20 hover:bg-black/30 p-2 rounded-full transition-all hover:scale-110 backdrop-blur-sm"
+              className="absolute top-16 right-4 z-[10000] bg-black/20 hover:bg-black/30 p-2 rounded-full transition-all hover:scale-110 backdrop-blur-sm"
             >
               <FaTimes className="text-white text-lg" />
             </button>
