@@ -1,236 +1,186 @@
-"use client"
-
-import { useEffect, useState } from "react"
-import Link from "next/link"
-import {
-    Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle,
-    DialogFooter, DialogClose, DialogDescription
-} from "@/components/ui/dialog"
-import {
-    HoverCard, HoverCardTrigger, HoverCardContent
-} from "@/components/ui/hover-card"
-import { Info, HelpCircle } from "lucide-react"
-
-import ProductCard from "./product-card"
+import Link from "next/link";
+import Image from "next/image";
+import LikeButton from "./likeButton";
 
 type Product = {
-    id: number
-    title: string
-    description: string
-    price: number
-    image_url: string | null
-}
+    id: number;
+    title: string;
+    description: string;
+    price: number;
+    image_url: string | string[] | null; // Support pour array ou string
+    user_id: string;
+    likes?: number;
+};
 
-function PriceFilter({
-    onChange, selectedIndex, onSelect
+export default async function ProductCard({
+    product,
+    userId,
 }: {
-    onChange: (range: [number, number] | null) => void
-    selectedIndex: number
-    onSelect: (index: number) => void
+    product: Product;
+    userId?: string;
 }) {
-    const ranges = [
-        { label: "Tous les prix", range: null, tip: "Tous les produits, sans restriction 💫" },
-        { label: "500 - 3 000 FCFA", range: [500, 3000], tip: "Petits prix, grandes trouvailles 🧴" },
-        { label: "3 000 - 7 000 FCFA", range: [3000, 7000], tip: "Idéal pour tester sans se ruiner 💅" },
-        { label: "7 000 - 10 000 FCFA", range: [7000, 10000], tip: "Un équilibre parfait ✨" },
-        { label: "10 000 - 15 000 FCFA", range: [10000, 15000], tip: "Qualité et style assurés 🌟" },
-        { label: "15 000 - 20 000 FCFA", range: [15000, 20000], tip: "Des pièces premium 😍" },
-        { label: "Plus de 20 000 FCFA", range: [20001, Infinity], tip: "Pour les coups de cœur ❤️" },
-    ]
+    // Extraire la première image du tableau ou utiliser l'image unique
+    const getFirstImage = (imageUrl: string | string[] | null): string => {
+        if (!imageUrl) return "/placeholder.jpg";
+
+        if (Array.isArray(imageUrl)) {
+            // Si c'est un tableau, prendre la première image non-vide
+            const firstValidImage = imageUrl.find(img => img && img.trim() !== '');
+            return firstValidImage || "/placeholder.jpg";
+        }
+
+        // Si c'est une string, l'utiliser directement
+        return imageUrl || "/placeholder.jpg";
+    };
+
+    // Compter le nombre total d'images pour l'indicateur
+    const getImageCount = (imageUrl: string | string[] | null): number => {
+        if (!imageUrl) return 0;
+        if (Array.isArray(imageUrl)) {
+            return imageUrl.filter(img => img && img.trim() !== '').length;
+        }
+        return 1;
+    };
+
+    const firstImage = getFirstImage(product.image_url);
+    const imageCount = getImageCount(product.image_url);
 
     return (
-        <div className="p-5 bg-white dark:bg-[#1a1a1a] rounded-3xl shadow-xl border border-[#E5E7EB] dark:border-[#374151]">
-            <div className="flex items-center justify-center gap-2 mb-2">
-                <h3 className="text-xl font-bold text-[#6366F1] dark:text-[#A8D5BA]">
-                    Ton budget ?
-                </h3>
-                <HoverCard>
-                    <HoverCardTrigger asChild>
-                        <button aria-label="Aide sur le filtre budget" className="text-[#6366F1] dark:text-[#A8D5BA] hover:text-[#4f46e5] dark:hover:text-[#94c7a7]">
-                            <HelpCircle size={18} />
-                        </button>
-                    </HoverCardTrigger>
-                    <HoverCardContent className="w-64 text-sm text-[#374151] dark:text-gray-300 bg-white dark:bg-[#2c2c2c] border border-[#A8D5BA] dark:border-[#6366F1] rounded-xl shadow-md">
-                        Filtre les produits par tranche de prix selon ton budget ou ton envie du moment !
-                    </HoverCardContent>
-                </HoverCard>
-            </div>
-            <p className="text-center text-gray-600 dark:text-gray-300 text-sm mb-5">
-                Choisis une fourchette pour filtrer les merveilles 💸
-            </p>
-            <div className="flex flex-wrap justify-center gap-2">
-                {ranges.map(({ label, tip }, i) => (
-                    <HoverCard key={i}>
-                        <HoverCardTrigger asChild>
-                            <button
-                                onClick={() => {
-                                    onSelect(i)
-                                    onChange(ranges[i].range)
-                                }}
-                                className={`px-4 py-2 rounded-full text-sm font-medium transition
-                  ${selectedIndex === i
-                                        ? "bg-[#6366F1] text-white shadow scale-105"
-                                        : "bg-[#F5E6CC] text-[#374151] hover:bg-[#6366F1]/90 hover:text-white dark:bg-[#2c2c2c] dark:text-gray-300"
-                                    } focus:outline-none focus:ring-2 focus:ring-[#6366F1]/50`}
-                                aria-pressed={selectedIndex === i}
-                            >
-                                {label}
-                            </button>
-                        </HoverCardTrigger>
-                        <HoverCardContent className="w-64 text-sm text-[#374151] dark:text-gray-300 bg-white dark:bg-[#2c2c2c] border border-[#A8D5BA] dark:border-[#6366F1] rounded-xl shadow-md">
-                            {tip}
-                        </HoverCardContent>
-                    </HoverCard>
-                ))}
-            </div>
-        </div>
-    )
-}
+        <div className="group relative w-full h-[480px] flex flex-col overflow-hidden rounded-3xl bg-white dark:bg-[#121212] border border-gray-100 dark:border-[#2a2a2a] shadow-[0_4px_24px_0_rgba(0,0,0,0.06)] dark:shadow-[0_4px_32px_0_rgba(0,0,0,0.4)] hover:shadow-[0_12px_48px_0_rgba(0,0,0,0.12)] dark:hover:shadow-[0_12px_48px_0_rgba(0,0,0,0.6)] transition-all duration-500 ease-out hover:-translate-y-1 hover:scale-[1.02]">
 
-export default function FilteredProducts({ products, userId }: { products: Product[], userId: string }) {
-    const [priceRange, setPriceRange] = useState<[number, number] | null>(null)
-    const [selectedIndex, setSelectedIndex] = useState(0)
-    const [open, setOpen] = useState(false)
-    const [showOnboarding, setShowOnboarding] = useState(false)
-
-    useEffect(() => {
-        const alreadyVisited = localStorage.getItem("onboardingSeen")
-        if (!alreadyVisited) setShowOnboarding(true)
-    }, [])
-
-    const dismissOnboarding = () => {
-        localStorage.setItem("onboardingSeen", "true")
-        setShowOnboarding(false)
-    }
-
-    const filteredProducts = products.filter(p =>
-        !priceRange || (p.price >= priceRange[0] && p.price <= priceRange[1])
-    )
-
-    const handleShare = () => {
-        const message = encodeURIComponent("Coucou ! 🌸 Découvre cette nouvelle plateforme de mode féminine, hijabs, skincare et + : https://sangse.shop — rejoins-nous !")
-        window.open(`https://wa.me/?text=${message}`, "_blank")
-    }
-
-    return (
-        <main className="w-full bg-[#FAFAFA] dark:bg-black min-h-screen pb-16 pt-5 px-4 sm:px-6 transition-colors duration-300">
-
-            {/* Invite + filtre bouton */}
-            <div className="w-full flex flex-col-reverse gap-3 md:flex-row md:justify-between md:items-center">
-                <div className="text-center">
-                    <Dialog open={open} onOpenChange={setOpen}>
-                        <DialogTrigger asChild>
-                            <button className="px-6 py-3 bg-[#6366F1] dark:bg-[#A8D5BA] text-white dark:text-[#374151] rounded-full font-semibold shadow-md hover:bg-[#4f46e5] dark:hover:bg-[#94c7a7] transition">
-                                💰 Filtrer par budget
-                            </button>
-                        </DialogTrigger>
-                        <DialogContent className="w-[95%] sm:max-w-md rounded-2xl p-6 dark:bg-[#1b1b1b] dark:text-white">
-                            <DialogHeader>
-                                <DialogTitle className="text-xl text-center text-[#6366F1] dark:text-[#A8D5BA] font-bold mb-3">
-                                    Choisis ta fourchette de prix
-                                </DialogTitle>
-                                <DialogDescription className="sr-only">Sélectionne un budget</DialogDescription>
-                            </DialogHeader>
-                            <PriceFilter onChange={setPriceRange} selectedIndex={selectedIndex} onSelect={setSelectedIndex} />
-                            <DialogFooter className="mt-6 flex justify-center gap-3">
-                                <DialogClose asChild>
-                                    <button className="px-5 py-2 bg-[#6366F1] dark:bg-[#A8D5BA] text-white dark:text-[#374151] rounded-lg font-semibold hover:bg-[#4f46e5] dark:hover:bg-[#94c7a7] transition">
-                                        Valider
-                                    </button>
-                                </DialogClose>
-                                <DialogClose asChild>
-                                    <button className="px-5 py-2 bg-[#E5E7EB] dark:bg-gray-600 text-[#374151] dark:text-white rounded-lg font-semibold hover:bg-gray-400 dark:hover:bg-gray-500 transition">
-                                        Annuler
-                                    </button>
-                                </DialogClose>
-                            </DialogFooter>
-                        </DialogContent>
-                    </Dialog>
-                </div>
-
-                <HoverCard>
-                    <HoverCardTrigger asChild>
-                        <button
-                            onClick={handleShare}
-                            className="w-full md:w-auto flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[#A8D5BA] to-[#FFD6BA] text-[#374151] font-semibold shadow-lg hover:scale-105 transition-transform"
-                        >
-                            💌 Invite une amie 🤫
-                        </button>
-                    </HoverCardTrigger>
-                    <HoverCardContent className="w-64 bg-white dark:bg-[#2c2c2c] border border-[#A8D5BA] dark:border-[#6366F1] text-sm text-[#374151] dark:text-gray-300 rounded-xl shadow-md">
-                        Partage la boutique à tes proches et gagne des surprises exclusives ! 🎁
-                    </HoverCardContent>
-                </HoverCard>
+            {/* Animated shimmer border */}
+            <div className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
+                <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-transparent via-[#D29587]/30 to-transparent animate-pulse"></div>
             </div>
 
-            {/* Onboarding */}
-            {showOnboarding && (
-                <div className="text-center mt-10">
-                    <HoverCard>
-                        <HoverCardTrigger asChild>
-                            <div className="bg-[#F5E6CC] dark:bg-[#2c2c2c] border border-[#A8D5BA] dark:border-[#6366F1] rounded-2xl p-6 shadow-md max-w-2xl mx-auto cursor-pointer">
-                                <h3 className="text-xl font-semibold text-[#6366F1] dark:text-[#A8D5BA] mb-2 flex items-center justify-center gap-2">
-                                    Tu veux gagner des revenus depuis chez toi ? 🧕📱
-                                    <Info size={20} />
-                                </h3>
-                                <p className="text-sm text-[#374151] dark:text-gray-300 mb-5">
-                                    Ouvre ta boutique gratuitement et commence à vendre en quelques clics. C'est simple, rapide et sans engagement.
-                                </p>
-                                <Link
-                                    href="/dashboard/products"
-                                    onClick={dismissOnboarding}
-                                    className="inline-block px-6 py-3 bg-[#6366F1] dark:bg-[#A8D5BA] text-white dark:text-[#374151] font-semibold rounded-full hover:bg-[#4f46e5] dark:hover:bg-[#94c7a7] transition shadow"
-                                >
-                                    🎉 Commencer à vendre
-                                </Link>
-                            </div>
-                        </HoverCardTrigger>
-                        <HoverCardContent className="w-72 bg-white dark:bg-[#2c2c2c] border border-[#A8D5BA] dark:border-[#6366F1] text-sm text-[#374151] dark:text-gray-300 rounded-xl shadow-md">
-                            <b>Bénéfices :</b>
-                            <ul className="list-disc pl-5 mt-2 space-y-1">
-                                <li>Crée ta boutique gratuitement</li>
-                                <li>Pas d'engagement, ni frais cachés</li>
-                                <li>Accompagnement personnalisé</li>
-                                <li>Rejoins une communauté bienveillante !</li>
-                            </ul>
-                        </HoverCardContent>
-                    </HoverCard>
-                </div>
-            )}
+            {/* Image container - hauteur fixe */}
+            <div className="relative w-full h-[280px] overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 dark:from-[#1e1e1e] dark:to-[#2a2a2a]">
+                <Link href={`/product/${product.id}`} className="block w-full h-full">
+                    <Image
+                        src={firstImage}
+                        alt={product.title}
+                        fill
+                        className="object-cover transition-all duration-700 ease-out group-hover:scale-105"
+                        sizes="(max-width: 768px) 50vw, 25vw"
+                        priority
+                    />
 
-            {/* Produits */}
-            <section className="mt-10">
-                {filteredProducts.length === 0 ? (
-                    <div className="flex flex-col items-center mt-10 gap-2">
-                        <span className="text-3xl">🤔</span>
-                        <p className="text-center text-gray-500 dark:text-gray-300 text-base">
-                            Aucun produit ne correspond à ta recherche<br />
-                            <span className="text-sm text-[#6366F1] dark:text-[#A8D5BA]">
-                                Essaie une autre catégorie ou élargis ton budget !
-                            </span>
-                        </p>
-                    </div>
-                ) : (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
-                        {filteredProducts.map((product) => (
-                            <HoverCard key={product.id}>
-                                <HoverCardTrigger asChild>
-                                    <div>
-                                        <ProductCard product={product} userId={userId} />
-                                    </div>
-                                </HoverCardTrigger>
-                                <HoverCardContent className="w-72 bg-white dark:bg-[#2c2c2c] border border-[#A8D5BA] dark:border-[#6366F1] text-sm text-[#374151] dark:text-gray-300 rounded-xl shadow-md">
-                                    <h4 className="font-semibold mb-1">{product.title}</h4>
-                                    <p className="mb-2">{product.description}</p>
-                                    <div className="text-xs text-[#6366F1] dark:text-[#A8D5BA] font-semibold">
-                                        Prix : {product.price} FCFA
-                                    </div>
-                                </HoverCardContent>
-                            </HoverCard>
-                        ))}
+                    {/* Overlay subtle pour améliorer la lisibilité sans cacher l'image */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                </Link>
+
+                {/* Indicateur du nombre d'images - nouveau badge */}
+                {imageCount > 1 && (
+                    <div className="absolute top-3 left-3 backdrop-blur-md bg-black/70 text-white rounded-xl px-2.5 py-1 text-xs font-bold shadow-md border border-white/20 flex items-center gap-1">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        {imageCount}
                     </div>
                 )}
-            </section>
-        </main>
-    )
+
+                {/* Like button - glassmorphism subtil */}
+                <div className="absolute top-3 right-3 backdrop-blur-md bg-white/90 dark:bg-black/70 border border-white/50 dark:border-gray-600/30 rounded-xl px-2.5 py-1.5 flex items-center gap-1.5 shadow-sm transition-all duration-300 hover:bg-white dark:hover:bg-black/80 hover:scale-105">
+                    <LikeButton productId={product.id} userId={userId} />
+                    {product.likes && product.likes > 0 && (
+                        <span className="text-xs font-semibold text-gray-800 dark:text-gray-200">
+                            {product.likes}
+                        </span>
+                    )}
+                </div>
+
+                {/* Badge premium plus élégant */}
+                {product.price > 50000 && (
+                    <div className="absolute top-14 left-3 bg-gradient-to-r from-amber-400 to-amber-500 text-amber-900 rounded-xl px-2.5 py-1 text-xs font-bold shadow-md border border-amber-300">
+                        ✨ Premium
+                    </div>
+                )}
+
+                {/* Quick actions - apparaissent au hover sans overlay opaque */}
+                <div className="absolute bottom-3 left-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
+                    <Link
+                        href={`/product/${product.id}`}
+                        className="flex-1 backdrop-blur-md bg-white/95 dark:bg-black/85 border border-white/60 dark:border-gray-600/30 rounded-xl px-4 py-2 text-sm font-semibold text-gray-900 dark:text-white text-center shadow-lg hover:bg-white dark:hover:bg-black transition-all duration-200 hover:scale-[1.02]"
+                    >
+                        {imageCount > 1 ? `Voir ${imageCount} photos` : 'Voir détails'}
+                    </Link>
+                    <button className="backdrop-blur-md bg-white/95 dark:bg-black/85 border border-white/60 dark:border-gray-600/30 rounded-xl px-3 py-2 shadow-lg hover:bg-white dark:hover:bg-black transition-all duration-200 hover:scale-[1.02]">
+                        <svg className="w-4 h-4 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            {/* Content section - hauteur fixe pour uniformité */}
+            <div className="relative flex-1 h-[200px] flex flex-col justify-between p-5 bg-white dark:bg-[#121212]">
+
+                {/* Title section avec hauteur fixe */}
+                <div className="mb-2">
+                    <h3 className="text-base font-bold text-gray-900 dark:text-white leading-tight group-hover:text-[#D29587] dark:group-hover:text-[#FBCFC2] transition-colors duration-300 line-clamp-2 min-h-[3rem]">
+                        {product.title}
+                    </h3>
+                </div>
+
+                {/* Description avec hauteur contrôlée */}
+                <div className="mb-4 flex-1">
+                    <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 leading-relaxed">
+                        {product.description}
+                    </p>
+                </div>
+
+                {/* Footer section - toujours en bas */}
+                <div className="mt-auto space-y-3">
+                    {/* Prix et CTA */}
+                    <div className="flex items-end justify-between">
+                        <div className="flex flex-col">
+                            <span className="text-lg font-black bg-gradient-to-r from-[#D29587] to-[#B36B5E] bg-clip-text text-transparent">
+                                {product.price.toLocaleString()}
+                            </span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400 font-medium -mt-1">
+                                FCFA
+                            </span>
+                        </div>
+
+                        <Link
+                            href={`/product/${product.id}`}
+                            className="group/btn relative overflow-hidden rounded-xl bg-gradient-to-r from-[#D29587] to-[#B36B5E] px-4 py-2 text-sm font-semibold text-white shadow-md transition-all duration-300 hover:shadow-lg hover:scale-105 active:scale-95"
+                        >
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-600"></div>
+                            <span className="relative">Acheter</span>
+                        </Link>
+                    </div>
+
+                    {/* Stats bar avec info images */}
+                    <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 pt-2 border-t border-gray-100 dark:border-gray-700">
+                        <span className="font-mono">#{product.id.toString().padStart(4, '0')}</span>
+                        <div className="flex items-center gap-3">
+                            {/* Indicateur d'images multiples dans les stats */}
+                            {imageCount > 1 && (
+                                <span className="flex items-center gap-1 text-[#D29587]">
+                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                    {imageCount}
+                                </span>
+                            )}
+
+                            {product.likes && product.likes > 0 && (
+                                <span className="flex items-center gap-1">
+                                    <svg className="w-3 h-3 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
+                                    </svg>
+                                    {product.likes}
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Micro interactions subtiles */}
+            <div className="absolute top-4 left-4 w-2 h-2 bg-[#D29587]/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 animate-pulse"></div>
+            <div className="absolute bottom-4 right-4 w-1.5 h-1.5 bg-[#FBCFC2]/30 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700 animate-pulse delay-200"></div>
+        </div>
+    );
 }

@@ -93,7 +93,7 @@ export default function Navbar({ products }: { products: Product[] }) {
       <div className="flex flex-col md:flex-row items-center justify-between px-4 py-3 max-w-7xl mx-auto w-full gap-2 md:gap-0">
         {/* Logo + mobile menu + theme */}
         <div className="flex items-center justify-between w-full md:w-auto">
-          <Link href="/" className="flex items-center gap-1 text-xl font-bold text-[#D29587] group">
+          <Link href="/" className="flex items-center gap-1 text-xl font-bold text-[#6366F1] group">
             <span className="transition-transform group-hover:scale-110">🌸</span>
             <TextLogo />
           </Link>
@@ -105,7 +105,7 @@ export default function Navbar({ products }: { products: Product[] }) {
                   {open ? <X size={26} /> : <Menu size={26} />}
                 </button>
               </HoverCardTrigger>
-              <HoverCardContent side="bottom" className="bg-white dark:bg-[#232323] border border-[#FBCFC2] dark:border-[#D29587] text-xs text-[#5A5A5A] dark:text-gray-300 rounded-xl shadow-md w-56">
+              <HoverCardContent side="bottom" className="bg-white dark:bg-[#232323] border border-[#A8D5BA] dark:border-[#6366F1] text-xs text-[#374151] dark:text-gray-300 rounded-xl shadow-md w-56">
                 {open ? "Ferme le menu ✖️" : "Ouvre le menu de navigation"}
               </HoverCardContent>
             </HoverCard>
@@ -124,7 +124,7 @@ export default function Navbar({ products }: { products: Product[] }) {
               <HoverCardTrigger asChild>
                 <Link
                   href={href}
-                  className={`flex items-center gap-1 text-[15px] font-medium px-2 py-1 rounded transition ${pathname === href ? 'text-[#D29587] bg-[#f9eceb] dark:bg-[#1a1a1a]' : 'text-gray-600 dark:text-gray-200 hover:text-[#D29587] hover:bg-[#f9eceb] dark:hover:bg-[#1a1a1a]'}
+                  className={`flex items-center gap-1 text-[15px] font-medium px-2 py-1 rounded transition ${pathname === href ? 'text-[#6366F1] bg-[#F5E6CC] dark:bg-[#1a1a1a]' : 'text-gray-600 dark:text-gray-200 hover:text-[#6366F1] hover:bg-[#F5E6CC] dark:hover:bg-[#1a1a1a]'}
                   `}
                   tabIndex={0}
                 >
@@ -132,7 +132,7 @@ export default function Navbar({ products }: { products: Product[] }) {
                   {label}
                 </Link>
               </HoverCardTrigger>
-              <HoverCardContent side="bottom" className="bg-white dark:bg-[#232323] border border-[#FBCFC2] dark:border-[#D29587] text-xs text-[#5A5A5A] dark:text-gray-300 rounded-xl shadow-md w-52">
+              <HoverCardContent side="bottom" className="bg-white dark:bg-[#232323] border border-[#A8D5BA] dark:border-[#6366F1] text-xs text-[#374151] dark:text-gray-300 rounded-xl shadow-md w-52">
                 {tip}
               </HoverCardContent>
             </HoverCard>
@@ -146,7 +146,7 @@ export default function Navbar({ products }: { products: Product[] }) {
                   alt="avatar"
                   width={34}
                   height={34}
-                  className="rounded-full border-2 border-[#FBCFC2] dark:border-[#D29587] hover:scale-105 transition"
+                  className="rounded-full border-2 border-[#A8D5BA] dark:border-[#6366F1] hover:scale-105 transition"
                 />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -168,19 +168,19 @@ export default function Navbar({ products }: { products: Product[] }) {
       </div>
 
       {/* Catégories scrollables */}
-      <div className="flex overflow-x-auto gap-3 px-2 sm:px-4 py-2 border-t border-[#f9eceb] dark:border-[#222] text-sm font-medium bg-white/95 dark:bg-black/90 scrollbar-thin scrollbar-thumb-[#FBCFC2]/40">
+      <div className="flex overflow-x-auto gap-3 px-2 sm:px-4 py-2 border-t border-[#F5E6CC] dark:border-[#222] text-sm font-medium bg-white/95 dark:bg-black/90 scrollbar-thin scrollbar-thumb-[#A8D5BA]/40">
         <HoverCard>
           <HoverCardTrigger asChild>
             <button
               onClick={resetCategory}
-              className={`whitespace-nowrap capitalize px-2 py-1 rounded transition min-w-[80px] ${!category ? 'text-[#D29587] border-b-2 border-[#D29587] bg-[#f9eceb] dark:bg-[#151010]' : 'text-gray-600 dark:text-gray-300 hover:text-[#D29587] hover:bg-[#f9eceb] dark:hover:bg-[#151010]'}
+              className={`whitespace-nowrap capitalize px-2 py-1 rounded transition min-w-[80px] ${!category ? 'text-[#6366F1] border-b-2 border-[#6366F1] bg-[#F5E6CC] dark:bg-[#151010]' : 'text-gray-600 dark:text-gray-300 hover:text-[#6366F1] hover:bg-[#F5E6CC] dark:hover:bg-[#151010]'}
               `}
               aria-pressed={!category}
             >
               Voir tout
             </button>
           </HoverCardTrigger>
-          <HoverCardContent side="bottom" className="bg-white dark:bg-[#232323] border border-[#FBCFC2] dark:border-[#D29587] text-xs text-[#5A5A5A] dark:text-gray-300 rounded-xl shadow-md w-44">
+          <HoverCardContent side="bottom" className="bg-white dark:bg-[#232323] border border-[#A8D5BA] dark:border-[#6366F1] text-xs text-[#374151] dark:text-gray-300 rounded-xl shadow-md w-44">
             Affiche tous les produits, sans filtre de catégorie.
           </HoverCardContent>
         </HoverCard>
@@ -191,14 +191,14 @@ export default function Navbar({ products }: { products: Product[] }) {
               <HoverCardTrigger asChild>
                 <button
                   onClick={() => handleCategory(cat.label)}
-                  className={`whitespace-nowrap capitalize px-2 py-1 rounded transition min-w-[110px] ${active ? 'text-[#D29587] border-b-2 border-[#D29587] bg-[#f9eceb] dark:bg-[#151010]' : 'text-gray-600 dark:text-gray-300 hover:text-[#D29587] hover:bg-[#f9eceb] dark:hover:bg-[#151010]'}
+                  className={`whitespace-nowrap capitalize px-2 py-1 rounded transition min-w-[110px] ${active ? 'text-[#6366F1] border-b-2 border-[#6366F1] bg-[#F5E6CC] dark:bg-[#151010]' : 'text-gray-600 dark:text-gray-300 hover:text-[#6366F1] hover:bg-[#F5E6CC] dark:hover:bg-[#151010]'}
                   `}
                   aria-pressed={active}
                 >
                   {cat.label.replace('_', ' ')}
                 </button>
               </HoverCardTrigger>
-              <HoverCardContent side="bottom" className="bg-white dark:bg-[#232323] border border-[#FBCFC2] dark:border-[#D29587] text-xs text-[#5A5A5A] dark:text-gray-300 rounded-xl shadow-md w-56">
+              <HoverCardContent side="bottom" className="bg-white dark:bg-[#232323] border border-[#A8D5BA] dark:border-[#6366F1] text-xs text-[#374151] dark:text-gray-300 rounded-xl shadow-md w-56">
                 {cat.tip}
               </HoverCardContent>
             </HoverCard>
@@ -208,7 +208,7 @@ export default function Navbar({ products }: { products: Product[] }) {
 
       {/* Menu mobile (drawer) */}
       {open && (
-        <div className="md:hidden px-4 pb-4 mt-2 space-y-5 animate-fadein-fast rounded-b-2xl bg-white/98 dark:bg-[#191515]/95 shadow-xl border-b border-[#f3e8e4] dark:border-[#2a2a2a]">
+        <div className="md:hidden px-4 pb-4 mt-2 space-y-5 animate-fadein-fast rounded-b-2xl bg-white/98 dark:bg-[#191515]/95 shadow-xl border-b border-[#E5E7EB] dark:border-[#2a2a2a]">
           <div>
             <p className="text-xs font-semibold text-gray-400 mb-2">Navigation</p>
             {navLinks.map(({ href, label, icon: Icon, tip }) => (
@@ -216,7 +216,7 @@ export default function Navbar({ products }: { products: Product[] }) {
                 <HoverCardTrigger asChild>
                   <Link
                     href={href}
-                    className={`flex items-center gap-2 text-[15px] font-medium px-2 py-2 rounded transition ${pathname === href ? 'text-[#D29587] bg-[#f9eceb]' : 'text-gray-600 dark:text-gray-200 hover:text-[#D29587] hover:bg-[#f9eceb]'}
+                    className={`flex items-center gap-2 text-[15px] font-medium px-2 py-2 rounded transition ${pathname === href ? 'text-[#6366F1] bg-[#F5E6CC]' : 'text-gray-600 dark:text-gray-200 hover:text-[#6366F1] hover:bg-[#F5E6CC]'}
                     `}
                     onClick={() => setOpen(false)}
                     tabIndex={0}
@@ -225,7 +225,7 @@ export default function Navbar({ products }: { products: Product[] }) {
                     {label}
                   </Link>
                 </HoverCardTrigger>
-                <HoverCardContent side="right" className="bg-white dark:bg-[#232323] border border-[#FBCFC2] dark:border-[#D29587] text-xs text-[#5A5A5A] dark:text-gray-300 rounded-xl shadow-md w-52">
+                <HoverCardContent side="right" className="bg-white dark:bg-[#232323] border border-[#A8D5BA] dark:border-[#6366F1] text-xs text-[#374151] dark:text-gray-300 rounded-xl shadow-md w-52">
                   {tip}
                 </HoverCardContent>
               </HoverCard>
@@ -242,14 +242,14 @@ export default function Navbar({ products }: { products: Product[] }) {
                     <HoverCardTrigger asChild>
                       <button
                         onClick={() => { handleCategory(cat.label); setOpen(false) }}
-                        className={`whitespace-nowrap capitalize px-2 py-1 rounded transition min-w-[100px] ${active ? 'text-[#D29587] border-b-2 border-[#D29587] bg-[#f9eceb] dark:bg-[#151010]' : 'text-gray-600 dark:text-gray-300 hover:text-[#D29587] hover:bg-[#f9eceb] dark:hover:bg-[#151010]'}
+                        className={`whitespace-nowrap capitalize px-2 py-1 rounded transition min-w-[100px] ${active ? 'text-[#6366F1] border-b-2 border-[#6366F1] bg-[#F5E6CC] dark:bg-[#151010]' : 'text-gray-600 dark:text-gray-300 hover:text-[#6366F1] hover:bg-[#F5E6CC] dark:hover:bg-[#151010]'}
                         `}
                         aria-pressed={active}
                       >
                         {cat.label.replace('_', ' ')}
                       </button>
                     </HoverCardTrigger>
-                    <HoverCardContent side="right" className="bg-white dark:bg-[#232323] border border-[#FBCFC2] dark:border-[#D29587] text-xs text-[#5A5A5A] dark:text-gray-300 rounded-xl shadow-md w-52">
+                    <HoverCardContent side="right" className="bg-white dark:bg-[#232323] border border-[#A8D5BA] dark:border-[#6366F1] text-xs text-[#374151] dark:text-gray-300 rounded-xl shadow-md w-52">
                       {cat.tip}
                     </HoverCardContent>
                   </HoverCard>
@@ -263,7 +263,7 @@ export default function Navbar({ products }: { products: Product[] }) {
               <Link
                 href={`/profile/${user.id}`}
                 onClick={() => setOpen(false)}
-                className="flex items-center gap-2 text-gray-700 dark:text-gray-200 hover:text-[#D29587]"
+                className="flex items-center gap-2 text-gray-700 dark:text-gray-200 hover:text-[#6366F1]"
               >
                 <User size={17} /> Mon profil
               </Link>
