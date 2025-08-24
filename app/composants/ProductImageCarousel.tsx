@@ -198,7 +198,8 @@ export default function ProductImageCarousel({
                     alt={`${productTitle || 'Produit'} - Miniature ${index + 1}`}
                     fill
                     className="object-cover"
-                    sizes="80px"
+                    height="60px"
+                    width='80px'
                     onError={() => handleImageError(index)}
                     unoptimized
                   />
@@ -247,10 +248,9 @@ export default function ProductImageCarousel({
                 className="w-full h-full"
               >
                 {validImages.map((img, index) => {
-                  const showError = imageErrors[index]
                   return (
                     <SwiperSlide key={index} className="flex items-center justify-center p-8">
-                      {!showError ? (
+                      
                         <div className="relative w-full h-full max-w-3xl max-h-[70vh]">
                           <Image
                             src={img || '/placeholder.jpg'}
@@ -263,11 +263,7 @@ export default function ProductImageCarousel({
                             unoptimized
                           />
                         </div>
-                      ) : (
-                        <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-12 text-center">
-                          <p className="text-gray-500 dark:text-gray-400">Image non disponible</p>
-                        </div>
-                      )}
+                     
                     </SwiperSlide>
                   )
                 })}
