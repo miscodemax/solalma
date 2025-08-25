@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
+import ImageUploader from '@/components/ImageUploader' // <-- importe ton composant uploader
 
 export default function UpdateProfilePage() {
   const supabase = createClient()
@@ -65,29 +66,6 @@ export default function UpdateProfilePage() {
     }
   }
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-
-    const filePath = `avatars/${user.id}-${Date.now()}.${file.name.split('.').pop()}`
-
-    const { error } = await supabase.storage.from('avatars').upload(filePath, file, {
-      cacheControl: '3600',
-      upsert: true
-    })
-
-    if (error) {
-      console.error(error)
-      return
-    }
-
-    const { data: publicUrlData } = supabase.storage.from('avatars').getPublicUrl(filePath)
-    setPreviewUrl(publicUrlData.publicUrl)
-  }
-
   if (loading) {
     return (
       <div className="text-center py-10 text-gray-500 animate-pulse">
@@ -111,15 +89,12 @@ export default function UpdateProfilePage() {
             height={120}
             className="rounded-full object-cover border shadow"
           />
-          <label className="cursor-pointer text-sm text-[#2B6CB0] hover:text-[#2C5282] dark:text-blue-400 dark:hover:text-blue-300">
-            📷 Changer ma photo
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleFileChange}
-              className="hidden"
-            />
-          </label>
+
+          {/* 🔥 Remplacement de l'input file par ImageUploader */}
+          <ImageUploader
+            onUpload={(url) => setPreviewUrl(url)}
+            currentImage={previewUrl || ''}
+          />
         </div>
 
         <div>
