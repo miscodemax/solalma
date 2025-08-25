@@ -62,15 +62,15 @@ export default function ProductsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center dark:bg-black">
-        <p className="text-white">Chargement...</p>
+      <div className="min-h-screen flex items-center justify-center bg-[#FAFAFA] dark:bg-black">
+        <p className="text-[#374151] dark:text-white">Chargement...</p>
       </div>
     )
   }
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center dark:bg-black">
+      <div className="min-h-screen flex items-center justify-center bg-[#FAFAFA] dark:bg-black">
         <AuthModal />
       </div>
     )
@@ -78,7 +78,7 @@ export default function ProductsPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center dark:bg-black">
+      <div className="min-h-screen flex items-center justify-center bg-[#FAFAFA] dark:bg-black">
         <p className="text-red-500">{error}</p>
       </div>
     )
@@ -94,21 +94,21 @@ export default function ProductsPage() {
   }).length
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#F9F6F1] via-[#FDF8F3] to-[#F5F1EC] dark:from-[#0a0a0a] dark:via-[#111111] dark:to-[#0f0f0f] relative overflow-hidden">
-      {/* Animated Background Elements */}
+    <div className="min-h-screen bg-gradient-to-br from-[#FAFAFA] via-[#F5E6CC]/20 to-[#A8D5BA]/10 dark:from-[#0a0a0a] dark:via-[#111111] dark:to-[#0f0f0f] relative overflow-hidden">
+      {/* Animated Background Elements - Palette Sangse */}
       <div className="absolute inset-0 opacity-30">
-        <div className="absolute top-20 left-10 w-32 h-32 bg-[#D29587]/20 rounded-full blur-xl animate-pulse"></div>
-        <div className="absolute top-40 right-20 w-48 h-48 bg-[#E8B4A6]/20 rounded-full blur-xl animate-bounce" style={{ animationDuration: '6s' }}></div>
-        <div className="absolute bottom-32 left-1/4 w-40 h-40 bg-[#D29587]/10 rounded-full blur-2xl animate-ping" style={{ animationDuration: '4s' }}></div>
+        <div className="absolute top-20 left-10 w-32 h-32 bg-[#A8D5BA]/20 rounded-full blur-xl animate-pulse"></div>
+        <div className="absolute top-40 right-20 w-48 h-48 bg-[#FFD6BA]/20 rounded-full blur-xl animate-bounce" style={{ animationDuration: '6s' }}></div>
+        <div className="absolute bottom-32 left-1/4 w-40 h-40 bg-[#6366F1]/10 rounded-full blur-2xl animate-ping" style={{ animationDuration: '4s' }}></div>
       </div>
 
       <div className="relative z-10 px-4 py-8">
         <div className="max-w-7xl mx-auto">
           <BackButton />
 
-          {/* Header Hero Section */}
+          {/* Header Hero Section - Palette Sangse */}
           <div className="mb-12">
-            <div className="relative bg-gradient-to-r from-[#D29587] to-[#E8B4A6] dark:from-[#8B5A4A] dark:to-[#A66B5B] p-8 rounded-3xl shadow-2xl overflow-hidden">
+            <div className="relative bg-gradient-to-r from-[#6366F1] to-[#A8D5BA] dark:from-[#5855eb] dark:to-[#96c7a8] p-8 rounded-3xl shadow-2xl overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
               <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-12 -translate-x-12"></div>
 
@@ -141,68 +141,68 @@ export default function ProductsPage() {
             </div>
           </div>
 
-          {/* Dashboard Stats */}
+          {/* Dashboard Stats - Palette Sangse */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-            <div className="bg-white/80 dark:bg-[#1a1a1a]/80 backdrop-blur-sm border border-[#E6E3DF]/50 dark:border-[#333]/50 rounded-2xl p-6 shadow-lg">
+            <div className="bg-white/80 dark:bg-[#1a1a1a]/80 backdrop-blur-sm border border-[#E5E7EB]/50 dark:border-[#333]/50 rounded-2xl p-6 shadow-lg">
               <div className="flex items-center gap-4">
-                <div className="bg-gradient-to-r from-[#D29587] to-[#E8B4A6] p-3 rounded-xl shadow-md">
+                <div className="bg-gradient-to-r from-[#6366F1] to-[#A8D5BA] p-3 rounded-xl shadow-md">
                   <Package className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <p className="text-sm text-[#6B6B6B] dark:text-[#aaa]">Total Produits</p>
-                  <p className="text-2xl font-bold text-[#1E1E1E] dark:text-white">{totalProducts}</p>
+                  <p className="text-sm text-[#374151] dark:text-[#aaa]">Total Produits</p>
+                  <p className="text-2xl font-bold text-[#374151] dark:text-white">{totalProducts}</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white/80 dark:bg-[#1a1a1a]/80 backdrop-blur-sm border border-[#E6E3DF]/50 dark:border-[#333]/50 rounded-2xl p-6 shadow-lg">
+            <div className="bg-white/80 dark:bg-[#1a1a1a]/80 backdrop-blur-sm border border-[#E5E7EB]/50 dark:border-[#333]/50 rounded-2xl p-6 shadow-lg">
               <div className="flex items-center gap-4">
-                <div className="bg-gradient-to-r from-[#52C41A] to-[#73D13D] p-3 rounded-xl shadow-md">
+                <div className="bg-gradient-to-r from-[#A8D5BA] to-[#FFD6BA] p-3 rounded-xl shadow-md">
                   <TrendingUp className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <p className="text-sm text-[#6B6B6B] dark:text-[#aaa]">Nouveaux (7j)</p>
-                  <p className="text-2xl font-bold text-[#1E1E1E] dark:text-white">{recentProducts}</p>
+                  <p className="text-sm text-[#374151] dark:text-[#aaa]">Nouveaux (7j)</p>
+                  <p className="text-2xl font-bold text-[#374151] dark:text-white">{recentProducts}</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white/80 dark:bg-[#1a1a1a]/80 backdrop-blur-sm border border-[#E6E3DF]/50 dark:border-[#333]/50 rounded-2xl p-6 shadow-lg">
+            <div className="bg-white/80 dark:bg-[#1a1a1a]/80 backdrop-blur-sm border border-[#E5E7EB]/50 dark:border-[#333]/50 rounded-2xl p-6 shadow-lg">
               <div className="flex items-center gap-4">
-                <div className="bg-gradient-to-r from-[#FAAD14] to-[#FFC53D] p-3 rounded-xl shadow-md">
+                <div className="bg-gradient-to-r from-[#FFD6BA] to-[#6366F1] p-3 rounded-xl shadow-md">
                   <Star className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <p className="text-sm text-[#6B6B6B] dark:text-[#aaa]">Valeur Totale</p>
-                  <p className="text-2xl font-bold text-[#1E1E1E] dark:text-white">{totalValue.toLocaleString()} FCFA</p>
+                  <p className="text-sm text-[#374151] dark:text-[#aaa]">Valeur Totale</p>
+                  <p className="text-2xl font-bold text-[#374151] dark:text-white">{totalValue.toLocaleString()} FCFA</p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Action Bar */}
-          <div className="bg-white/80 dark:bg-[#1a1a1a]/80 backdrop-blur-sm border border-[#E6E3DF]/50 dark:border-[#333]/50 rounded-2xl p-6 mb-8 shadow-lg">
+          {/* Action Bar - Palette Sangse */}
+          <div className="bg-white/80 dark:bg-[#1a1a1a]/80 backdrop-blur-sm border border-[#E5E7EB]/50 dark:border-[#333]/50 rounded-2xl p-6 mb-8 shadow-lg">
             <div className="flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between">
               <div className="flex flex-1 gap-3">
                 <div className="relative flex-1 max-w-md">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#6B6B6B] dark:text-[#aaa]" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#374151] dark:text-[#aaa]" />
                   <input
                     type="text"
                     placeholder="Rechercher vos produits..."
-                    className="w-full pl-10 pr-4 py-3 bg-[#F9F6F1]/50 dark:bg-[#2a2a2a]/50 border border-[#E6E3DF] dark:border-[#333] rounded-xl"
+                    className="w-full pl-10 pr-4 py-3 bg-[#FAFAFA]/50 dark:bg-[#2a2a2a]/50 border border-[#E5E7EB] dark:border-[#333] rounded-xl text-[#374151] dark:text-white"
                   />
                 </div>
-                <button className="px-4 py-3 bg-[#F9F6F1] dark:bg-[#2a2a2a] border border-[#E6E3DF] dark:border-[#333] rounded-xl">
+                <button className="px-4 py-3 bg-[#FAFAFA] dark:bg-[#2a2a2a] border border-[#E5E7EB] dark:border-[#333] rounded-xl text-[#374151] dark:text-white">
                   <Filter className="w-4 h-4" />
                 </button>
-                <button className="px-4 py-3 bg-[#F9F6F1] dark:bg-[#2a2a2a] border border-[#E6E3DF] dark:border-[#333] rounded-xl">
+                <button className="px-4 py-3 bg-[#FAFAFA] dark:bg-[#2a2a2a] border border-[#E5E7EB] dark:border-[#333] rounded-xl text-[#374151] dark:text-white">
                   <Grid className="w-4 h-4" />
                 </button>
               </div>
 
               <Link
                 href="/dashboard/add"
-                className="bg-gradient-to-r from-[#D29587] to-[#E8B4A6] text-white px-6 py-3 rounded-xl shadow-lg font-semibold flex items-center gap-2"
+                className="bg-gradient-to-r from-[#6366F1] to-[#A8D5BA] text-white px-6 py-3 rounded-xl shadow-lg font-semibold flex items-center gap-2"
               >
                 <Plus className="w-4 h-4" />
                 Créer un produit
@@ -210,22 +210,22 @@ export default function ProductsPage() {
             </div>
           </div>
 
-          {/* Products Grid */}
+          {/* Products Grid - Palette Sangse */}
           {products.length === 0 ? (
             <div className="text-center py-20">
-              <div className="bg-white/80 dark:bg-[#1a1a1a]/80 backdrop-blur-sm border border-[#E6E3DF]/50 dark:border-[#333]/50 rounded-3xl p-12 shadow-lg max-w-lg mx-auto">
-                <div className="w-32 h-32 mx-auto mb-6 bg-gradient-to-br from-[#D29587]/20 to-[#E8B4A6]/20 rounded-full flex items-center justify-center">
-                  <Package className="w-16 h-16 text-[#D29587]" />
+              <div className="bg-white/80 dark:bg-[#1a1a1a]/80 backdrop-blur-sm border border-[#E5E7EB]/50 dark:border-[#333]/50 rounded-3xl p-12 shadow-lg max-w-lg mx-auto">
+                <div className="w-32 h-32 mx-auto mb-6 bg-gradient-to-br from-[#A8D5BA]/20 to-[#6366F1]/20 rounded-full flex items-center justify-center">
+                  <Package className="w-16 h-16 text-[#6366F1]" />
                 </div>
-                <h3 className="text-2xl font-bold text-[#1E1E1E] dark:text-white mb-4">
+                <h3 className="text-2xl font-bold text-[#374151] dark:text-white mb-4">
                   Votre vitrine vous attend ! ✨
                 </h3>
-                <p className="text-[#6B6B6B] dark:text-[#aaa] mb-8 leading-relaxed">
+                <p className="text-[#374151]/70 dark:text-[#aaa] mb-8 leading-relaxed">
                   Commencez à bâtir votre empire commercial en ajoutant votre premier produit.
                 </p>
                 <Link
                   href="/dashboard/add"
-                  className="inline-flex items-center gap-2 bg-gradient-to-r from-[#D29587] to-[#E8B4A6] text-white px-8 py-4 rounded-xl shadow-lg font-semibold"
+                  className="inline-flex items-center gap-2 bg-gradient-to-r from-[#6366F1] to-[#A8D5BA] text-white px-8 py-4 rounded-xl shadow-lg font-semibold"
                 >
                   <Plus className="w-5 h-5" />
                   Ajouter mon premier produit
@@ -237,7 +237,7 @@ export default function ProductsPage() {
               {products.map((product, index) => (
                 <div
                   key={product.id}
-                  className="group bg-white/80 dark:bg-[#1a1a1a]/80 backdrop-blur-sm border border-[#E6E3DF]/50 dark:border-[#333]/50 rounded-2xl shadow-lg overflow-hidden"
+                  className="group bg-white/80 dark:bg-[#1a1a1a]/80 backdrop-blur-sm border border-[#E5E7EB]/50 dark:border-[#333]/50 rounded-2xl shadow-lg overflow-hidden"
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
                   <div className="relative overflow-hidden rounded-t-2xl">
@@ -246,30 +246,30 @@ export default function ProductsPage() {
                       alt={product.title}
                     />
                     {recentProducts > 0 && new Date(product.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) && (
-                      <div className="absolute top-3 left-3 bg-gradient-to-r from-[#52C41A] to-[#73D13D] text-white text-xs font-bold px-2 py-1 rounded-full shadow-md">
+                      <div className="absolute top-3 left-3 bg-gradient-to-r from-[#A8D5BA] to-[#6366F1] text-white text-xs font-bold px-2 py-1 rounded-full shadow-md">
                         ✨ Nouveau
                       </div>
                     )}
                   </div>
 
                   <div className="p-6">
-                    <h3 className="text-lg font-bold text-[#1E1E1E] dark:text-white line-clamp-1 mb-3">
+                    <h3 className="text-lg font-bold text-[#374151] dark:text-white line-clamp-1 mb-3">
                       {product.title}
                     </h3>
-                    <p className="text-xs text-[#999] dark:text-[#888] mb-3">
+                    <p className="text-xs text-[#374151]/60 dark:text-[#888] mb-3">
                       📅 Ajouté le {new Date(product.created_at).toLocaleDateString('fr-FR')}
                     </p>
-                    <p className="text-sm text-[#6B6B6B] dark:text-[#bbb] mb-4 line-clamp-2">
+                    <p className="text-sm text-[#374151]/70 dark:text-[#bbb] mb-4 line-clamp-2">
                       {product.description}
                     </p>
 
                     <div className="flex items-center justify-between">
-                      <span className="text-xl font-black text-[#D29587]">
+                      <span className="text-xl font-black text-[#6366F1]">
                         {parseFloat(product.price).toLocaleString()} FCFA
                       </span>
                       <div className="flex gap-2">
                         <Link href={`/dashboard/edit/${product.id}`}>
-                          <button className="text-[#D29587] border-2 border-[#D29587] px-3 py-1.5 rounded-lg text-sm font-semibold">
+                          <button className="text-[#6366F1] border-2 border-[#6366F1] px-3 py-1.5 rounded-lg text-sm font-semibold">
                             Modifier
                           </button>
                         </Link>
@@ -284,11 +284,11 @@ export default function ProductsPage() {
 
           {products.length > 0 && (
             <div className="mt-16 text-center">
-              <div className="bg-gradient-to-r from-[#D29587]/10 to-[#E8B4A6]/10 dark:from-[#8B5A4A]/10 dark:to-[#A66B5B]/10 backdrop-blur-sm border border-[#D29587]/20 rounded-3xl p-8 max-w-2xl mx-auto">
-                <h3 className="text-2xl font-bold text-[#1E1E1E] dark:text-white mb-4">
+              <div className="bg-gradient-to-r from-[#A8D5BA]/20 to-[#6366F1]/10 dark:from-[#96c7a8]/10 dark:to-[#5855eb]/10 backdrop-blur-sm border border-[#A8D5BA]/30 rounded-3xl p-8 max-w-2xl mx-auto">
+                <h3 className="text-2xl font-bold text-[#374151] dark:text-white mb-4">
                   🎉 Félicitations, entrepreneur !
                 </h3>
-                <p className="text-[#6B6B6B] dark:text-[#aaa] leading-relaxed">
+                <p className="text-[#374151]/70 dark:text-[#aaa] leading-relaxed">
                   Votre boutique grandit jour après jour. Continuez à ajouter des produits
                   et regardez votre empire commercial prospérer !
                 </p>
