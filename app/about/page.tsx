@@ -45,7 +45,18 @@ export default function AboutPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] dark:from-[#0A0A0A] dark:via-[#121212] dark:to-[#1A1A1A] transition-colors duration-500 overflow-hidden">
+    <div className="
+  min-h-screen 
+  bg-[#FAFAFA] 
+  dark:bg-[#0A0A0A] 
+  dark:from-[#0A0A0A] 
+  dark:via-[#121212] 
+  dark:to-[#1A1A1A] 
+  transition-colors 
+  duration-500 
+  overflow-hidden
+">
+
       {/* Hero Section */}
       <div className="relative">
         {/* Éléments décoratifs avec palette Sangse */}
