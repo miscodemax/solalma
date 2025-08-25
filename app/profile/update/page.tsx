@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import ImageUploader from '@/app/dashboard/add/imageuploader' // adapte le chemin si nécessaire
 
 export default function UpdateProfilePage() {
   const supabase = createClient()
@@ -27,9 +26,7 @@ export default function UpdateProfilePage() {
         .eq('id', user.id)
         .single()
 
-      if (error) {
-        console.error(error)
-      } else {
+      if (!error && data) {
         setProfile(data)
         setPreviewUrl(data.avatar_url)
       }
@@ -38,7 +35,7 @@ export default function UpdateProfilePage() {
     }
 
     getProfile()
-  }, [])
+  }, [supabase, router])
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -68,8 +65,27 @@ export default function UpdateProfilePage() {
     }
   }
 
-  const handleImageUpload = (url: string) => {
-    setPreviewUrl(url)
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    const filePath = `avatars/${user.id}-${Date.now()}.${file.name.split('.').pop()}`
+
+    const { error } = await supabase.storage.from('avatars').upload(filePath, file, {
+      cacheControl: '3600',
+      upsert: true
+    })
+
+    if (error) {
+      console.error(error)
+      return
+    }
+
+    const { data: publicUrlData } = supabase.storage.from('avatars').getPublicUrl(filePath)
+    setPreviewUrl(publicUrlData.publicUrl)
   }
 
   if (loading) {
@@ -81,7 +97,7 @@ export default function UpdateProfilePage() {
   }
 
   return (
-    <div className="max-w-xl mx-auto px-4 dark:bg-black py-10">
+    <div className="max-w-xl mx-auto px-4 py-10 dark:bg-black">
       <h1 className="text-3xl font-bold mb-6 text-center">🔧 Modifier mon profil</h1>
 
       <form onSubmit={handleUpdate} className="space-y-6">
@@ -89,11 +105,19 @@ export default function UpdateProfilePage() {
           <Image
             src={previewUrl || '/default-avatar.png'}
             alt="Avatar"
-            width={100}
-            height={100}
-            className="rounded-full object-cover border"
+            width={120}
+            height={120}
+            className="rounded-full object-cover border shadow"
           />
-          <ImageUploader onUpload={handleImageUpload} />
+          <label className="cursor-pointer text-sm text-[#D29587] hover:underline">
+            📷 Changer ma photo
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+          </label>
         </div>
 
         <div>
