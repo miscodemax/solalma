@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import ImageUploader from '@/components/ImageUploader' // <-- importe ton composant uploader
+import ImageUploader from './uploader' // <-- importe ton composant uploader
 
 export default function UpdateProfilePage() {
   const supabase = createClient()
