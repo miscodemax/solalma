@@ -15,17 +15,17 @@ export default async function FavoritesPage() {
   })
 
   const {
-    data: { user },
-    error,
+    data: { user }
   } = await supabase.auth.getUser()
 
-  if (!user || error) {
+  if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#FAFAFA] via-white to-[#F5E6CC] dark:from-[#1a1a1a] dark:via-[#222] dark:to-[#1a1a1a]">
+      <div className="min-h-screen flex items-center justify-center ...">
         <AuthModal />
       </div>
     )
   }
+
 
   // Récupère les likes
   const { data: likes } = await supabase
@@ -429,7 +429,7 @@ export default async function FavoritesPage() {
                     animationFillMode: 'forwards'
                   }}
                 >
-                  <ProductCard product={products} userId={id} />
+                  <ProductCard product={product} userId={id} />
                 </div>
               ))}
             </div>
