@@ -10,7 +10,8 @@ import {
   AlertDialogTitle,
   AlertDialogDescription,
   AlertDialogFooter,
-  AlertDialogCancel
+  AlertDialogCancel,
+  AlertDialogAction
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 
@@ -29,8 +30,10 @@ export default function RatingSeller({
   const [count, setCount] = useState<number>(initialCount)
 
   const [modalOpen, setModalOpen] = useState(false)
-  const [modalTitle, setModalTitle] = useState('')
-  const [modalMessage, setModalMessage] = useState('')
+  const [modalTitle, setModalTitle] = useState('Noter ce vendeur')
+  const [modalMessage, setModalMessage] = useState(
+    "Cette action est irréversible. Votre note contribue à évaluer la fiabilité de ce vendeur. Choisissez attentivement."
+  )
   const [pendingRating, setPendingRating] = useState<number>(0)
 
   const supabase = createClient()
@@ -65,7 +68,6 @@ export default function RatingSeller({
   const confirmVote = async () => {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return showModal("Connexion requise", "Vous devez être connecté pour noter ce vendeur.")
-
     if (user.id === sellerId) return showModal("Action impossible", "Vous ne pouvez pas noter vous-même.")
 
     const { error } = await supabase
@@ -145,12 +147,10 @@ export default function RatingSeller({
               >
                 <AlertDialogHeader>
                   <AlertDialogTitle className="text-xl font-bold text-center">
-                    Noter ce vendeur
+                    {modalTitle}
                   </AlertDialogTitle>
                   <AlertDialogDescription className="text-center text-gray-600 dark:text-gray-400">
-                    Cette action est <span className="font-semibold text-red-500">irréversible</span>.
-                    Votre note contribue à évaluer la <span className="font-semibold">fiabilité</span> de ce vendeur.
-                    Choisissez attentivement.
+                    {modalMessage}
                   </AlertDialogDescription>
                 </AlertDialogHeader>
 
@@ -160,13 +160,13 @@ export default function RatingSeller({
 
                 <AlertDialogFooter className="mt-6 flex justify-between">
                   <AlertDialogCancel>Annuler</AlertDialogCancel>
-                  <Button
+                  <AlertDialogAction
                     onClick={confirmVote}
                     disabled={pendingRating === 0}
                     className="bg-yellow-500 hover:bg-yellow-600 text-white rounded-xl"
                   >
                     Confirmer ma note
-                  </Button>
+                  </AlertDialogAction>
                 </AlertDialogFooter>
               </motion.div>
             </AlertDialogContent>
