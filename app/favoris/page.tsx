@@ -422,12 +422,7 @@ export default async function FavoritesPage() {
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
               {products.map((product, index) => (
                 <div
-                  key={product.id}
-                  className="opacity-0 animate-fade-in-up"
-                  style={{
-                    animationDelay: `${index * 100}ms`,
-                    animationFillMode: 'forwards'
-                  }}
+                  key={product.id + index}
                 >
                   <ProductCard product={product} userId={id} />
                 </div>
