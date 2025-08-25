@@ -137,7 +137,9 @@ Lien produit: https://sangse.shop/product/${product.id}`
     : null
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] dark:from-[#0A0A0A] dark:via-[#121212] dark:to-[#1A1A1A]">
+    <div className="min-h-screen bg-[#FAFAFA] 
+  dark:bg-gradient-radial dark:from-[#0A0A0A] dark:via-[#121212] dark:to-[#000000]">
+
       {/* Éléments décoratifs avec palette Sangse */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-10 w-64 h-64 bg-[#A8D5BA]/10 rounded-full blur-3xl animate-pulse"></div>
