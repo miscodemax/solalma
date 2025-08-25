@@ -234,7 +234,7 @@ export default function ProductImageCarousel({
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 40 }}
               transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }} // cubic-bezier style smooth
-              className="relative mt-6 bg-[#FAFAFA] dark:bg-gray-900 rounded-2xl shadow-2xl max-w-4xl max-h-[80vh] overflow-hidden"
+              className="relative mt-12 bg-[#FAFAFA] dark:bg-gray-900 rounded-2xl shadow-2xl max-w-4xl max-h-[70vh] overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
               {/* BOUTON FERMER */}
@@ -242,7 +242,7 @@ export default function ProductImageCarousel({
                 whileHover={{ scale: 1.15, rotate: 90 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={closeZoom}
-                className="absolute top-10 right-4 z-[10000] bg-[#374151]/80 hover:bg-[#374151]/90 p-2 rounded-full backdrop-blur-sm"
+                className="absolute top-12 right-4 z-[10000] bg-[#374151]/80 hover:bg-[#374151]/90 p-2 rounded-full backdrop-blur-sm"
               >
                 <FaTimes className="text-white text-lg" />
               </motion.button>
