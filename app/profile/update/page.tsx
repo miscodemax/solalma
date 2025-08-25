@@ -90,15 +90,17 @@ export default function UpdateProfilePage() {
 
   if (loading) {
     return (
-      <div className="text-center py-10 text-gray-600 animate-pulse">
+      <div className="text-center py-10 text-gray-500 animate-pulse">
         Chargement du profil...
       </div>
     )
   }
 
   return (
-    <div className="max-w-xl mx-auto px-4 py-10 dark:bg-black">
-      <h1 className="text-3xl font-bold mb-6 text-center">🔧 Modifier mon profil</h1>
+    <div className="max-w-xl mx-auto px-4 py-10 bg-[#F7FAFC] dark:bg-[#1A202C] rounded-2xl shadow">
+      <h1 className="text-3xl font-bold mb-6 text-center text-[#4A5568] dark:text-gray-200">
+        🔧 Modifier mon profil
+      </h1>
 
       <form onSubmit={handleUpdate} className="space-y-6">
         <div className="flex flex-col items-center space-y-4">
@@ -109,7 +111,7 @@ export default function UpdateProfilePage() {
             height={120}
             className="rounded-full object-cover border shadow"
           />
-          <label className="cursor-pointer text-sm text-[#D29587] hover:underline">
+          <label className="cursor-pointer text-sm text-[#2B6CB0] hover:text-[#2C5282] dark:text-blue-400 dark:hover:text-blue-300">
             📷 Changer ma photo
             <input
               type="file"
@@ -121,22 +123,26 @@ export default function UpdateProfilePage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">Nom d’utilisateur</label>
+          <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+            Nom d’utilisateur
+          </label>
           <input
             type="text"
             value={profile.username}
             onChange={(e) => setProfile({ ...profile, username: e.target.value })}
-            className="w-full border border-gray-300 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-[#D29587]"
+            className="w-full border border-gray-300 dark:border-gray-600 rounded-xl p-3 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#2B6CB0]"
             required
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">Bio</label>
+          <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+            Bio
+          </label>
           <textarea
             value={profile.bio}
             onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
-            className="w-full border border-gray-300 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-[#D29587]"
+            className="w-full border border-gray-300 dark:border-gray-600 rounded-xl p-3 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#2B6CB0]"
             rows={4}
             placeholder="Parle-nous un peu de toi..."
           />
@@ -145,14 +151,14 @@ export default function UpdateProfilePage() {
         <button
           type="submit"
           disabled={saving}
-          className="w-full bg-[#D29587] text-white font-semibold py-3 rounded-xl hover:bg-[#c07a6b] transition disabled:opacity-60"
+          className="w-full bg-[#2B6CB0] text-white font-semibold py-3 rounded-xl hover:bg-[#2C5282] transition disabled:opacity-60"
         >
           {saving ? '⏳ Enregistrement...' : '💾 Enregistrer'}
         </button>
       </form>
 
       {successMessage && (
-        <div className="mt-4 text-center text-green-600 font-medium animate-fade-in">
+        <div className="mt-4 text-center text-green-600 dark:text-green-400 font-medium animate-fade-in">
           {successMessage}
         </div>
       )}

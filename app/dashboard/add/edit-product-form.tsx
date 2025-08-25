@@ -79,19 +79,19 @@ export default function EditProductForm({ product }: Props) {
   }
 
   return (
-    <div className="min-h-screen px-4 py-8 bg-[#F9F6F1] dark:bg-black transition-colors duration-300">
+    <div className="min-h-screen px-4 py-8 bg-neutral-100 dark:bg-dark-bg transition-colors duration-300">
       <Button
         variant="outline"
         size="lg"
         onClick={() => router.back()}
-        className="mb-10 hover:bg-[#D29587] font-bold border-[#D29587] dark:text-white dark:border-white dark:hover:bg-white dark:hover:text-black"
+        className="mb-10 font-bold border-primary text-primary hover:bg-primary hover:text-white dark:text-neutral-100 dark:border-neutral-100 dark:hover:bg-neutral-100 dark:hover:text-dark-bg"
       >
         Retour
       </Button>
 
       <form
         onSubmit={handleSubmit}
-        className="max-w-xl mx-auto space-y-6 bg-white dark:bg-[#1a1a1a] shadow-lg rounded-2xl p-8 border border-[#E6E3DF] dark:border-gray-700 animate-fade-in"
+        className="max-w-xl mx-auto space-y-6 bg-white dark:bg-dark-card shadow-lg rounded-2xl p-8 border border-neutral-200 dark:border-neutral-700 animate-fade-in"
       >
         {error && <p className="text-red-500 text-sm">{error}</p>}
 
@@ -103,7 +103,10 @@ export default function EditProductForm({ product }: Props) {
           {images.length > 0 && (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 w-full">
               {images.map((url, idx) => (
-                <div key={idx} className="relative w-full aspect-square group rounded-xl overflow-hidden border border-[#E6E3DF] dark:border-gray-700 shadow-sm">
+                <div
+                  key={idx}
+                  className="relative w-full aspect-square group rounded-xl overflow-hidden border border-neutral-200 dark:border-neutral-700 shadow-sm"
+                >
                   <Image
                     src={url}
                     alt={`Image ${idx + 1}`}
@@ -130,7 +133,7 @@ export default function EditProductForm({ product }: Props) {
             placeholder="Titre du produit"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full px-4 py-3 border border-[#DAD5CD] dark:border-gray-700 dark:bg-[#2a2a2a] dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D29587] transition"
+            className="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-700 dark:bg-dark-card dark:text-neutral-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary transition"
             required
           />
           <input
@@ -138,7 +141,7 @@ export default function EditProductForm({ product }: Props) {
             placeholder="Prix (en FCFA)"
             value={price}
             onChange={(e) => setPrice(e.target.value)}
-            className="w-full px-4 py-3 border border-[#DAD5CD] dark:border-gray-700 dark:bg-[#2a2a2a] dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D29587] transition"
+            className="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-700 dark:bg-dark-card dark:text-neutral-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary transition"
             required
             min={0}
             step="0.01"
@@ -147,7 +150,7 @@ export default function EditProductForm({ product }: Props) {
             placeholder="Description détaillée..."
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="w-full px-4 py-3 border border-[#DAD5CD] dark:border-gray-700 dark:bg-[#2a2a2a] dark:text-white rounded-xl h-32 resize-none focus:outline-none focus:ring-2 focus:ring-[#D29587] transition"
+            className="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-700 dark:bg-dark-card dark:text-neutral-100 rounded-xl h-32 resize-none focus:outline-none focus:ring-2 focus:ring-primary transition"
             required
           />
           <input
@@ -155,7 +158,7 @@ export default function EditProductForm({ product }: Props) {
             placeholder="Numéro WhatsApp (+221...)"
             value={whatsappNumber}
             onChange={(e) => setWhatsappNumber(e.target.value)}
-            className="w-full px-4 py-3 border border-[#DAD5CD] dark:border-gray-700 dark:bg-[#2a2a2a] dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D29587] transition"
+            className="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-700 dark:bg-dark-card dark:text-neutral-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary transition"
             pattern="^\+?\d{7,15}$"
             title="Entrez un numéro WhatsApp valide, avec indicatif pays"
             required
@@ -164,8 +167,8 @@ export default function EditProductForm({ product }: Props) {
             <label
               htmlFor="category"
               className={`absolute left-4 top-3 text-sm transition-all duration-200 ${category
-                ? 'text-xs -top-2 bg-white dark:bg-[#1a1a1a] px-1 text-[#D29587]'
-                : 'text-[#A6A6A6] dark:text-gray-400'
+                  ? 'text-xs -top-2 bg-white dark:bg-dark-card px-1 text-primary'
+                  : 'text-neutral-500 dark:text-neutral-400'
                 }`}
             >
               Catégorie
@@ -174,7 +177,7 @@ export default function EditProductForm({ product }: Props) {
               id="category"
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="w-full appearance-none px-4 pt-6 pb-3 border border-[#DAD5CD] dark:border-gray-700 dark:bg-[#2a2a2a] dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D29587] transition"
+              className="w-full appearance-none px-4 pt-6 pb-3 border border-neutral-300 dark:border-neutral-700 dark:bg-dark-card dark:text-neutral-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary transition"
               required
             >
               {categories.map((cat) => (
@@ -199,7 +202,7 @@ export default function EditProductForm({ product }: Props) {
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-[#D29587] text-white font-semibold py-3 rounded-xl hover:bg-[#bb7d72] transition"
+          className="w-full bg-primary text-white font-semibold py-3 rounded-xl hover:bg-primary-dark transition disabled:opacity-60"
         >
           {loading ? 'Modification en cours...' : 'Modifier le produit'}
         </button>

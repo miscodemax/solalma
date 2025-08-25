@@ -138,7 +138,7 @@ export default function AddProductForm({ userId }: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-4 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-[#FAFAFA] via-white to-[#F5E6CC] dark:bg-gradient-to-br dark:from-[#1a1a1a] dark:via-[#222] dark:to-[#2a2a2a] py-4 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
         {/* Header avec bouton retour */}
         <div className="mb-6 sm:mb-8">
@@ -146,38 +146,46 @@ export default function AddProductForm({ userId }: Props) {
             variant="outline"
             size="lg"
             onClick={() => router.back()}
-            className="mb-4 border-[#D29587] text-[#D29587] font-semibold hover:bg-[#F7ECEA] hover:dark:bg-[#1a1a1a] transition-all duration-200 px-6 py-3"
+            className="mb-4 border-[#A8D5BA] text-[#A8D5BA] font-semibold hover:bg-[#A8D5BA]/10 hover:dark:bg-[#A8D5BA]/20 transition-all duration-200 px-6 py-3"
           >
             ← Retour
           </Button>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            Ajouter un produit
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base">
-            Remplissez les informations pour mettre votre produit en vente
+          <div className="relative">
+            <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-[#6366F1] via-[#A8D5BA] to-[#6366F1] bg-clip-text text-transparent mb-2">
+              Ajouter un produit
+            </h1>
+            <div className="absolute -bottom-1 left-0 w-16 h-1 bg-gradient-to-r from-[#A8D5BA] to-transparent rounded-full"></div>
+          </div>
+          <p className="text-[#374151] dark:text-gray-300 text-sm sm:text-base mt-3">
+            Remplissez les informations pour mettre votre produit en vente sur Sangse
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-8 sm:space-y-10">
           {/* Messages d'erreur/succès */}
           {error && (
-            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4">
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 backdrop-blur-sm">
               <p className="text-red-700 dark:text-red-400 text-center font-medium">{error}</p>
             </div>
           )}
           {success && (
-            <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4">
-              <p className="text-green-700 dark:text-green-400 text-center font-medium">
+            <div className="bg-gradient-to-r from-[#A8D5BA]/20 to-[#A8D5BA]/10 border border-[#A8D5BA]/30 rounded-xl p-4 backdrop-blur-sm">
+              <p className="text-[#A8D5BA] dark:text-[#A8D5BA] text-center font-medium">
                 ✅ Produit ajouté avec succès !
               </p>
             </div>
           )}
 
           {/* Section Photos */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 sm:p-8">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-4 sm:mb-6">
-              📸 Photos du produit
-            </h2>
+          <div className="bg-white/80 dark:bg-[#2a2a2a]/80 backdrop-blur-xl rounded-2xl shadow-lg border border-[#E5E7EB] dark:border-gray-600 p-6 sm:p-8">
+            <div className="flex items-center gap-3 mb-4 sm:mb-6">
+              <div className="p-2 bg-gradient-to-r from-[#6366F1] to-[#A8D5BA] rounded-xl">
+                <span className="text-white text-lg">📸</span>
+              </div>
+              <h2 className="text-lg sm:text-xl font-semibold text-[#374151] dark:text-white">
+                Photos du produit
+              </h2>
+            </div>
 
             <div className="space-y-6">
               {/* Uploader d'image */}
@@ -192,9 +200,12 @@ export default function AddProductForm({ userId }: Props) {
               {/* Aperçu des images */}
               {images.length > 0 && (
                 <div className="space-y-4">
-                  <h3 className="text-md font-medium text-gray-700 dark:text-gray-300">
-                    Images ajoutées ({images.length}/5)
-                  </h3>
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-[#A8D5BA] rounded-full animate-pulse"></div>
+                    <h3 className="text-md font-medium text-[#374151] dark:text-gray-300">
+                      Images ajoutées ({images.length}/5)
+                    </h3>
+                  </div>
 
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                     {images.map((imageUrl, index) => (
@@ -204,12 +215,12 @@ export default function AddProductForm({ userId }: Props) {
                             src={imageUrl}
                             alt={`Produit ${index + 1}`}
                             fill
-                            className="rounded-lg object-cover border border-gray-200 dark:border-gray-600"
+                            className="rounded-lg object-cover border border-[#E5E7EB] dark:border-gray-600"
                           />
 
                           {/* Badge image principale */}
                           {index === 0 && (
-                            <div className="absolute top-2 left-2 bg-[#D29587] text-white text-xs px-2 py-1 rounded-full font-medium">
+                            <div className="absolute top-2 left-2 bg-gradient-to-r from-[#6366F1] to-[#A8D5BA] text-white text-xs px-3 py-1 rounded-full font-medium shadow-lg">
                               Principale
                             </div>
                           )}
@@ -221,7 +232,7 @@ export default function AddProductForm({ userId }: Props) {
                                 <button
                                   type="button"
                                   onClick={() => handleSetMainImage(index)}
-                                  className="bg-[#D29587] text-white p-2 rounded-full hover:bg-[#bb7d72] transition-colors"
+                                  className="bg-gradient-to-r from-[#A8D5BA] to-[#6366F1] text-white p-2 rounded-full hover:scale-110 transition-all duration-200 shadow-lg"
                                   title="Définir comme image principale"
                                 >
                                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -232,7 +243,7 @@ export default function AddProductForm({ userId }: Props) {
                               <button
                                 type="button"
                                 onClick={() => handleRemoveImage(index)}
-                                className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors"
+                                className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 hover:scale-110 transition-all duration-200 shadow-lg"
                                 title="Supprimer cette image"
                               >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -255,15 +266,20 @@ export default function AddProductForm({ userId }: Props) {
           </div>
 
           {/* Section Informations générales */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 sm:p-8">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-6 sm:mb-8">
-              ℹ️ Informations générales
-            </h2>
+          <div className="bg-white/80 dark:bg-[#2a2a2a]/80 backdrop-blur-xl rounded-2xl shadow-lg border border-[#E5E7EB] dark:border-gray-600 p-6 sm:p-8">
+            <div className="flex items-center gap-3 mb-6 sm:mb-8">
+              <div className="p-2 bg-gradient-to-r from-[#A8D5BA] to-[#6366F1] rounded-xl">
+                <span className="text-white text-lg">ℹ️</span>
+              </div>
+              <h2 className="text-lg sm:text-xl font-semibold text-[#374151] dark:text-white">
+                Informations générales
+              </h2>
+            </div>
 
             <div className="space-y-6 sm:space-y-8">
               {/* Titre */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                <label className="block text-sm font-medium text-[#374151] dark:text-gray-300 mb-3">
                   Titre du produit *
                 </label>
                 <HoverCard>
@@ -274,19 +290,19 @@ export default function AddProductForm({ userId }: Props) {
                       placeholder="Ex: Robe Wax taille M"
                       value={form.title}
                       onChange={handleChange}
-                      className="w-full px-4 py-4 text-base border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D29587] focus:border-transparent transition-all duration-200"
+                      className="w-full px-4 py-4 text-base border border-[#E5E7EB] dark:border-gray-600 bg-white dark:bg-[#333] text-[#374151] dark:text-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6366F1] focus:border-transparent transition-all duration-200 hover:border-[#A8D5BA]"
                       required
                     />
                   </HoverCardTrigger>
-                  <HoverCardContent className="w-64 text-sm text-gray-700 dark:text-gray-300">
-                    Donnez un nom clair à votre produit. Ex : <strong>Robe Wax taille M</strong>
+                  <HoverCardContent className="w-64 text-sm text-[#374151] dark:text-gray-300 bg-white/95 dark:bg-[#2a2a2a]/95 backdrop-blur-xl border border-[#E5E7EB] dark:border-gray-600">
+                    Donnez un nom clair à votre produit. Ex : <strong className="text-[#6366F1]">Robe Wax taille M</strong>
                   </HoverCardContent>
                 </HoverCard>
               </div>
 
               {/* Catégorie */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                <label className="block text-sm font-medium text-[#374151] dark:text-gray-300 mb-3">
                   Catégorie *
                 </label>
                 <HoverCard>
@@ -296,7 +312,7 @@ export default function AddProductForm({ userId }: Props) {
                         name="category"
                         value={form.category}
                         onChange={handleChange}
-                        className="w-full appearance-none px-4 py-4 text-base border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D29587] focus:border-transparent transition-all duration-200"
+                        className="w-full appearance-none px-4 py-4 text-base border border-[#E5E7EB] dark:border-gray-600 bg-white dark:bg-[#333] text-[#374151] dark:text-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6366F1] focus:border-transparent transition-all duration-200 hover:border-[#A8D5BA]"
                         required
                       >
                         {categories.map((cat) => (
@@ -305,14 +321,14 @@ export default function AddProductForm({ userId }: Props) {
                           </option>
                         ))}
                       </select>
-                      <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-gray-400 dark:text-gray-500">
+                      <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-[#A8D5BA]">
                         <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                         </svg>
                       </div>
                     </div>
                   </HoverCardTrigger>
-                  <HoverCardContent className="w-64 text-sm text-gray-700 dark:text-gray-300">
+                  <HoverCardContent className="w-64 text-sm text-[#374151] dark:text-gray-300 bg-white/95 dark:bg-[#2a2a2a]/95 backdrop-blur-xl border border-[#E5E7EB] dark:border-gray-600">
                     Choisissez la catégorie qui décrit le mieux votre produit.
                   </HoverCardContent>
                 </HoverCard>
@@ -320,7 +336,7 @@ export default function AddProductForm({ userId }: Props) {
 
               {/* Description */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                <label className="block text-sm font-medium text-[#374151] dark:text-gray-300 mb-3">
                   Description *
                 </label>
                 <HoverCard>
@@ -330,11 +346,11 @@ export default function AddProductForm({ userId }: Props) {
                       placeholder="Décrivez votre produit en détail : matières, couleurs, état, taille, conseils d'entretien..."
                       value={form.description}
                       onChange={handleChange}
-                      className="w-full px-4 py-4 text-base border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-xl h-32 sm:h-40 resize-none focus:outline-none focus:ring-2 focus:ring-[#D29587] focus:border-transparent transition-all duration-200"
+                      className="w-full px-4 py-4 text-base border border-[#E5E7EB] dark:border-gray-600 bg-white dark:bg-[#333] text-[#374151] dark:text-gray-100 rounded-xl h-32 sm:h-40 resize-none focus:outline-none focus:ring-2 focus:ring-[#6366F1] focus:border-transparent transition-all duration-200 hover:border-[#A8D5BA]"
                       required
                     />
                   </HoverCardTrigger>
-                  <HoverCardContent className="w-64 text-sm text-gray-700 dark:text-gray-300">
+                  <HoverCardContent className="w-64 text-sm text-[#374151] dark:text-gray-300 bg-white/95 dark:bg-[#2a2a2a]/95 backdrop-blur-xl border border-[#E5E7EB] dark:border-gray-600">
                     Décrivez les avantages, matériaux, tailles ou instructions d'entretien.
                   </HoverCardContent>
                 </HoverCard>
@@ -343,15 +359,20 @@ export default function AddProductForm({ userId }: Props) {
           </div>
 
           {/* Section Prix et Contact */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 sm:p-8">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-6 sm:mb-8">
-              💰 Prix et contact
-            </h2>
+          <div className="bg-white/80 dark:bg-[#2a2a2a]/80 backdrop-blur-xl rounded-2xl shadow-lg border border-[#E5E7EB] dark:border-gray-600 p-6 sm:p-8">
+            <div className="flex items-center gap-3 mb-6 sm:mb-8">
+              <div className="p-2 bg-gradient-to-r from-[#FFD6BA] to-[#F5E6CC] rounded-xl">
+                <span className="text-[#374151] text-lg">💰</span>
+              </div>
+              <h2 className="text-lg sm:text-xl font-semibold text-[#374151] dark:text-white">
+                Prix et contact
+              </h2>
+            </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8">
               {/* Prix */}
               <div className="sm:col-span-1">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                <label className="block text-sm font-medium text-[#374151] dark:text-gray-300 mb-3">
                   Prix en FCFA *
                 </label>
                 <HoverCard>
@@ -363,17 +384,17 @@ export default function AddProductForm({ userId }: Props) {
                         placeholder="2500"
                         value={form.price}
                         onChange={handleChange}
-                        className="w-full pl-4 pr-16 py-4 text-base border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D29587] focus:border-transparent transition-all duration-200"
+                        className="w-full pl-4 pr-16 py-4 text-base border border-[#E5E7EB] dark:border-gray-600 bg-white dark:bg-[#333] text-[#374151] dark:text-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6366F1] focus:border-transparent transition-all duration-200 hover:border-[#A8D5BA]"
                         required
                         min="0"
                         step="any"
                       />
-                      <div className="absolute inset-y-0 right-4 flex items-center text-gray-500 dark:text-gray-400 text-sm font-medium">
+                      <div className="absolute inset-y-0 right-4 flex items-center text-[#A8D5BA] text-sm font-medium">
                         FCFA
                       </div>
                     </div>
                   </HoverCardTrigger>
-                  <HoverCardContent className="w-64 text-sm text-gray-700 dark:text-gray-300">
+                  <HoverCardContent className="w-64 text-sm text-[#374151] dark:text-gray-300 bg-white/95 dark:bg-[#2a2a2a]/95 backdrop-blur-xl border border-[#E5E7EB] dark:border-gray-600">
                     Indiquez un prix réaliste en FCFA. Ne mettez que les chiffres (ex : 2500).
                   </HoverCardContent>
                 </HoverCard>
@@ -381,13 +402,13 @@ export default function AddProductForm({ userId }: Props) {
 
               {/* WhatsApp */}
               <div className="sm:col-span-1">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                <label className="block text-sm font-medium text-[#374151] dark:text-gray-300 mb-3">
                   Numéro WhatsApp *
                 </label>
                 <HoverCard>
                   <HoverCardTrigger asChild>
-                    <div className="flex border border-gray-300 dark:border-gray-600 rounded-xl focus-within:ring-2 focus-within:ring-[#D29587] focus-within:border-transparent transition-all duration-200">
-                      <div className="flex items-center px-4 py-4 bg-gray-50 dark:bg-gray-600 text-[#D29587] font-semibold rounded-l-xl border-r border-gray-300 dark:border-gray-600">
+                    <div className="flex border border-[#E5E7EB] dark:border-gray-600 rounded-xl focus-within:ring-2 focus-within:ring-[#6366F1] focus-within:border-transparent transition-all duration-200 hover:border-[#A8D5BA]">
+                      <div className="flex items-center px-4 py-4 bg-gradient-to-r from-[#A8D5BA]/20 to-[#6366F1]/20 text-[#6366F1] font-semibold rounded-l-xl border-r border-[#E5E7EB] dark:border-gray-600">
                         +221
                       </div>
                       <input
@@ -396,7 +417,7 @@ export default function AddProductForm({ userId }: Props) {
                         placeholder="771234567"
                         value={form.whatsappNumber}
                         onChange={handleWhatsappChange}
-                        className="flex-1 px-4 py-4 text-base bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-r-xl focus:outline-none"
+                        className="flex-1 px-4 py-4 text-base bg-white dark:bg-[#333] text-[#374151] dark:text-gray-100 rounded-r-xl focus:outline-none"
                         required
                         maxLength={9}
                         pattern="\d{8,9}"
@@ -404,7 +425,7 @@ export default function AddProductForm({ userId }: Props) {
                       />
                     </div>
                   </HoverCardTrigger>
-                  <HoverCardContent className="w-64 text-sm text-gray-700 dark:text-gray-300">
+                  <HoverCardContent className="w-64 text-sm text-[#374151] dark:text-gray-300 bg-white/95 dark:bg-[#2a2a2a]/95 backdrop-blur-xl border border-[#E5E7EB] dark:border-gray-600">
                     Ce numéro sera utilisé pour contacter l'acheteur sur WhatsApp.
                   </HoverCardContent>
                 </HoverCard>
@@ -413,11 +434,11 @@ export default function AddProductForm({ userId }: Props) {
           </div>
 
           {/* Bouton de soumission */}
-          <div className="sticky bottom-0 bg-gray-50 dark:bg-gray-900 pb-4 pt-6 -mx-4 px-4 sm:static sm:bg-transparent sm:dark:bg-transparent sm:pb-0 sm:pt-0 sm:mx-0 sm:px-0">
+          <div className="sticky bottom-0 bg-gradient-to-t from-[#FAFAFA] via-[#FAFAFA] to-transparent dark:from-[#1a1a1a] dark:via-[#1a1a1a] dark:to-transparent pb-4 pt-6 -mx-4 px-4 sm:static sm:bg-transparent sm:dark:bg-transparent sm:pb-0 sm:pt-0 sm:mx-0 sm:px-0">
             <button
               type="submit"
               disabled={loading || images.length === 0}
-              className="w-full bg-[#D29587] text-white font-semibold py-4 px-6 text-lg rounded-xl hover:bg-[#bb7d72] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg"
+              className="w-full bg-gradient-to-r from-[#6366F1] to-[#A8D5BA] hover:from-[#A8D5BA] hover:to-[#6366F1] text-white font-semibold py-4 px-6 text-lg rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl"
             >
               {loading ? (
                 <div className="flex items-center justify-center gap-3">
@@ -425,13 +446,30 @@ export default function AddProductForm({ userId }: Props) {
                   Ajout en cours...
                 </div>
               ) : (
-                'Publier mon produit'
+                <div className="flex items-center justify-center gap-3">
+                  <span>Publier mon produit</span>
+                  <div className="bg-white/20 px-2 py-1 rounded-full text-sm">
+                    ✨
+                  </div>
+                </div>
               )}
             </button>
 
-            <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-4">
-              {success ? 'Redirection dans un instant…' : 'En publiant, vous acceptez nos conditions d\'utilisation ✨'}
-            </p>
+            <div className="text-center mt-4">
+              {success ? (
+                <p className="text-sm text-[#A8D5BA] font-medium">
+                  Redirection dans un instant… 🎉
+                </p>
+              ) : (
+                <p className="text-sm text-[#374151] dark:text-gray-400">
+                  En publiant, vous acceptez nos{' '}
+                  <span className="text-[#6366F1] hover:underline cursor-pointer">
+                    conditions d'utilisation
+                  </span>
+                  {' '}✨
+                </p>
+              )}
+            </div>
           </div>
         </form>
       </div>
