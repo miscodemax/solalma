@@ -1,5 +1,5 @@
 "use client"
-
+import { ProductCardSkeletonGrid } from './skeletonproduct'
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import {
@@ -10,7 +10,6 @@ import {
   HoverCard, HoverCardTrigger, HoverCardContent
 } from "@/components/ui/hover-card"
 import { Info, HelpCircle } from "lucide-react"
-
 import ProductCard from "./product-card"
 
 type Product = {
@@ -53,20 +52,16 @@ function PriceFilter({
               <HelpCircle size={18} />
             </button>
           </HoverCardTrigger>
-          <HoverCardContent
-            className="w-64 text-sm text-[#374151] dark:text-gray-300 
-               bg-white dark:bg-[#2c2c2c] 
-               border border-[#A8D5BA] dark:border-[#6366F1] 
-               rounded-xl shadow-md"
-          >
+          <HoverCardContent className="w-64 text-sm text-[#374151] dark:text-gray-300 bg-white dark:bg-[#2c2c2c] border border-[#A8D5BA] dark:border-[#6366F1] rounded-xl shadow-md">
             Filtre les produits par tranche de prix selon ton budget ou ton envie du moment !
           </HoverCardContent>
         </HoverCard>
-
       </div>
+
       <p className="text-center text-gray-600 dark:text-gray-300 text-sm mb-5">
         Choisis une fourchette pour filtrer les merveilles 💸
       </p>
+
       <div className="flex flex-wrap justify-center gap-2">
         {ranges.map(({ label, tip }, i) => (
           <HoverCard key={i}>
@@ -101,10 +96,15 @@ export default function FilteredProducts({ products, userId }: { products: Produ
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [open, setOpen] = useState(false)
   const [showOnboarding, setShowOnboarding] = useState(false)
+  const [loading, setLoading] = useState(true) // ✅ ajout du loading
 
   useEffect(() => {
     const alreadyVisited = localStorage.getItem("onboardingSeen")
     if (!alreadyVisited) setShowOnboarding(true)
+
+    // Simule un délai de chargement
+    const timer = setTimeout(() => setLoading(false), 1200)
+    return () => clearTimeout(timer)
   }, [])
 
   const dismissOnboarding = () => {
@@ -123,7 +123,6 @@ export default function FilteredProducts({ products, userId }: { products: Produ
 
   return (
     <main className="w-full bg-[#FAF6F4] dark:bg-black min-h-screen pb-16 pt-5 px-4 sm:px-6 transition-colors duration-300">
-
       {/* Invite + filtre bouton */}
       <div className="w-full flex flex-col-reverse gap-3 md:flex-row md:justify-between md:items-center">
         <div className="text-center">
@@ -220,10 +219,11 @@ export default function FilteredProducts({ products, userId }: { products: Produ
         </div>
       )}
 
-
       {/* Produits */}
       <section className="mt-10">
-        {filteredProducts.length === 0 ? (
+        {loading ? (
+          <ProductCardSkeletonGrid count={10} />
+        ) : filteredProducts.length === 0 ? (
           <div className="flex flex-col items-center mt-10 gap-3">
             <span className="text-4xl">🛍️</span>
             <p className="text-center text-gray-500 dark:text-gray-300 text-base">
@@ -242,25 +242,26 @@ export default function FilteredProducts({ products, userId }: { products: Produ
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
             {filteredProducts.map((product) => (
-              <HoverCard key={product.id}>
-                <HoverCardTrigger asChild>
-                  <div>
-                    <ProductCard product={product} userId={userId} />
-                  </div>
-                </HoverCardTrigger>
-                <HoverCardContent className="w-72 bg-white dark:bg-[#2c2c2c] border-l-4 border-indigo-600 dark:border-teal-500 text-sm text-gray-600 dark:text-gray-300 rounded-xl shadow-md">
-                  <h4 className="font-semibold mb-1">{product.title}</h4>
-                  <p className="mb-2 line-clamp-3">{product.description}</p>
-                  <div className="text-xs text-indigo-600 dark:text-teal-400 font-semibold">
-                    Prix : {product.price} FCFA
-                  </div>
-                </HoverCardContent>
-              </HoverCard>
+              <div key={product.id}>
+                <HoverCard>
+                  <HoverCardTrigger asChild>
+                    <div>
+                      <ProductCard product={product} userId={userId} />
+                    </div>
+                  </HoverCardTrigger>
+                  <HoverCardContent className="w-72 bg-white dark:bg-[#2c2c2c] border-l-4 border-indigo-600 dark:border-teal-500 text-sm text-gray-600 dark:text-gray-300 rounded-xl shadow-md">
+                    <h4 className="font-semibold mb-1">{product.title}</h4>
+                    <p className="mb-2 line-clamp-3">{product.description}</p>
+                    <div className="text-xs text-indigo-600 dark:text-teal-400 font-semibold">
+                      Prix : {product.price} FCFA
+                    </div>
+                  </HoverCardContent>
+                </HoverCard>
+              </div>
             ))}
           </div>
         )}
       </section>
-
     </main>
   )
 }
