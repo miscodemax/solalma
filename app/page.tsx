@@ -3,7 +3,7 @@ import { createServerClient } from "@supabase/ssr"
 import { supabaseUrl, supabaseKey } from "@/lib/supabase"
 import ProductList from "./composants/productlist"
 import { Suspense } from "react";
-import ProductSkeletonDemo from "@/components/ProductSkeletonDemo";
+import ProductSkeletonDemo from "./composants/skeletonproduct";
 
 type Props = {
   searchParams: {
