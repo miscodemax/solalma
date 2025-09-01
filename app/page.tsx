@@ -2,6 +2,8 @@ import { cookies } from "next/headers"
 import { createServerClient } from "@supabase/ssr"
 import { supabaseUrl, supabaseKey } from "@/lib/supabase"
 import ProductList from "./composants/productlist"
+import { Suspense } from "react";
+import ProductSkeletonDemo from "@/components/ProductSkeletonDemo";
 
 type Props = {
   searchParams: {
@@ -50,6 +52,10 @@ export default async function HomePage({ searchParams }: Props) {
     return likesB - likesA // Descendant
   })
 
-  return <ProductList products={sorted} />
+  return (
+    <Suspense fallback={<ProductSkeletonDemo />}>
+      <ProductList products={sorted} />
+    </Suspense>
+  );
 
 }
