@@ -51,6 +51,10 @@ export default async function RootLayout({
         <Script src="https://cdn.botpress.cloud/webchat/v3.0/inject.js" />
         <Script src="https://files.bpcontent.cloud/2025/06/08/22/20250608224703-TFXKL5BC.js" />
 
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#000000" />
+
+
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen overflow-x-hidden`}
