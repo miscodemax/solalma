@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Footer from "./composants/footer";
 import Navbar from "./composants/navbar";
+import BottomNavbar from "./composants/BottomNavbar";
 import { Toaster } from "@/components/ui/sonner"
 import { Suspense } from 'react'
 import { ThemeProvider } from "./composants/theme-provider";
@@ -54,14 +55,11 @@ export default async function RootLayout({
 
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#000000" />
-
-
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen overflow-x-hidden`}
       >
         <Suspense fallback={<div>Chargement...</div>}>
-
           <ThemeProvider
             attribute="class"
             defaultTheme="system"
@@ -69,16 +67,17 @@ export default async function RootLayout({
             disableTransitionOnChange
           >
             <Navbar products={products} />
-            <main className="flex-grow">
 
-
+            {/* Main avec padding bottom pour éviter que le bottom navbar cache le contenu */}
+            <main className="flex-grow pb-20 md:pb-0">
               {children}
-
               <Toaster />
-
-
             </main>
+
             <PWAInstallPrompt />
+
+            {/* Bottom navbar pour mobile uniquement */}
+            <BottomNavbar />
 
             <Footer />
           </ThemeProvider>
