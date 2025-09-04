@@ -7,7 +7,7 @@ import BottomNavbar from "./composants/BottomNavbar";
 import { Toaster } from "@/components/ui/sonner"
 import { Suspense } from 'react'
 import { ThemeProvider } from "./composants/theme-provider";
-import Script from "next/script";
+// import Script from "next/script";
 import { createClient } from "@/lib/supabase";
 import PWAInstallPrompt from "./composants/pwaInstallPrompt";
 //import { SessionContextProvider } from "@supabase/auth-helpers-react";
