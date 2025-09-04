@@ -50,8 +50,8 @@ export default async function RootLayout({
     <html lang="fr" suppressHydrationWarning>
       <head>
         {/* Script d'injection de Botpress */}
-        <Script src="https://cdn.botpress.cloud/webchat/v3.0/inject.js" />
-        <Script src="https://files.bpcontent.cloud/2025/06/08/22/20250608224703-TFXKL5BC.js" />
+        {/* <Script src="https://cdn.botpress.cloud/webchat/v3.0/inject.js" />
+        <Script src="https://files.bpcontent.cloud/2025/06/08/22/20250608224703-TFXKL5BC.js" /> */}
 
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#000000" />
