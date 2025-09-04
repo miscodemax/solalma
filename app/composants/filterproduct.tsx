@@ -96,7 +96,9 @@ export default function FilteredProducts({ products, userId }: { products: Produ
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [open, setOpen] = useState(false)
   const [showOnboarding, setShowOnboarding] = useState(false)
-  const [loading, setLoading] = useState(true) // ✅ ajout du loading
+  const [loading, setLoading] = useState(true)
+  const [displayedCount, setDisplayedCount] = useState(12) // Nombre de produits affichés initialement
+  const [isLoadingMore, setIsLoadingMore] = useState(false) // État pour le chargement "Voir plus"
 
   useEffect(() => {
     const alreadyVisited = localStorage.getItem("onboardingSeen")
@@ -115,6 +117,23 @@ export default function FilteredProducts({ products, userId }: { products: Produ
   const filteredProducts = products.filter(p =>
     !priceRange || (p.price >= priceRange[0] && p.price <= priceRange[1])
   )
+
+  const displayedProducts = filteredProducts.slice(0, displayedCount)
+  const hasMoreProducts = filteredProducts.length > displayedCount
+
+  // Reset du compteur quand le filtre change
+  useEffect(() => {
+    setDisplayedCount(12)
+  }, [priceRange])
+
+  const handleLoadMore = () => {
+    setIsLoadingMore(true)
+    // Simule un délai de chargement pour l'UX
+    setTimeout(() => {
+      setDisplayedCount(prev => Math.min(prev + 8, filteredProducts.length))
+      setIsLoadingMore(false)
+    }, 800)
+  }
 
   const handleShare = () => {
     const message = encodeURIComponent("Coucou ! 🌸 Découvre cette nouvelle plateforme de mode féminine, hijabs, skincare et + : https://sangse.shop — rejoins-nous !")
@@ -180,7 +199,6 @@ export default function FilteredProducts({ products, userId }: { products: Produ
         </HoverCard>
       </div>
 
-
       {/* Onboarding */}
       {showOnboarding && (
         <div className="text-center mt-10">
@@ -193,7 +211,7 @@ export default function FilteredProducts({ products, userId }: { products: Produ
                 </h3>
                 <p className="text-sm text-[#5C5C5C] dark:text-gray-300 mb-5 leading-relaxed">
                   Ouvre ta boutique gratuitement et commence à vendre en quelques clics.
-                  C’est <span className="font-semibold text-[#D29587] dark:text-[#FBCFC2]">simple</span>,
+                  C'est <span className="font-semibold text-[#D29587] dark:text-[#FBCFC2]">simple</span>,
                   <span className="font-semibold text-[#D29587] dark:text-[#FBCFC2]"> rapide</span> et
                   <span className="font-semibold text-[#D29587] dark:text-[#FBCFC2]"> sans engagement</span>.
                 </p>
@@ -210,7 +228,7 @@ export default function FilteredProducts({ products, userId }: { products: Produ
               <b className="text-[#D29587] dark:text-[#FBCFC2]">Bénéfices :</b>
               <ul className="list-disc pl-5 mt-2 space-y-1">
                 <li>Crée ta boutique gratuitement</li>
-                <li>Pas d’engagement, ni frais cachés</li>
+                <li>Pas d'engagement, ni frais cachés</li>
                 <li>Accompagnement personnalisé</li>
                 <li>Rejoins une communauté bienveillante !</li>
               </ul>
@@ -222,7 +240,7 @@ export default function FilteredProducts({ products, userId }: { products: Produ
       {/* Produits */}
       <section className="mt-10">
         {loading ? (
-          <ProductCardSkeletonGrid count={10} />
+          <ProductCardSkeletonGrid count={12} />
         ) : filteredProducts.length === 0 ? (
           <div className="flex flex-col items-center mt-10 gap-3">
             <span className="text-4xl">🛍️</span>
@@ -240,26 +258,83 @@ export default function FilteredProducts({ products, userId }: { products: Produ
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-            {filteredProducts.map((product) => (
-              <div key={product.id}>
-                <HoverCard>
-                  <HoverCardTrigger asChild>
-                    <div>
-                      <ProductCard product={product} userId={userId} />
-                    </div>
-                  </HoverCardTrigger>
-                  <HoverCardContent className="w-72 bg-white dark:bg-[#2c2c2c] border-l-4 border-indigo-600 dark:border-teal-500 text-sm text-gray-600 dark:text-gray-300 rounded-xl shadow-md">
-                    <h4 className="font-semibold mb-1">{product.title}</h4>
-                    <p className="mb-2 line-clamp-3">{product.description}</p>
-                    <div className="text-xs text-indigo-600 dark:text-teal-400 font-semibold">
-                      Prix : {product.price} FCFA
-                    </div>
-                  </HoverCardContent>
-                </HoverCard>
+          <>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+              {displayedProducts.map((product) => (
+                <div key={product.id}>
+                  <HoverCard>
+                    <HoverCardTrigger asChild>
+                      <div>
+                        <ProductCard product={product} userId={userId} />
+                      </div>
+                    </HoverCardTrigger>
+                    <HoverCardContent className="w-72 bg-white dark:bg-[#2c2c2c] border-l-4 border-indigo-600 dark:border-teal-500 text-sm text-gray-600 dark:text-gray-300 rounded-xl shadow-md">
+                      <h4 className="font-semibold mb-1">{product.title}</h4>
+                      <p className="mb-2 line-clamp-3">{product.description}</p>
+                      <div className="text-xs text-indigo-600 dark:text-teal-400 font-semibold">
+                        Prix : {product.price} FCFA
+                      </div>
+                    </HoverCardContent>
+                  </HoverCard>
+                </div>
+              ))}
+            </div>
+
+            {/* Bouton Voir plus */}
+            {hasMoreProducts && (
+              <div className="flex flex-col items-center mt-12 gap-4">
+                <div className="text-center text-sm text-gray-500 dark:text-gray-400">
+                  {displayedCount} produits sur {filteredProducts.length} affichés
+                </div>
+                <button
+                  onClick={handleLoadMore}
+                  disabled={isLoadingMore}
+                  className={`group relative px-8 py-4 bg-gradient-to-r from-[#6366F1] to-[#A8D5BA] text-white font-semibold rounded-2xl shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-[#6366F1]/30 ${isLoadingMore ? 'opacity-75 cursor-not-allowed' : 'hover:from-[#4F46E5] hover:to-[#86B49E]'
+                    }`}
+                >
+                  <div className="flex items-center gap-3">
+                    {isLoadingMore ? (
+                      <>
+                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        <span>Chargement...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-lg">👀</span>
+                        <span>Voir plus de produits</span>
+                        <span className="text-lg group-hover:translate-x-1 transition-transform">🛍️</span>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Effet de shimmer au hover */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 rounded-2xl" />
+                </button>
+
+                {/* Indication subtile */}
+                <div className="text-xs text-gray-400 dark:text-gray-500 text-center max-w-xs">
+                  Encore {filteredProducts.length - displayedCount} produits à découvrir ! ✨
+                </div>
               </div>
-            ))}
-          </div>
+            )}
+
+            {/* Message de fin si tous les produits sont affichés */}
+            {!hasMoreProducts && filteredProducts.length > 12 && (
+              <div className="flex flex-col items-center mt-12 gap-3">
+                <div className="text-4xl">🎉</div>
+                <div className="text-center text-gray-500 dark:text-gray-400">
+                  <p className="font-medium">Tu as tout vu !</p>
+                  <p className="text-sm mt-1">Reviens bientôt pour découvrir nos nouveautés</p>
+                </div>
+                <button
+                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                  className="mt-2 px-4 py-2 text-sm bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                >
+                  ⬆️ Retour en haut
+                </button>
+              </div>
+            )}
+          </>
         )}
       </section>
     </main>
