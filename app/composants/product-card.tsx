@@ -7,7 +7,7 @@ type Product = {
     title: string;
     description: string;
     price: number;
-    image_url: string | string[] | null; // Support pour array ou string
+    image_url: string | string[] | null;
     user_id: string;
     likes?: number;
 };
@@ -24,12 +24,10 @@ export default async function ProductCard({
         if (!imageUrl) return "/placeholder.jpg";
 
         if (Array.isArray(imageUrl)) {
-            // Si c'est un tableau, prendre la première image non-vide
             const firstValidImage = imageUrl.find(img => img && img.trim() !== '');
             return firstValidImage || "/placeholder.jpg";
         }
 
-        // Si c'est une string, l'utiliser directement
         return imageUrl || "/placeholder.jpg";
     };
 
@@ -46,141 +44,154 @@ export default async function ProductCard({
     const imageCount = getImageCount(product.image_url);
 
     return (
-        <div className="group relative w-full h-[480px] flex flex-col overflow-hidden rounded-3xl bg-white dark:bg-[#121212] border border-[#E5E7EB] dark:border-[#374151] shadow-[0_4px_24px_0_rgba(0,0,0,0.06)] dark:shadow-[0_4px_32px_0_rgba(0,0,0,0.4)] hover:shadow-[0_12px_48px_0_rgba(0,0,0,0.12)] dark:hover:shadow-[0_12px_48px_0_rgba(0,0,0,0.6)] transition-all duration-500 ease-out hover:-translate-y-1 hover:scale-[1.02]">
+        <article className="group relative w-full flex flex-col overflow-hidden rounded-2xl md:rounded-3xl bg-white dark:bg-gray-900 shadow-sm hover:shadow-xl dark:shadow-gray-900/20 transition-all duration-300 hover:-translate-y-0.5 border border-gray-100 dark:border-gray-800">
 
-            {/* Animated shimmer border */}
-            <div className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
-                <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-transparent via-[#A8D5BA]/30 to-transparent animate-pulse"></div>
-            </div>
-
-            {/* Image container - hauteur fixe */}
-            <div className="relative w-full h-[280px] overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 dark:from-[#1e1e1e] dark:to-[#2a2a2a]">
-                <Link href={`/product/${product.id}`} className="block w-full h-full">
+            {/* Image container - Responsive aspect ratio */}
+            <div className="relative w-full aspect-square md:aspect-[4/5] overflow-hidden bg-gray-50 dark:bg-gray-800">
+                <Link
+                    href={`/product/${product.id}`}
+                    className="block w-full h-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-2xl"
+                    aria-label={`Voir les détails de ${product.title}`}
+                >
                     <Image
                         src={firstImage}
                         alt={product.title}
                         fill
-                        className="object-cover transition-all duration-700 ease-out group-hover:scale-105"
-                        sizes="(max-width: 768px) 50vw, 25vw"
-                        priority
+                        className="object-cover transition-transform duration-700 group-hover:scale-105"
+                        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                        priority={false}
                     />
 
-                    {/* Overlay subtle pour améliorer la lisibilité sans cacher l'image */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    {/* Subtle overlay on hover */}
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
                 </Link>
 
-                {/* Indicateur du nombre d'images - nouveau badge */}
+                {/* Image counter badge */}
                 {imageCount > 1 && (
-                    <div className="absolute top-3 left-3 backdrop-blur-md bg-black/70 text-white rounded-xl px-2.5 py-1 text-xs font-bold shadow-md border border-white/20 flex items-center gap-1">
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 002 2z" />
-                        </svg>
-                        {imageCount}
+                    <div className="absolute top-2 left-2 md:top-3 md:left-3">
+                        <div className="flex items-center gap-1 px-2 py-1 md:px-2.5 md:py-1.5 bg-black/75 backdrop-blur-sm text-white rounded-lg text-xs font-medium shadow-sm">
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2-2z" />
+                            </svg>
+                            <span>{imageCount}</span>
+                        </div>
                     </div>
                 )}
 
-                {/* Like button - glassmorphism subtil */}
-                <div className="absolute top-3 right-3 backdrop-blur-md bg-white/90 dark:bg-black/70 border border-white/50 dark:border-gray-600/30 rounded-xl px-2.5 py-1.5 flex items-center gap-1.5 shadow-sm transition-all duration-300 hover:bg-white dark:hover:bg-black/80 hover:scale-105">
-                    <LikeButton productId={product.id} userId={userId} />
-                    {product.likes && product.likes > 0 && (
-                        <span className="text-xs font-semibold text-gray-800 dark:text-gray-200">
-                            {product.likes}
-                        </span>
-                    )}
+                {/* Like button - Mobile optimized */}
+                <div className="absolute top-2 right-2 md:top-3 md:right-3">
+                    <div className="flex items-center gap-1.5 px-2 py-1.5 md:px-2.5 md:py-2 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm rounded-lg shadow-sm transition-all duration-200 hover:bg-white dark:hover:bg-gray-900 active:scale-95">
+                        <LikeButton productId={product.id} userId={userId} />
+                        {product.likes && product.likes > 0 && (
+                            <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 min-w-[1ch] text-center">
+                                {product.likes > 99 ? '99+' : product.likes}
+                            </span>
+                        )}
+                    </div>
                 </div>
 
-                {/* Badge premium plus élégant */}
+                {/* Premium badge */}
                 {product.price > 50000 && (
-                    <div className="absolute top-14 left-3 bg-gradient-to-r from-amber-400 to-amber-500 text-amber-900 rounded-xl px-2.5 py-1 text-xs font-bold shadow-md border border-amber-300">
-                        ✨ Premium
+                    <div className="absolute top-12 left-2 md:top-14 md:left-3">
+                        <div className="px-2 py-1 bg-gradient-to-r from-amber-400 to-amber-500 text-amber-900 rounded-lg text-xs font-bold shadow-sm">
+                            ✨ Premium
+                        </div>
                     </div>
                 )}
 
-                {/* Quick actions - apparaissent au hover sans overlay opaque */}
-                <div className="absolute bottom-3 left-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
+                {/* Mobile-first quick action - Only on larger screens */}
+                <div className="hidden md:block absolute inset-x-3 bottom-3 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
                     <Link
                         href={`/product/${product.id}`}
-                        className="flex-1 backdrop-blur-md bg-white/95 dark:bg-black/85 border border-white/60 dark:border-gray-600/30 rounded-xl px-4 py-2 text-sm font-semibold text-gray-900 dark:text-white text-center shadow-lg hover:bg-white dark:hover:bg-black transition-all duration-200 hover:scale-[1.02]"
+                        className="block w-full px-4 py-2.5 bg-white/95 backdrop-blur-sm rounded-xl text-sm font-semibold text-gray-900 text-center shadow-lg hover:bg-white transition-all duration-200 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
-                        {imageCount > 1 ? `Voir ${imageCount} photos` : 'Voir détails'}
+                        {imageCount > 1 ? `Voir ${imageCount} photos` : 'Voir les détails'}
                     </Link>
-                    <button className="backdrop-blur-md bg-white/95 dark:bg-black/85 border border-white/60 dark:border-gray-600/30 rounded-xl px-3 py-2 shadow-lg hover:bg-white dark:hover:bg-black transition-all duration-200 hover:scale-[1.02]">
-                        <svg className="w-4 h-4 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
-                        </svg>
-                    </button>
                 </div>
             </div>
 
-            {/* Content section - hauteur fixe pour uniformité */}
-            <div className="relative flex-1 h-[200px] flex flex-col justify-between p-5 bg-white dark:bg-[#121212]">
+            {/* Content section - Mobile optimized spacing */}
+            <div className="flex-1 p-3 md:p-4 space-y-3">
 
-                {/* Title section avec hauteur fixe */}
-                <div className="mb-2">
-                    <h3 className="text-base font-bold text-[#374151] dark:text-white leading-tight group-hover:text-[#6366F1] dark:group-hover:text-[#A8D5BA] transition-colors duration-300 line-clamp-2 min-h-[3rem]">
-                        {product.title}
-                    </h3>
+                {/* Title - Improved mobile typography */}
+                <div>
+                    <Link
+                        href={`/product/${product.id}`}
+                        className="block focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded"
+                    >
+                        <h3 className="text-sm md:text-base font-semibold text-gray-900 dark:text-white leading-tight line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200">
+                            {product.title}
+                        </h3>
+                    </Link>
                 </div>
 
-                {/* Description avec hauteur contrôlée */}
-                <div className="mb-4 flex-1">
-                    <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 leading-relaxed">
+                {/* Description - Hidden on mobile to save space */}
+                <div className="hidden sm:block">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 leading-relaxed">
                         {product.description}
                     </p>
                 </div>
 
-                {/* Footer section - toujours en bas */}
-                <div className="mt-auto space-y-3">
-                    {/* Prix et CTA */}
-                    <div className="flex items-end justify-between">
-                        <div className="flex flex-col">
-                            <span className="text-lg font-black bg-gradient-to-r from-[#6366F1] to-[#4f46e5] bg-clip-text text-transparent">
+                {/* Price and CTA section - Mobile optimized */}
+                <div className="flex items-center justify-between pt-2">
+                    <div className="flex flex-col">
+                        <div className="flex items-baseline gap-1">
+                            <span className="text-lg md:text-xl font-bold text-gray-900 dark:text-white">
                                 {product.price.toLocaleString()}
                             </span>
-                            <span className="text-xs text-gray-500 dark:text-gray-400 font-medium -mt-1">
+                            <span className="text-xs md:text-sm text-gray-500 dark:text-gray-400 font-medium">
                                 FCFA
                             </span>
                         </div>
-
-                        <Link
-                            href={`/product/${product.id}`}
-                            className="group/btn relative overflow-hidden rounded-xl bg-gradient-to-r from-[#6366F1] to-[#4f46e5] px-4 py-2 text-sm font-semibold text-white shadow-md transition-all duration-300 hover:shadow-lg hover:scale-105 active:scale-95"
-                        >
-                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-600"></div>
-                            <span className="relative">Acheter</span>
-                        </Link>
                     </div>
 
-                    {/* Stats bar avec info images */}
-                    <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 pt-2 border-t border-[#E5E7EB] dark:border-gray-700">
-                        <span className="font-mono">#{product.id.toString().padStart(4, '0')}</span>
-                        <div className="flex items-center gap-3">
-                            {/* Indicateur d'images multiples dans les stats */}
-                            {imageCount > 1 && (
-                                <span className="flex items-center gap-1 text-[#6366F1]">
-                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 002 2z" />
-                                    </svg>
-                                    {imageCount}
-                                </span>
-                            )}
+                    {/* Mobile-first CTA button */}
+                    <Link
+                        href={`/product/${product.id}`}
+                        className="group/btn relative overflow-hidden rounded-xl bg-blue-600 hover:bg-blue-700 px-3 py-2 md:px-4 md:py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:shadow-md active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    >
+                        <span className="relative">Voir</span>
+                    </Link>
+                </div>
 
-                            {product.likes && product.likes > 0 && (
-                                <span className="flex items-center gap-1">
-                                    <svg className="w-3 h-3 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
+                {/* Stats bar - Simplified for mobile */}
+                <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 pt-2 border-t border-gray-100 dark:border-gray-800">
+                    <span className="font-mono opacity-60">
+                        #{product.id.toString().padStart(4, '0')}
+                    </span>
+
+                    <div className="flex items-center gap-3">
+                        {/* Image count indicator for mobile */}
+                        <div className="md:hidden">
+                            {imageCount > 1 && (
+                                <span className="flex items-center gap-1 text-blue-600 dark:text-blue-400">
+                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2-2z" />
                                     </svg>
-                                    {product.likes}
+                                    <span className="font-medium">{imageCount}</span>
                                 </span>
                             )}
                         </div>
+
+                        {/* Likes indicator */}
+                        {product.likes && product.likes > 0 && (
+                            <span className="flex items-center gap-1">
+                                <svg className="w-3 h-3 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd"
+                                        d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"
+                                        clipRule="evenodd" />
+                                </svg>
+                                <span className="font-medium">{product.likes > 99 ? '99+' : product.likes}</span>
+                            </span>
+                        )}
                     </div>
                 </div>
             </div>
 
-            {/* Micro interactions subtiles */}
-            <div className="absolute top-4 left-4 w-2 h-2 bg-[#A8D5BA]/30 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 animate-pulse"></div>
-            <div className="absolute bottom-4 right-4 w-1.5 h-1.5 bg-[#FFD6BA]/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700 animate-pulse delay-200"></div>
-        </div>
+            {/* Hover indicator - Desktop only */}
+            <div className="hidden md:block absolute top-3 left-3 w-1.5 h-1.5 bg-blue-500/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        </article>
     );
 }
