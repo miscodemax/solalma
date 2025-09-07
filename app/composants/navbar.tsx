@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import {
@@ -9,33 +9,28 @@ import {
 } from '@/components/ui/dropdown-menu'
 import {
   HomeIcon, ShoppingCart, User,
-  Info, Menu, X, LogOut, Heart, ShoppingBag
+  Info, Menu, X, LogOut, Heart, ShoppingBag, Search as SearchIcon, Bell, MessageSquare
 } from 'lucide-react'
 import { ThemeToggle } from './theme-toggle'
 import TextLogo from './textLogo'
 import { createClient } from '@/lib/supabase'
 import Image from 'next/image'
 import Search from './search'
-import {
-  HoverCard,
-  HoverCardTrigger,
-  HoverCardContent,
-} from '@/components/ui/hover-card'
 
 const categories = [
-  { label: 'vetement', tip: 'Découvre nos habits tendances pour tous les styles !' },
-  { label: 'artisanat', tip: 'Des pièces uniques faites main, pour offrir ou se faire plaisir.' },
-  { label: 'maquillage', tip: 'Sublime-toi grâce à notre sélection de makeup.' },
-  { label: 'soins_et_astuces', tip: 'Prends soin de toi avec nos produits naturels et conseils.' },
-  { label: 'electronique', tip: 'Encore plus de style avec notre gamme d\'appareil elecronique' },
-
+  { label: 'vetement', tip: 'Découvre nos habits tendances pour tous les styles !', emoji: '👗' },
+  { label: 'artisanat', tip: 'Des pièces uniques faites main, pour offrir ou se faire plaisir.', emoji: '🎨' },
+  { label: 'maquillage', tip: 'Sublime-toi grâce à notre sélection de makeup.', emoji: '💄' },
+  { label: 'soins_et_astuces', tip: 'Prends soin de toi avec nos produits naturels et conseils.', emoji: '🧴' },
+  { label: 'electronique', tip: 'Encore plus de style avec notre gamme d\'appareil electronique', emoji: '📱' },
 ]
+
 const navLinks = [
-  { href: '/', icon: HomeIcon, label: 'Accueil', tip: 'Retour à la page principale' },
-  { href: '/dashboard/add', icon: ShoppingCart, label: 'Vendre', tip: 'Dépose un produit ou ouvre ta boutique' },
-  { href: '/dashboard/products', icon: User, label: 'Mes produits', tip: 'Gère tes articles mis en vente' },
-  { href: '/about', icon: Info, label: 'À propos', tip: 'En savoir plus sur Sangse.shop' },
-  { href: '/favoris', icon: Heart, label: 'Favoris', tip: 'Retrouve tes coups de cœur' },
+  { href: '/', icon: HomeIcon, label: 'Accueil', tip: 'Retour à la page principale', category: 'main' },
+  { href: '/dashboard/add', icon: ShoppingCart, label: 'Vendre', tip: 'Dépose un produit ou ouvre ta boutique', category: 'sell' },
+  { href: '/dashboard/products', icon: ShoppingBag, label: 'Mes produits', tip: 'Gère tes articles mis en vente', category: 'manage' },
+  { href: '/favoris', icon: Heart, label: 'Favoris', tip: 'Retrouve tes coups de cœur', category: 'main' },
+  { href: '/about', icon: Info, label: 'À propos', tip: 'En savoir plus sur Sangse.shop', category: 'info' },
 ]
 
 type Product = {
@@ -50,11 +45,14 @@ export default function Navbar({ products }: { products: Product[] }) {
   const [open, setOpen] = useState(false)
   const [user, setUser] = useState<any>(null)
   const [avatar, setAvatar] = useState('')
+  const [isSearchFocused, setIsSearchFocused] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const category = searchParams.get('category')
   const supabase = createClient()
+  const mobileMenuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -72,6 +70,32 @@ export default function Navbar({ products }: { products: Product[] }) {
     fetchData()
   }, [])
 
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20)
+    }
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target as Node)) {
+        setOpen(false)
+      }
+    }
+    if (open) {
+      document.addEventListener('mousedown', handleClickOutside)
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.body.style.overflow = 'unset'
+    }
+  }, [open])
+
   const handleLogout = async () => {
     await supabase.auth.signOut()
     router.refresh()
@@ -88,194 +112,319 @@ export default function Navbar({ products }: { products: Product[] }) {
   }
 
   return (
-    <nav className="sticky top-0 z-50 bg-white/95 dark:bg-black/90 shadow-md backdrop-blur-md transition-colors duration-300">
-      {/* Top bar */}
-      <div className="flex flex-col md:flex-row items-center justify-between px-4 py-3 max-w-7xl mx-auto w-full gap-2 md:gap-0">
-        {/* Logo + mobile menu + theme */}
-        <div className="flex items-center justify-between w-full md:w-auto">
-          <Link href="/" className="flex items-center gap-1 text-xl font-bold text-[#6366F1] group">
-            <span className="transition-transform group-hover:scale-110 text-[#D29587] dark:text-[#FBCFC2]">
-              <ShoppingBag size={18} />
-            </span>
-            <TextLogo />
-          </Link>
-          <div className="flex items-center gap-3 md:hidden">
-            <ThemeToggle />
-            <HoverCard>
-              <HoverCardTrigger asChild>
-                <button onClick={() => setOpen(!open)} className="text-gray-700 dark:text-gray-200 focus:outline-none px-1" aria-label="Ouvrir ou fermer le menu">
-                  {open ? <X size={26} /> : <Menu size={26} />}
-                </button>
-              </HoverCardTrigger>
-              <HoverCardContent side="bottom" className="bg-white dark:bg-[#232323] border border-[#A8D5BA] dark:border-[#6366F1] text-xs text-[#374151] dark:text-gray-300 rounded-xl shadow-md w-56">
-                {open ? "Ferme le menu ✖️" : "Ouvre le menu de navigation"}
-              </HoverCardContent>
-            </HoverCard>
-          </div>
-        </div>
+    <>
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled
+        ? 'bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl shadow-lg border-b border-gray-200/50 dark:border-gray-800/50'
+        : 'bg-white/80 dark:bg-gray-900/80 backdrop-blur-md'
+        }`}>
 
-        {/* Desktop Search */}
-        <div className="hidden md:flex flex-1 justify-center px-4 w-full max-w-md">
-          <Search products={products} />
-        </div>
+        {/* Main navbar container */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
 
-        {/* Desktop nav */}
-        <div className="hidden md:flex items-center gap-4 xl:gap-7">
-          {navLinks.map(({ href, label, icon: Icon, tip }) => (
-            <HoverCard key={href}>
-              <HoverCardTrigger asChild>
+          {/* Top row - Mobile optimized layout */}
+          <div className="flex items-center justify-between h-16">
+
+            {/* Logo - Mobile optimized */}
+            <Link href="/" className="flex items-center gap-2 group shrink-0">
+              <div className="relative">
+                <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full opacity-0 group-hover:opacity-20 blur transition-opacity duration-300" />
+                <ShoppingBag className="relative w-7 h-7 text-blue-600 dark:text-blue-400 transition-transform group-hover:scale-110" />
+              </div>
+              <div className="hidden sm:block">
+                <TextLogo />
+              </div>
+            </Link>
+
+            {/* Desktop navigation */}
+            <div className="hidden lg:flex items-center gap-1 xl:gap-2">
+              {navLinks.filter(link => link.category === 'main').map(({ href, label, icon: Icon }) => (
                 <Link
+                  key={href}
                   href={href}
-                  className={`flex items-center gap-1 text-[15px] font-medium px-2 py-1 rounded transition ${pathname === href ? 'text-[#6366F1] bg-[#F5E6CC] dark:bg-[#1a1a1a]' : 'text-gray-600 dark:text-gray-200 hover:text-[#6366F1] hover:bg-[#F5E6CC] dark:hover:bg-[#1a1a1a]'}
-                  `}
-                  tabIndex={0}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 hover:scale-105 ${pathname === href
+                    ? 'text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-900/20 shadow-sm'
+                    : 'text-gray-600 dark:text-gray-300 hover:text-blue-600 hover:bg-gray-50 dark:hover:bg-gray-800/50'
+                    }`}
                 >
-                  <Icon size={17} />
-                  {label}
+                  <Icon className="w-4 h-4" />
+                  <span>{label}</span>
                 </Link>
-              </HoverCardTrigger>
-              <HoverCardContent side="bottom" className="bg-white dark:bg-[#232323] border border-[#A8D5BA] dark:border-[#6366F1] text-xs text-[#374151] dark:text-gray-300 rounded-xl shadow-md w-52">
-                {tip}
-              </HoverCardContent>
-            </HoverCard>
-          ))}
-          <ThemeToggle />
-          {user && (
-            <DropdownMenu>
-              <DropdownMenuTrigger className="focus:outline-none ml-2">
-                <Image
-                  src={avatar || 'https://icons.veryicon.com/png/o/miscellaneous/standard/avatar-15.png'}
-                  alt="avatar"
-                  width={34}
-                  height={34}
-                  className="rounded-full border-2 border-[#A8D5BA] dark:border-[#6366F1] hover:scale-105 transition"
-                />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => router.push(`/profile/${user.id}`)}>
-                  <User size={16} className="mr-2" /> Voir mon profil
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleLogout} className="text-red-600">
-                  <LogOut size={14} className="mr-2" /> Déconnexion
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
-        </div>
-      </div>
+              ))}
+            </div>
 
-      {/* Mobile Search */}
-      <div className="md:hidden px-4 mt-2">
-        <Search products={products} />
-      </div>
+            {/* Search bar - Enhanced mobile */}
+            <div className="flex-1 max-w-md mx-4 lg:mx-8">
+              <div className={`relative transition-all duration-300 ${isSearchFocused ? 'scale-105' : ''
+                }`}>
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-2xl opacity-0 transition-opacity duration-300 peer-focus:opacity-100" />
+                <div className="relative bg-gray-50 dark:bg-gray-800/50 rounded-2xl overflow-hidden border border-gray-200/50 dark:border-gray-700/50 hover:border-blue-300 dark:hover:border-blue-600 transition-colors duration-200">
+                  <Search
+                    products={products}
+                    onFocus={() => setIsSearchFocused(true)}
+                    onBlur={() => setIsSearchFocused(false)}
+                  />
+                </div>
+              </div>
+            </div>
 
-      {/* Catégories scrollables */}
-      <div className="flex overflow-x-auto gap-3 px-2 sm:px-4 py-2 border-t border-[#F5E6CC] dark:border-[#222] text-sm font-medium bg-white/95 dark:bg-black/90 scrollbar-thin scrollbar-thumb-[#A8D5BA]/40">
-        <HoverCard>
-          <HoverCardTrigger asChild>
+            {/* Right side actions */}
+            <div className="flex items-center gap-2">
+
+              {/* Desktop actions */}
+              <div className="hidden lg:flex items-center gap-2">
+                {/* Sell button - Prominent */}
+                <Link
+                  href="/dashboard/add"
+                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl font-semibold shadow-sm hover:shadow-md transition-all duration-200 hover:scale-105"
+                >
+                  <ShoppingCart className="w-4 h-4" />
+                  <span>Vendre</span>
+                </Link>
+
+                {/* Notifications */}
+                <button className="p-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-xl transition-all duration-200 hover:scale-105 relative">
+                  <Bell className="w-5 h-5" />
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white dark:border-gray-900" />
+                </button>
+
+                {/* Messages */}
+                <button className="p-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-xl transition-all duration-200 hover:scale-105">
+                  <MessageSquare className="w-5 h-5" />
+                </button>
+
+                <ThemeToggle />
+
+                {/* User avatar */}
+                {user && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger className="focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-full">
+                      <div className="relative group">
+                        <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full opacity-0 group-hover:opacity-100 blur transition-opacity duration-300" />
+                        <Image
+                          src={avatar || 'https://icons.veryicon.com/png/o/miscellaneous/standard/avatar-15.png'}
+                          alt="Profile"
+                          width={36}
+                          height={36}
+                          className="relative rounded-full border-2 border-white dark:border-gray-800 shadow-sm"
+                        />
+                      </div>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56">
+                      <DropdownMenuItem onClick={() => router.push(`/profile/${user.id}`)}>
+                        <User className="w-4 h-4 mr-2" /> Voir mon profil
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => router.push('/dashboard/products')}>
+                        <ShoppingBag className="w-4 h-4 mr-2" /> Mes produits
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => router.push('/favoris')}>
+                        <Heart className="w-4 h-4 mr-2" /> Mes favoris
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={handleLogout} className="text-red-600">
+                        <LogOut className="w-4 h-4 mr-2" /> Déconnexion
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
+              </div>
+
+              {/* Mobile menu button - Enhanced design */}
+              <div className="lg:hidden flex items-center gap-2">
+                <ThemeToggle />
+                <button
+                  onClick={() => setOpen(!open)}
+                  className={`relative p-2 rounded-xl transition-all duration-300 ${open
+                    ? 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400'
+                    : 'bg-gray-50 text-gray-600 dark:bg-gray-800/50 dark:text-gray-300 hover:bg-blue-50 hover:text-blue-600'
+                    }`}
+                  aria-label={open ? "Fermer le menu" : "Ouvrir le menu"}
+                >
+                  <div className="relative w-6 h-6">
+                    <Menu className={`absolute inset-0 w-6 h-6 transition-all duration-300 ${open ? 'rotate-180 opacity-0 scale-50' : 'rotate-0 opacity-100 scale-100'
+                      }`} />
+                    <X className={`absolute inset-0 w-6 h-6 transition-all duration-300 ${open ? 'rotate-0 opacity-100 scale-100' : '-rotate-180 opacity-0 scale-50'
+                      }`} />
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Categories bar - Enhanced design */}
+          <div className="hidden lg:flex items-center gap-1 py-3 border-t border-gray-100 dark:border-gray-800/50 overflow-x-auto scrollbar-none">
             <button
               onClick={resetCategory}
-              className={`whitespace-nowrap capitalize px-2 py-1 rounded transition min-w-[80px] ${!category ? 'text-[#6366F1] border-b-2 border-[#6366F1] bg-[#F5E6CC] dark:bg-[#151010]' : 'text-gray-600 dark:text-gray-300 hover:text-[#6366F1] hover:bg-[#F5E6CC] dark:hover:bg-[#151010]'}
-              `}
-              aria-pressed={!category}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 hover:scale-105 shrink-0 ${!category
+                ? 'text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-900/20 shadow-sm'
+                : 'text-gray-600 dark:text-gray-300 hover:text-blue-600 hover:bg-gray-50 dark:hover:bg-gray-800/50'
+                }`}
             >
-              Voir tout
+              <span className="text-base">🏷️</span>
+              <span>Tout voir</span>
             </button>
-          </HoverCardTrigger>
-          <HoverCardContent side="bottom" className="bg-white dark:bg-[#232323] border border-[#A8D5BA] dark:border-[#6366F1] text-xs text-[#374151] dark:text-gray-300 rounded-xl shadow-md w-44">
-            Affiche tous les produits, sans filtre de catégorie.
-          </HoverCardContent>
-        </HoverCard>
-        {categories.map((cat) => {
-          const active = category === cat.label
-          return (
-            <HoverCard key={cat.label}>
-              <HoverCardTrigger asChild>
-                <button
-                  onClick={() => handleCategory(cat.label)}
-                  className={`whitespace-nowrap capitalize px-2 py-1 rounded transition min-w-[110px] ${active ? 'text-[#6366F1] border-b-2 border-[#6366F1] bg-[#F5E6CC] dark:bg-[#151010]' : 'text-gray-600 dark:text-gray-300 hover:text-[#6366F1] hover:bg-[#F5E6CC] dark:hover:bg-[#151010]'}
-                  `}
-                  aria-pressed={active}
-                >
-                  {cat.label.replace('_', ' ')}
-                </button>
-              </HoverCardTrigger>
-              <HoverCardContent side="bottom" className="bg-white dark:bg-[#232323] border border-[#A8D5BA] dark:border-[#6366F1] text-xs text-[#374151] dark:text-gray-300 rounded-xl shadow-md w-56">
-                {cat.tip}
-              </HoverCardContent>
-            </HoverCard>
-          )
-        })}
-      </div>
-
-      {/* Menu mobile (drawer) */}
-      {open && (
-        <div className="md:hidden px-4 pb-4 mt-2 space-y-5 animate-fadein-fast rounded-b-2xl bg-white/98 dark:bg-[#191515]/95 shadow-xl border-b border-[#E5E7EB] dark:border-[#2a2a2a]">
-          <div>
-            <p className="text-xs font-semibold text-gray-400 mb-2">Navigation</p>
-            {navLinks.map(({ href, label, icon: Icon, tip }) => (
-              <HoverCard key={href}>
-                <HoverCardTrigger asChild>
-                  <Link
-                    href={href}
-                    className={`flex items-center gap-2 text-[15px] font-medium px-2 py-2 rounded transition ${pathname === href ? 'text-[#6366F1] bg-[#F5E6CC]' : 'text-gray-600 dark:text-gray-200 hover:text-[#6366F1] hover:bg-[#F5E6CC]'}
-                    `}
-                    onClick={() => setOpen(false)}
-                    tabIndex={0}
-                  >
-                    <Icon size={19} />
-                    {label}
-                  </Link>
-                </HoverCardTrigger>
-                <HoverCardContent side="right" className="bg-white dark:bg-[#232323] border border-[#A8D5BA] dark:border-[#6366F1] text-xs text-[#374151] dark:text-gray-300 rounded-xl shadow-md w-52">
-                  {tip}
-                </HoverCardContent>
-              </HoverCard>
+            {categories.map((cat) => (
+              <button
+                key={cat.label}
+                onClick={() => handleCategory(cat.label)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 hover:scale-105 shrink-0 ${category === cat.label
+                  ? 'text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-900/20 shadow-sm'
+                  : 'text-gray-600 dark:text-gray-300 hover:text-blue-600 hover:bg-gray-50 dark:hover:bg-gray-800/50'
+                  }`}
+              >
+                <span className="text-base">{cat.emoji}</span>
+                <span className="capitalize">{cat.label.replace('_', ' ')}</span>
+              </button>
             ))}
           </div>
+        </div>
+      </nav>
 
-          <div>
-            <p className="text-xs font-semibold text-gray-400 mt-4 mb-2">Catégories</p>
-            <div className="flex flex-wrap gap-2">
-              {categories.map((cat) => {
-                const active = category === cat.label
-                return (
-                  <HoverCard key={cat.label}>
-                    <HoverCardTrigger asChild>
-                      <button
-                        onClick={() => { handleCategory(cat.label); setOpen(false) }}
-                        className={`whitespace-nowrap capitalize px-2 py-1 rounded transition min-w-[100px] ${active ? 'text-[#6366F1] border-b-2 border-[#6366F1] bg-[#F5E6CC] dark:bg-[#151010]' : 'text-gray-600 dark:text-gray-300 hover:text-[#6366F1] hover:bg-[#F5E6CC] dark:hover:bg-[#151010]'}
-                        `}
-                        aria-pressed={active}
-                      >
-                        {cat.label.replace('_', ' ')}
-                      </button>
-                    </HoverCardTrigger>
-                    <HoverCardContent side="right" className="bg-white dark:bg-[#232323] border border-[#A8D5BA] dark:border-[#6366F1] text-xs text-[#374151] dark:text-gray-300 rounded-xl shadow-md w-52">
-                      {cat.tip}
-                    </HoverCardContent>
-                  </HoverCard>
-                )
-              })}
+      {/* Mobile menu overlay */}
+      {open && (
+        <div className="lg:hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm" onClick={() => setOpen(false)}>
+          <div
+            ref={mobileMenuRef}
+            className="absolute right-0 top-0 h-full w-full max-w-sm bg-white dark:bg-gray-900 shadow-2xl overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Menu header */}
+            <div className="p-6 border-b border-gray-200 dark:border-gray-800">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <ShoppingBag className="w-8 h-8 text-blue-600" />
+                  <TextLogo />
+                </div>
+                <button
+                  onClick={() => setOpen(false)}
+                  className="p-2 text-gray-400 hover:text-gray-600 rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* User info mobile */}
+              {user && (
+                <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
+                  <Image
+                    src={avatar || 'https://icons.veryicon.com/png/o/miscellaneous/standard/avatar-15.png'}
+                    alt="Profile"
+                    width={40}
+                    height={40}
+                    className="rounded-full border-2 border-blue-200 dark:border-blue-800"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-gray-900 dark:text-white truncate">Mon compte</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Gérer mon profil</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Navigation sections */}
+            <div className="p-6 space-y-8">
+
+              {/* Quick actions */}
+              <div>
+                <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-4">Actions rapides</h3>
+                <div className="space-y-2">
+                  <Link
+                    href="/dashboard/add"
+                    onClick={() => setOpen(false)}
+                    className="flex items-center gap-3 p-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200"
+                  >
+                    <ShoppingCart className="w-5 h-5" />
+                    <span className="font-medium">Vendre un produit</span>
+                  </Link>
+                  <Link
+                    href="/favoris"
+                    onClick={() => setOpen(false)}
+                    className="flex items-center gap-3 p-3 bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400 rounded-xl transition-colors"
+                  >
+                    <Heart className="w-5 h-5" />
+                    <span className="font-medium">Mes favoris</span>
+                  </Link>
+                </div>
+              </div>
+
+              {/* Navigation */}
+              <div>
+                <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-4">Navigation</h3>
+                <div className="space-y-1">
+                  {navLinks.map(({ href, label, icon: Icon }) => (
+                    <Link
+                      key={href}
+                      href={href}
+                      onClick={() => setOpen(false)}
+                      className={`flex items-center gap-3 p-3 rounded-xl transition-all duration-200 ${pathname === href
+                        ? 'text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-900/20'
+                        : 'text-gray-600 dark:text-gray-300 hover:text-blue-600 hover:bg-gray-50 dark:hover:bg-gray-800/50'
+                        }`}
+                    >
+                      <Icon className="w-5 h-5" />
+                      <span className="font-medium">{label}</span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+
+              {/* Categories */}
+              <div>
+                <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-4">Catégories</h3>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={resetCategory}
+                    className={`flex items-center gap-2 p-3 rounded-xl text-sm font-medium transition-all duration-200 ${!category
+                      ? 'text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-900/20'
+                      : 'text-gray-600 dark:text-gray-300 hover:text-blue-600 hover:bg-gray-50 dark:hover:bg-gray-800/50'
+                      }`}
+                  >
+                    <span className="text-lg">🏷️</span>
+                    <span>Tout</span>
+                  </button>
+                  {categories.map((cat) => (
+                    <button
+                      key={cat.label}
+                      onClick={() => handleCategory(cat.label)}
+                      className={`flex items-center gap-2 p-3 rounded-xl text-sm font-medium transition-all duration-200 ${category === cat.label
+                        ? 'text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-900/20'
+                        : 'text-gray-600 dark:text-gray-300 hover:text-blue-600 hover:bg-gray-50 dark:hover:bg-gray-800/50'
+                        }`}
+                    >
+                      <span className="text-lg">{cat.emoji}</span>
+                      <span className="capitalize text-xs">{cat.label.replace('_', ' ')}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Account actions */}
+              {user && (
+                <div className="border-t border-gray-200 dark:border-gray-800 pt-6">
+                  <div className="space-y-2">
+                    <Link
+                      href={`/profile/${user.id}`}
+                      onClick={() => setOpen(false)}
+                      className="flex items-center gap-3 p-3 text-gray-600 dark:text-gray-300 hover:text-blue-600 hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-xl transition-all duration-200"
+                    >
+                      <User className="w-5 h-5" />
+                      <span className="font-medium">Mon profil</span>
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center gap-3 p-3 w-full text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all duration-200"
+                    >
+                      <LogOut className="w-5 h-5" />
+                      <span className="font-medium">Déconnexion</span>
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
-
-          {user && (
-            <div className="border-t pt-3 mt-2 flex items-center gap-4">
-              <Link
-                href={`/profile/${user.id}`}
-                onClick={() => setOpen(false)}
-                className="flex items-center gap-2 text-gray-700 dark:text-gray-200 hover:text-[#6366F1]"
-              >
-                <User size={17} /> Mon profil
-              </Link>
-              <button onClick={handleLogout} className="flex items-center gap-2 text-red-600 mt-1">
-                <LogOut size={17} /> Déconnexion
-              </button>
-            </div>
-          )}
         </div>
       )}
-    </nav>
+
+      {/* Spacer for fixed navbar */}
+      <div className="h-16 lg:h-28" />
+    </>
   )
 }
