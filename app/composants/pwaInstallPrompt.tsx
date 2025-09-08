@@ -6,6 +6,7 @@ export default function SimplePWAInstall() {
     const [deferredPrompt, setDeferredPrompt] = useState(null);
     const [showInstallButton, setShowInstallButton] = useState(false);
     const [isIOS, setIsIOS] = useState(false);
+    const [isOk, setIsOk] = useState(false)
 
     useEffect(() => {
         // Détection iOS
@@ -16,6 +17,7 @@ export default function SimplePWAInstall() {
         const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
 
         if (isStandalone) {
+            setIsOk(true)
             console.log('App déjà installée');
             return;
         }
@@ -77,7 +79,7 @@ export default function SimplePWAInstall() {
     }
 
     return (
-        <div className="fixed bottom-9 left-4 right-4 bg-white shadow-lg rounded-lg p-4 border max-w-sm mx-auto">
+        <div className={"fixed bottom-16 left-4 right-4 bg-white shadow-lg rounded-lg p-4 border max-w-sm mx-auto" + isOk && 'hidden'}>
             <div className="flex items-center space-x-3">
                 <div className="bg-yellow-400 p-2 rounded-lg">
                     📱
