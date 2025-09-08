@@ -8,7 +8,7 @@ import {
   HoverCard, HoverCardTrigger, HoverCardContent
 } from "@/components/ui/hover-card"
 import { Info, HelpCircle, Filter, Share2, Heart, ShoppingBag, Star, Zap, TrendingUp, Users, Gift, ArrowUp, X } from "lucide-react"
-
+import ProductCard from "./product-card"
 // Skeleton Components
 function ProductCardSkeleton() {
   return (
@@ -36,96 +36,8 @@ function ProductCardSkeletonGrid({ count }: { count: number }) {
   )
 }
 
-// Enhanced ProductCard Component
-function ProductCard({ product, userId, index }: { product: Product, userId: string, index: number }) {
-  const [isLiked, setIsLiked] = useState(false)
-  const [imageLoaded, setImageLoaded] = useState(false)
 
-  return (
-    <div
-      className="group relative bg-white dark:bg-gray-900 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-700 hover:-translate-y-1 border border-gray-100 dark:border-gray-800 animate-fade-in-scale"
-      style={{ animationDelay: `${index * 50}ms` }}
-    >
-      {/* Enhanced trending badge */}
-      <div className="absolute top-2 left-2 z-10">
-        <div className="flex items-center gap-1 bg-gradient-to-r from-pink-500 to-rose-400 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-md backdrop-blur-sm">
-          <TrendingUp size={8} className="animate-pulse" />
-          HOT
-        </div>
-      </div>
 
-      {/* Enhanced heart button */}
-      <button
-        onClick={() => setIsLiked(!isLiked)}
-        className="absolute top-2 right-2 z-10 w-7 h-7 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm rounded-full flex items-center justify-center shadow-md hover:scale-110 transition-all duration-300 border border-gray-100 dark:border-gray-700"
-      >
-        <Heart
-          size={14}
-          className={`transition-all duration-300 ${isLiked ? 'fill-red-500 text-red-500 scale-110' : 'text-gray-600 dark:text-gray-300'}`}
-        />
-      </button>
-
-      {/* Enhanced image with better overlay */}
-      <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700">
-        <img
-          src={product.image_url || '/placeholder-image.jpg'}
-          alt={product.title}
-          className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105"
-          onLoad={() => setImageLoaded(true)}
-        />
-
-        {/* Improved quick action overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-end justify-center pb-4">
-          <div className="transform translate-y-6 group-hover:translate-y-0 transition-transform duration-500">
-            <button className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm text-gray-900 dark:text-white px-4 py-2 rounded-xl font-semibold shadow-xl flex items-center gap-2 hover:scale-105 transition-all duration-300 text-sm border border-gray-200 dark:border-gray-700">
-              <ShoppingBag size={14} />
-              Voir
-            </button>
-          </div>
-        </div>
-
-        {/* Enhanced shimmer effect */}
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1200" />
-      </div>
-
-      {/* Improved content layout */}
-      <div className="p-3">
-        <h3 className="font-semibold text-gray-900 dark:text-white text-sm leading-tight mb-2 line-clamp-2 group-hover:text-pink-600 dark:group-hover:text-pink-400 transition-colors duration-300">
-          {product.title}
-        </h3>
-
-        <div className="flex items-center justify-between">
-          <div className="flex flex-col gap-1">
-            <span className="text-base font-bold text-gray-900 dark:text-white">
-              {product.price.toLocaleString()}
-              <span className="text-xs font-normal text-gray-500 ml-1">FCFA</span>
-            </span>
-            <div className="flex items-center gap-1">
-              <div className="flex">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} size={9} className="fill-yellow-400 text-yellow-400" />
-                ))}
-              </div>
-              <span className="text-xs text-gray-500">4.8</span>
-            </div>
-          </div>
-
-          <button className="w-7 h-7 bg-gradient-to-r from-pink-500 to-rose-400 text-white rounded-xl flex items-center justify-center shadow-md hover:scale-110 transition-all duration-300 hover:shadow-lg">
-            <ShoppingBag size={12} />
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-type Product = {
-  id: number
-  title: string
-  description: string
-  price: number
-  image_url: string | null
-}
 
 function PriceFilter({
   onChange, selectedIndex, onSelect, onClose
@@ -405,10 +317,10 @@ export default function FilteredProducts({ products = [], userId = 'demo' }) {
             {/* Center grid and constrain width so cards don't stretch too large on wide desktop */}
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-10">
               {displayedProducts.map((product, index) => (
-                <div key={product.id} className="w-full flex justify-center">
+                <div key={product.id * index} className="w-full flex justify-center">
                   {/* wrapped to avoid full-bleed stretching; ProductCard internal size stays untouched */}
                   <div className="w-full max-w-[320px]">
-                    <ProductCard product={product} userId={userId} index={index} />
+                    <ProductCard product={product} userId={userId} />
                   </div>
                 </div>
               ))}
