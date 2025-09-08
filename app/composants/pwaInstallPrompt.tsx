@@ -40,7 +40,6 @@ export default function PWAInstallPrompt() {
         if (!deferredPrompt) return;
         setIsInstalling(true);
         await deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
         setIsInstalling(false);
         setOpen(false);
         setDeferredPrompt(null);
