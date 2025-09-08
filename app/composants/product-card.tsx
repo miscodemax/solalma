@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import LikeButton from "./likeButton";
@@ -12,30 +14,31 @@ type Product = {
     likes?: number;
 };
 
-export default async function ProductCard({
+export default function ProductCard({
     product,
     userId,
 }: {
     product: Product;
     userId?: string;
 }) {
-    // Extraire la première image du tableau ou utiliser l'image unique
+    const BRAND = {
+        blue: "#1E3A8A",
+        orange: "#F97316",
+    };
+
     const getFirstImage = (imageUrl: string | string[] | null): string => {
         if (!imageUrl) return "/placeholder.jpg";
-
         if (Array.isArray(imageUrl)) {
-            const firstValidImage = imageUrl.find(img => img && img.trim() !== '');
+            const firstValidImage = imageUrl.find((img) => img && img.trim() !== "");
             return firstValidImage || "/placeholder.jpg";
         }
-
         return imageUrl || "/placeholder.jpg";
     };
 
-    // Compter le nombre total d'images pour l'indicateur
     const getImageCount = (imageUrl: string | string[] | null): number => {
         if (!imageUrl) return 0;
         if (Array.isArray(imageUrl)) {
-            return imageUrl.filter(img => img && img.trim() !== '').length;
+            return imageUrl.filter((img) => img && img.trim() !== "").length;
         }
         return 1;
     };
@@ -44,154 +47,98 @@ export default async function ProductCard({
     const imageCount = getImageCount(product.image_url);
 
     return (
-        <article className="group relative w-full flex flex-col overflow-hidden rounded-2xl md:rounded-3xl bg-white dark:bg-gray-900 shadow-sm hover:shadow-xl dark:shadow-gray-900/20 transition-all duration-300 hover:-translate-y-0.5 border border-gray-100 dark:border-gray-800">
-
-            {/* Image container - Responsive aspect ratio */}
-            <div className="relative w-full aspect-square md:aspect-[4/5] overflow-hidden bg-gray-50 dark:bg-gray-800">
+        <article className="group relative w-full flex flex-col overflow-hidden rounded-3xl bg-white shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-gray-100">
+            {/* Image */}
+            <div className="relative w-full aspect-square md:aspect-[4/5] overflow-hidden bg-gray-50">
                 <Link
                     href={`/product/${product.id}`}
-                    className="block w-full h-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-2xl"
-                    aria-label={`Voir les détails de ${product.title}`}
+                    className="block w-full h-full focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 rounded-3xl"
                 >
                     <Image
                         src={firstImage}
                         alt={product.title}
                         fill
-                        className="object-cover transition-transform duration-700 group-hover:scale-105"
+                        className="object-cover transition-transform duration-700 group-hover:scale-110"
                         sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                        priority={false}
                     />
-
-                    {/* Subtle overlay on hover */}
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
+                    {/* Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition duration-500" />
                 </Link>
 
-                {/* Image counter badge */}
-                {imageCount > 1 && (
-                    <div className="absolute top-2 left-2 md:top-3 md:left-3">
-                        <div className="flex items-center gap-1 px-2 py-1 md:px-2.5 md:py-1.5 bg-black/75 backdrop-blur-sm text-white rounded-lg text-xs font-medium shadow-sm">
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2-2z" />
-                            </svg>
-                            <span>{imageCount}</span>
-                        </div>
-                    </div>
-                )}
-
-                {/* Like button - Mobile optimized */}
-                <div className="absolute top-2 right-2 md:top-3 md:right-3">
-                    <div className="flex items-center gap-1.5 px-2 py-1.5 md:px-2.5 md:py-2 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm rounded-lg shadow-sm transition-all duration-200 hover:bg-white dark:hover:bg-gray-900 active:scale-95">
+                {/* Like */}
+                <div className="absolute top-3 right-3">
+                    <div className="flex items-center gap-1 px-2 py-1.5 bg-white/90 backdrop-blur-sm rounded-xl shadow-sm hover:scale-105 transition">
                         <LikeButton productId={product.id} userId={userId} />
                         {product.likes && product.likes > 0 && (
-                            <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 min-w-[1ch] text-center">
-                                {product.likes > 99 ? '99+' : product.likes}
+                            <span className="text-xs font-semibold text-gray-700">
+                                {product.likes > 99 ? "99+" : product.likes}
                             </span>
                         )}
                     </div>
                 </div>
+
+                {/* Image count */}
+                {imageCount > 1 && (
+                    <div className="absolute bottom-3 right-3 text-xs px-2 py-1 bg-black/60 text-white rounded-lg backdrop-blur-sm">
+                        {imageCount} photos
+                    </div>
+                )}
 
                 {/* Premium badge */}
                 {product.price > 50000 && (
-                    <div className="absolute top-12 left-2 md:top-14 md:left-3">
-                        <div className="px-2 py-1 bg-gradient-to-r from-amber-400 to-amber-500 text-amber-900 rounded-lg text-xs font-bold shadow-sm">
-                            ✨ Premium
-                        </div>
+                    <div className="absolute top-3 left-3 px-2 py-1 rounded-lg text-xs font-bold shadow-sm text-amber-900 bg-gradient-to-r from-amber-300 to-amber-500">
+                        ✨ Premium
                     </div>
                 )}
 
-                {/* Mobile-first quick action - Only on larger screens */}
-                <div className="hidden md:block absolute inset-x-3 bottom-3 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
+                {/* CTA flottant (desktop) */}
+                <div className="hidden md:block absolute inset-x-6 bottom-4 opacity-0 group-hover:opacity-100 translate-y-3 group-hover:translate-y-0 transition-all duration-500">
                     <Link
                         href={`/product/${product.id}`}
-                        className="block w-full px-4 py-2.5 bg-white/95 backdrop-blur-sm rounded-xl text-sm font-semibold text-gray-900 text-center shadow-lg hover:bg-white transition-all duration-200 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="block w-full py-2.5 rounded-xl font-semibold text-sm text-white text-center shadow-lg"
+                        style={{
+                            background: `linear-gradient(90deg, ${BRAND.blue}, ${BRAND.orange})`,
+                        }}
                     >
-                        {imageCount > 1 ? `Voir ${imageCount} photos` : 'Voir les détails'}
+                        {imageCount > 1 ? `Voir ${imageCount} photos` : "Voir les détails"}
                     </Link>
                 </div>
             </div>
 
-            {/* Content section - Mobile optimized spacing */}
-            <div className="flex-1 p-3 md:p-4 space-y-3">
+            {/* Infos */}
+            <div className="flex-1 p-4 space-y-3">
+                <Link
+                    href={`/product/${product.id}`}
+                    className="block focus:outline-none focus:ring-2 focus:ring-orange-500 rounded"
+                >
+                    <h3 className="text-base font-semibold text-gray-900 leading-tight line-clamp-2 group-hover:text-orange-600 transition-colors duration-200">
+                        {product.title}
+                    </h3>
+                </Link>
 
-                {/* Title - Improved mobile typography */}
-                <div>
-                    <Link
-                        href={`/product/${product.id}`}
-                        className="block focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded"
-                    >
-                        <h3 className="text-sm md:text-base font-semibold text-gray-900 dark:text-white leading-tight line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200">
-                            {product.title}
-                        </h3>
-                    </Link>
-                </div>
+                <p className="hidden sm:block text-sm text-gray-600 line-clamp-2">
+                    {product.description}
+                </p>
 
-                {/* Description - Hidden on mobile to save space */}
-                <div className="hidden sm:block">
-                    <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 leading-relaxed">
-                        {product.description}
-                    </p>
-                </div>
-
-                {/* Price and CTA section - Mobile optimized */}
-                <div className="flex items-center justify-between pt-2">
-                    <div className="flex flex-col">
-                        <div className="flex items-baseline gap-1">
-                            <span className="text-lg md:text-xl font-bold text-gray-900 dark:text-white">
-                                {product.price.toLocaleString()}
-                            </span>
-                            <span className="text-xs md:text-sm text-gray-500 dark:text-gray-400 font-medium">
-                                FCFA
-                            </span>
-                        </div>
+                <div className="flex items-center justify-between">
+                    <div>
+                        <span className="text-lg font-bold text-gray-900">
+                            {product.price.toLocaleString()}{" "}
+                            <span className="text-xs text-gray-500">FCFA</span>
+                        </span>
                     </div>
 
-                    {/* Mobile-first CTA button */}
                     <Link
                         href={`/product/${product.id}`}
-                        className="group/btn relative overflow-hidden rounded-xl bg-blue-600 hover:bg-blue-700 px-3 py-2 md:px-4 md:py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:shadow-md active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                        className="px-3 py-2 rounded-lg font-semibold text-sm text-white shadow-md hover:shadow-lg transition transform hover:scale-105"
+                        style={{
+                            background: `linear-gradient(90deg, ${BRAND.blue}, ${BRAND.orange})`,
+                        }}
                     >
-                        <span className="relative">Voir</span>
+                        Voir
                     </Link>
-                </div>
-
-                {/* Stats bar - Simplified for mobile */}
-                <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 pt-2 border-t border-gray-100 dark:border-gray-800">
-                    <span className="font-mono opacity-60">
-                        #{product.id.toString().padStart(4, '0')}
-                    </span>
-
-                    <div className="flex items-center gap-3">
-                        {/* Image count indicator for mobile */}
-                        <div className="md:hidden">
-                            {imageCount > 1 && (
-                                <span className="flex items-center gap-1 text-blue-600 dark:text-blue-400">
-                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2-2z" />
-                                    </svg>
-                                    <span className="font-medium">{imageCount}</span>
-                                </span>
-                            )}
-                        </div>
-
-                        {/* Likes indicator */}
-                        {product.likes && product.likes > 0 && (
-                            <span className="flex items-center gap-1">
-                                <svg className="w-3 h-3 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd"
-                                        d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"
-                                        clipRule="evenodd" />
-                                </svg>
-                                <span className="font-medium">{product.likes > 99 ? '99+' : product.likes}</span>
-                            </span>
-                        )}
-                    </div>
                 </div>
             </div>
-
-            {/* Hover indicator - Desktop only */}
-            <div className="hidden md:block absolute top-3 left-3 w-1.5 h-1.5 bg-blue-500/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
         </article>
     );
 }

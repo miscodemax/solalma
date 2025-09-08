@@ -294,7 +294,7 @@ export default function FilteredProducts({ products = [], userId = 'demo' }) {
   }
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: BRAND.gray }}>
+    <div className="min-h-screen pt-6" style={{ backgroundColor: BRAND.gray }}>
       {/* Sticky header */}
       <div className="sticky top-0 z-40 bg-white/98 backdrop-blur-sm border-b border-gray-200 shadow-sm">
         <div className="px-4 py-3 max-w-7xl mx-auto flex items-center justify-between gap-4">
