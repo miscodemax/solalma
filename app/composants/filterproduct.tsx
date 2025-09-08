@@ -201,56 +201,22 @@ function PriceFilter({
   )
 }
 
-export default function FilteredProducts({ products = [], userId = "demo" }: { products?: Product[], userId?: string }) {
+
+
+export default function FilteredProducts({ products = [], userId = 'demo' }) {
   // Mock data pour la démo
-  const mockProducts: Product[] = [
-    {
-      id: 1,
-      title: "Robe Hijab Moderne Premium",
-      description: "Robe élégante et confortable pour toutes occasions",
-      price: 15000,
-      image_url: "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=400"
-    },
-    {
-      id: 2,
-      title: "Set Skincare Glow",
-      description: "Routine complète pour une peau éclatante",
-      price: 8500,
-      image_url: "https://images.unsplash.com/photo-1556228720-195a672e8a03?w=400"
-    },
-    {
-      id: 3,
-      title: "Hijab Satin Luxe",
-      description: "Voile premium en satin doux",
-      price: 4200,
-      image_url: "https://images.unsplash.com/photo-1583292650898-7d22cd27ca6f?w=400"
-    },
-    {
-      id: 4,
-      title: "Kaftan Brodé Main",
-      description: "Pièce unique artisanale",
-      price: 25000,
-      image_url: "https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=400"
-    },
-    {
-      id: 5,
-      title: "Sérum Anti-âge Bio",
-      description: "Formule naturelle et efficace",
-      price: 12000,
-      image_url: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=400"
-    },
-    {
-      id: 6,
-      title: "Abaya Casual Chic",
-      description: "Style décontracté pour le quotidien",
-      price: 18000,
-      image_url: "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=400"
-    }
+  const mockProducts = [
+    { id: 1, title: 'Robe Hijab Moderne Premium', description: 'Robe élégante et confortable pour toutes occasions', price: 15000, image_url: 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=400' },
+    { id: 2, title: 'Set Skincare Glow', description: 'Routine complète pour une peau éclatante', price: 8500, image_url: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=400' },
+    { id: 3, title: 'Hijab Satin Luxe', description: 'Voile premium en satin doux', price: 4200, image_url: 'https://images.unsplash.com/photo-1583292650898-7d22cd27ca6f?w=400' },
+    { id: 4, title: 'Kaftan Brodé Main', description: 'Pièce unique artisanale', price: 25000, image_url: 'https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=400' },
+    { id: 5, title: "Sérum Anti-âge Bio", description: 'Formule naturelle et efficace', price: 12000, image_url: 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=400' },
+    { id: 6, title: 'Abaya Casual Chic', description: 'Style décontracté pour le quotidien', price: 18000, image_url: 'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=400' }
   ]
 
   const displayProducts = products.length > 0 ? products : mockProducts
 
-  const [priceRange, setPriceRange] = useState<[number, number] | null>(null)
+  const [priceRange, setPriceRange] = useState(null)
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [filterOpen, setFilterOpen] = useState(false)
   const [showOnboarding, setShowOnboarding] = useState(true)
@@ -259,32 +225,51 @@ export default function FilteredProducts({ products = [], userId = "demo" }: { p
   const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [showScrollToTop, setShowScrollToTop] = useState(false)
 
+  // Respecter palette Sangse
+  const BRAND = {
+    blue: '#1E3A8A',
+    orange: '#F97316',
+    gray: '#F3F4F6',
+    green: '#10B981',
+    black: '#111827'
+  }
+
+  // loader simulation
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 1200)
+    const timer = setTimeout(() => setLoading(false), 900)
     return () => clearTimeout(timer)
   }, [])
 
+  // scroll to top visibility
   useEffect(() => {
-    const handleScroll = () => {
-      setShowScrollToTop(window.scrollY > 400)
-    }
+    const handleScroll = () => setShowScrollToTop(window.scrollY > 400)
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  const dismissOnboarding = () => {
-    setShowOnboarding(false)
-  }
+  // adapt initial displayedCount by screen size (desktop shows more items without touching product card size)
+  useEffect(() => {
+    const setByWidth = () => {
+      const w = window.innerWidth
+      if (w >= 1024) setDisplayedCount(12)
+      else if (w >= 768) setDisplayedCount(9)
+      else setDisplayedCount(8)
+    }
+    setByWidth()
+    window.addEventListener('resize', setByWidth)
+    return () => window.removeEventListener('resize', setByWidth)
+  }, [])
 
-  const filteredProducts = displayProducts.filter(p =>
-    !priceRange || (p.price >= priceRange[0] && p.price <= priceRange[1])
-  )
+  const dismissOnboarding = () => setShowOnboarding(false)
 
+  const filteredProducts = displayProducts.filter(p => !priceRange || (p.price >= priceRange[0] && p.price <= priceRange[1]))
   const displayedProducts = filteredProducts.slice(0, displayedCount)
   const hasMoreProducts = filteredProducts.length > displayedCount
 
   useEffect(() => {
-    setDisplayedCount(8)
+    // when changing filters, reset count to a sensible number for the current viewport
+    const w = window.innerWidth
+    setDisplayedCount(w >= 1024 ? 12 : w >= 768 ? 9 : 8)
   }, [priceRange])
 
   const handleLoadMore = () => {
@@ -292,83 +277,72 @@ export default function FilteredProducts({ products = [], userId = "demo" }: { p
     setTimeout(() => {
       setDisplayedCount(prev => Math.min(prev + 6, filteredProducts.length))
       setIsLoadingMore(false)
-    }, 800)
+    }, 700)
   }
 
   const handleShare = () => {
-    const message = encodeURIComponent("Coucou ! 🌸 Découvre cette nouvelle plateforme de mode féminine, hijabs, skincare et + : https://sangse.shop — rejoins-nous !")
-    window.open(`https://wa.me/?text=${message}`, "_blank")
+    const message = encodeURIComponent("Coucou ! 🌸 Découvre Sangse : https://sangse.shop — rejoins-nous !")
+    window.open(`https://wa.me/?text=${message}`, '_blank')
   }
 
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  }
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' })
 
   const getFilterLabel = () => {
-    if (selectedIndex === 0) return "Tous les prix"
-    const ranges = [
-      null, "500-3K", "3K-7K", "7K-10K", "10K-15K", "15K-20K", "20K+"
-    ]
+    if (selectedIndex === 0) return 'Tous les prix'
+    const ranges = [null, '500-3K', '3K-7K', '7K-10K', '10K-15K', '15K-20K', '20K+']
     return ranges[selectedIndex]
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-25 via-white to-rose-25 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
-      {/* Sticky header with improved mobile layout */}
-      <div className="sticky top-0 z-40 bg-white/98 dark:bg-gray-900/98 backdrop-blur-xl border-b border-gray-100 dark:border-gray-800 shadow-sm">
-        <div className="px-3 py-3">
-          {/* Mobile version - Horizontal alignment */}
-          <div className="flex gap-2 sm:hidden">
-            <button
-              onClick={handleShare}
-              className="flex-1 h-11 bg-gradient-to-r from-pink-500 via-rose-400 to-pink-500 text-white rounded-xl font-semibold shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] text-sm"
-            >
+    <div className="min-h-screen" style={{ backgroundColor: BRAND.gray }}>
+      {/* Sticky header */}
+      <div className="sticky top-0 z-40 bg-white/98 backdrop-blur-sm border-b border-gray-200 shadow-sm">
+        <div className="px-4 py-3 max-w-7xl mx-auto flex items-center justify-between gap-4">
+          {/* Left - actions (mobile compressed) */}
+          <div className="flex-1 sm:hidden flex gap-2">
+            <button onClick={handleShare} className="flex-1 h-11 rounded-xl font-semibold shadow-md flex items-center justify-center gap-2 text-white" style={{ background: `linear-gradient(90deg, ${BRAND.blue}, ${BRAND.orange})` }}>
               <Share2 size={16} />
-              <span>Invite une amie</span>
+              <span className="text-sm">Invite une amie</span>
               <Gift size={14} className="animate-pulse" />
             </button>
 
-            <button
-              onClick={() => setFilterOpen(true)}
-              className="flex-1 h-11 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-semibold shadow-sm hover:shadow-md transition-all duration-300 flex items-center justify-center gap-2 hover:border-pink-300 dark:hover:border-pink-600 text-sm"
-            >
+            <button onClick={() => setFilterOpen(true)} className="flex-1 h-11 rounded-xl font-semibold shadow-sm flex items-center justify-center gap-2 border border-gray-200 bg-white text-gray-700">
               <Filter size={16} />
-              <span className="truncate">{getFilterLabel()}</span>
-              {priceRange && <Zap size={12} className="text-pink-500" />}
+              <span className="truncate text-sm">{getFilterLabel()}</span>
+              {priceRange && <Zap size={12} className="text-green-500" />}
             </button>
           </div>
 
-          {/* Desktop version */}
-          <div className="hidden sm:flex items-center justify-between gap-4">
-            <button
-              onClick={handleShare}
-              className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-pink-500 to-rose-400 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-            >
-              <Share2 size={18} />
-              <span>Invite une amie</span>
-              <Gift size={16} className="animate-pulse" />
-            </button>
+          {/* Desktop actions */}
+          <div className="hidden sm:flex items-center justify-between w-full">
+            <div className="flex gap-3">
+              <button onClick={handleShare} className="flex items-center gap-3 px-5 py-3 rounded-xl font-semibold shadow-lg text-white" style={{ background: `linear-gradient(90deg, ${BRAND.blue}, ${BRAND.orange})` }}>
+                <Share2 size={18} />
+                <span>Invite une amie</span>
+                <Gift size={16} className="animate-pulse" />
+              </button>
 
-            <button
-              onClick={() => setFilterOpen(true)}
-              className="flex items-center gap-3 px-6 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-semibold shadow-sm hover:shadow-md transition-all duration-300 hover:border-pink-300"
-            >
-              <Filter size={18} />
-              <span>Filtrer par prix</span>
-              {priceRange && <Zap size={14} className="text-pink-500" />}
-            </button>
+              <button onClick={() => setFilterOpen(true)} className="flex items-center gap-3 px-5 py-3 rounded-xl font-semibold shadow-sm bg-white border border-gray-200 text-gray-700">
+                <Filter size={18} />
+                <span>Filtrer par prix</span>
+                {priceRange && <Zap size={14} className="text-green-500" />}
+              </button>
+            </div>
+
+            {/* simple search placeholder (keeps header balanced) */}
+            <div className="hidden lg:flex items-center gap-3">
+              <div className="text-sm text-gray-600">Marché • Mode • Beauté</div>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="px-3 pb-20">
-        {/* Enhanced onboarding */}
+      <div className="px-4 pb-20 max-w-7xl mx-auto">
+        {/* Onboarding - plus vivant avec emojis (respect palette) */}
         {showOnboarding && (
           <div className="mt-4 mb-6">
-            <div className="relative bg-gradient-to-br from-pink-500 via-rose-400 to-pink-600 text-white rounded-2xl p-5 shadow-xl overflow-hidden animate-slide-in-down">
-              <div className="absolute -top-4 -right-4 w-16 h-16 bg-white/10 rounded-full animate-pulse" />
-              <div className="absolute -bottom-4 -left-4 w-20 h-20 bg-white/10 rounded-full animate-pulse" />
-
+            <div className="relative rounded-2xl p-5 shadow-xl overflow-hidden" style={{ background: `linear-gradient(135deg, ${BRAND.blue}, ${BRAND.orange})`, color: 'white' }}>
+              <div className="absolute -top-6 -right-6 w-20 h-20 bg-white/10 rounded-full animate-pulse" />
               <div className="relative z-10">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3">
@@ -376,114 +350,74 @@ export default function FilteredProducts({ products = [], userId = "demo" }: { p
                       <Users size={20} />
                     </div>
                     <div>
-                      <h3 className="text-lg font-bold">Gagne de l'argent ! 💰</h3>
-                      <p className="text-white/90 text-sm">Depuis chez toi, facilement</p>
+                      <h3 className="text-lg font-bold">Vends facilement 🚀</h3>
+                      <p className="text-white/90 text-sm">Ouvre ta boutique et commence à vendre aujourd'hui</p>
                     </div>
                   </div>
-                  <button
-                    onClick={dismissOnboarding}
-                    className="w-7 h-7 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition-colors"
-                  >
+
+                  <button onClick={dismissOnboarding} className="w-7 h-7 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition-colors">
                     <X size={16} />
                   </button>
                 </div>
 
-                <p className="text-white/95 text-sm mb-4 leading-relaxed">
-                  Ouvre ta boutique <span className="font-semibold">gratuitement</span> et commence à vendre en quelques clics.
-                </p>
+                <p className="text-white/95 text-sm mb-4 leading-relaxed">Crée ta boutique en moins de 2 minutes. 📱 Prends des photos, fixe ton prix et partage sur WhatsApp.</p>
 
-                <button
-                  onClick={dismissOnboarding}
-                  className="w-full py-3 bg-white text-pink-600 rounded-xl font-bold hover:bg-gray-50 transition-all duration-300 shadow-lg hover:shadow-xl text-sm"
-                >
-                  🚀 Commencer à vendre
-                </button>
+                <div className="flex gap-3">
+                  <button onClick={dismissOnboarding} className="flex-1 py-3 rounded-xl font-bold shadow-lg text-sm" style={{ background: '#ffffff', color: BRAND.blue }}>
+                    ✅ Commencer
+                  </button>
+                  <button onClick={() => { window.scrollTo({ top: 600, behavior: 'smooth' }) }} className="py-3 px-4 rounded-xl font-semibold text-sm" style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.18)', color: 'white' }}>
+                    ℹ️ En savoir plus
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* Compact stats */}
-        <div className="grid grid-cols-3 gap-2 mb-6">
-          <div className="bg-white dark:bg-gray-900 rounded-xl p-3 text-center shadow-sm border border-gray-100 dark:border-gray-800">
-            <div className="text-lg font-bold text-pink-600 dark:text-pink-400">2.4K+</div>
-            <div className="text-xs text-gray-600 dark:text-gray-400">Produits</div>
-          </div>
-          <div className="bg-white dark:bg-gray-900 rounded-xl p-3 text-center shadow-sm border border-gray-100 dark:border-gray-800">
-            <div className="text-lg font-bold text-rose-600 dark:text-rose-400">850+</div>
-            <div className="text-xs text-gray-600 dark:text-gray-400">Clientes</div>
-          </div>
-          <div className="bg-white dark:bg-gray-900 rounded-xl p-3 text-center shadow-sm border border-gray-100 dark:border-gray-800">
-            <div className="text-lg font-bold text-purple-600 dark:text-purple-400">4.9★</div>
-            <div className="text-xs text-gray-600 dark:text-gray-400">Satisfaction</div>
-          </div>
-        </div>
-
         {/* Results header */}
         <div className="mb-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-              {priceRange ? `${filteredProducts.length} produits` : 'Nos coups de cœur'}
-            </h2>
+            <h2 className="text-xl font-bold" style={{ color: BRAND.black }}>{priceRange ? `${filteredProducts.length} produits` : 'Nos coups de cœur'}</h2>
             {filteredProducts.length > 0 && (
-              <div className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-full">
-                {displayedCount}/{filteredProducts.length}
-              </div>
+              <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">{displayedCount}/{filteredProducts.length}</div>
             )}
           </div>
           {priceRange && (
-            <button
-              onClick={() => {
-                setPriceRange(null)
-                setSelectedIndex(0)
-              }}
-              className="mt-2 text-sm text-pink-600 dark:text-pink-400 hover:text-pink-700 dark:hover:text-pink-300 transition-colors"
-            >
-              ✨ Voir tous les produits
-            </button>
+            <button onClick={() => { setPriceRange(null); setSelectedIndex(0) }} className="mt-2 text-sm text-blue-700 hover:text-blue-800 transition-colors">✨ Voir tous les produits</button>
           )}
         </div>
 
-        {/* Products grid */}
+        {/* Products grid - mobile: Vinted-like (2 cols). Desktop: compact grid without changing card size */}
         {loading ? (
           <ProductCardSkeletonGrid count={8} />
         ) : filteredProducts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center animate-fade-in">
-            <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 rounded-full flex items-center justify-center mb-4">
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mb-4">
               <ShoppingBag size={28} className="text-gray-400" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              Aucun produit trouvé
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-4 max-w-sm text-sm">
-              Essaie un autre budget ou découvre tous nos produits
-            </p>
-            <button
-              onClick={() => {
-                setPriceRange(null)
-                setSelectedIndex(0)
-              }}
-              className="px-6 py-3 bg-gradient-to-r from-pink-500 to-rose-400 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
-            >
-              🔄 Voir tous les produits
-            </button>
+            <h3 className="text-lg font-semibold" style={{ color: BRAND.black }}>Aucun produit trouvé</h3>
+            <p className="text-gray-600 max-w-sm text-sm mb-4">Essaie un autre budget ou découvre tous nos produits</p>
+            <button onClick={() => { setPriceRange(null); setSelectedIndex(0) }} className="px-6 py-3 rounded-xl font-semibold text-white" style={{ background: `linear-gradient(90deg, ${BRAND.blue}, ${BRAND.orange})` }}>🔄 Voir tous les produits</button>
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-2 gap-3 mb-10">
+            {/* Center grid and constrain width so cards don't stretch too large on wide desktop */}
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-10">
               {displayedProducts.map((product, index) => (
-                <ProductCard key={product.id} product={product} userId={userId} index={index} />
+                <div key={product.id} className="w-full flex justify-center">
+                  {/* wrapped to avoid full-bleed stretching; ProductCard internal size stays untouched */}
+                  <div className="w-full max-w-[320px]">
+                    <ProductCard product={product} userId={userId} index={index} />
+                  </div>
+                </div>
               ))}
             </div>
 
             {/* Load more button */}
             {hasMoreProducts && (
               <div className="text-center space-y-3">
-                <button
-                  onClick={handleLoadMore}
-                  disabled={isLoadingMore}
-                  className="group relative w-full max-w-sm mx-auto h-12 bg-gradient-to-r from-pink-500 to-rose-400 text-white font-semibold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-500 hover:scale-105 disabled:opacity-75 disabled:cursor-not-allowed overflow-hidden"
-                >
+                <button onClick={handleLoadMore} disabled={isLoadingMore} className="relative w-full max-w-sm mx-auto h-12 rounded-2xl font-semibold text-white" style={{ background: `linear-gradient(90deg, ${BRAND.blue}, ${BRAND.orange})` }}>
                   <div className="relative z-10 flex items-center justify-center gap-2">
                     {isLoadingMore ? (
                       <>
@@ -492,34 +426,26 @@ export default function FilteredProducts({ products = [], userId = "demo" }: { p
                       </>
                     ) : (
                       <>
-                        <span className="group-hover:animate-bounce">✨</span>
+                        <span>✨</span>
                         <span className="text-sm">Voir {Math.min(6, filteredProducts.length - displayedCount)} produits de plus</span>
-                        <span className="group-hover:animate-bounce">🛍️</span>
+                        <span>🛍️</span>
                       </>
                     )}
                   </div>
-
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                 </button>
 
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Encore plein de pépites à découvrir ! 💎
-                </p>
+                <p className="text-xs text-gray-500">Encore plein de pépites à découvrir ! 💎</p>
               </div>
             )}
 
             {/* End message */}
             {!hasMoreProducts && filteredProducts.length > 8 && (
-              <div className="text-center py-6 animate-fade-in">
-                <div className="w-12 h-12 bg-gradient-to-br from-pink-100 to-rose-100 dark:from-pink-900 dark:to-rose-900 rounded-full flex items-center justify-center mx-auto mb-3">
+              <div className="text-center py-6">
+                <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-3">
                   <span className="text-xl">🎉</span>
                 </div>
-                <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-2">
-                  Tu as tout vu !
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400 text-sm mb-3">
-                  Reviens bientôt pour nos nouveautés
-                </p>
+                <h3 className="text-base font-semibold" style={{ color: BRAND.black }}>Tu as tout vu !</h3>
+                <p className="text-gray-600 text-sm mb-3">Reviens bientôt pour nos nouveautés</p>
               </div>
             )}
           </>
@@ -528,230 +454,23 @@ export default function FilteredProducts({ products = [], userId = "demo" }: { p
 
       {/* Floating scroll to top */}
       {showScrollToTop && (
-        <button
-          onClick={scrollToTop}
-          className="fixed bottom-20 right-4 w-10 h-10 bg-gradient-to-r from-pink-500 to-rose-400 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 flex items-center justify-center z-30 animate-bounce-in"
-        >
+        <button onClick={scrollToTop} className="fixed bottom-20 right-4 w-10 h-10 rounded-full shadow-lg flex items-center justify-center z-30" style={{ background: `linear-gradient(90deg, ${BRAND.blue}, ${BRAND.orange})`, color: 'white' }}>
           <ArrowUp size={16} />
         </button>
       )}
 
-      {/* Enhanced price filter dialog */}
+      {/* Price filter dialog */}
       <Dialog open={filterOpen} onOpenChange={setFilterOpen}>
         <DialogContent className="w-[95vw] max-w-md mx-auto rounded-2xl p-0 overflow-hidden border-0 shadow-2xl">
-          <div className="bg-gradient-to-br from-pink-50 to-rose-50 dark:from-gray-900 dark:to-gray-800">
-            <PriceFilter
-              onChange={(range) => {
-                setPriceRange(range)
-                setFilterOpen(false)
-              }}
-              selectedIndex={selectedIndex}
-              onSelect={setSelectedIndex}
-              onClose={() => setFilterOpen(false)}
-            />
+          <div style={{ backgroundColor: BRAND.gray }}>
+            <PriceFilter onChange={(range) => { setPriceRange(range); setFilterOpen(false) }} selectedIndex={selectedIndex} onSelect={setSelectedIndex} onClose={() => setFilterOpen(false)} />
           </div>
         </DialogContent>
       </Dialog>
 
       <style jsx>{`
-        @keyframes fade-in-scale {
-          from {
-            opacity: 0;
-            transform: scale(0.9) translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1) translateY(0);
-          }
-        }
-        
-        @keyframes slide-in-down {
-          from {
-            opacity: 0;
-            transform: translateY(-20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        
-        @keyframes fade-in {
-          from {
-            opacity: 0;
-            transform: translateY(10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        
-        @keyframes bounce-in {
-          from {
-            opacity: 0;
-            transform: scale(0.3);
-          }
-          50% {
-            opacity: 1;
-            transform: scale(1.1);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1);
-          }
-        }
-        
-        @keyframes pulse-slow {
-          0%, 100% {
-            transform: translateX(-100%);
-          }
-          50% {
-            transform: translateX(100%);
-          }
-        }
-        
-        .animate-fade-in-scale {
-          animation: fade-in-scale 0.6s ease-out both;
-        }
-        
-        .animate-slide-in-down {
-          animation: slide-in-down 0.5s ease-out;
-        }
-        
-        .animate-fade-in {
-          animation: fade-in 0.4s ease-out;
-        }
-        
-        .animate-bounce-in {
-          animation: bounce-in 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-        }
-        
-        .animate-pulse-slow {
-          animation: pulse-slow 2s ease-in-out infinite;
-        }
-        
-        .line-clamp-2 {
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        
-        /* Custom scrollbar for webkit browsers */
-        ::-webkit-scrollbar {
-          width: 6px;
-        }
-        
-        ::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        
-        ::-webkit-scrollbar-thumb {
-          background: linear-gradient(to bottom, #ec4899, #f43f5e);
-          border-radius: 10px;
-        }
-        
-        ::-webkit-scrollbar-thumb:hover {
-          background: linear-gradient(to bottom, #db2777, #e11d48);
-        }
-        
-        /* Smooth focus styles */
-        button:focus-visible {
-          outline: 2px solid #ec4899;
-          outline-offset: 2px;
-        }
-        
-        /* Enhanced hover effects */
-        .group:hover .group-hover\\:scale-105 {
-          transform: scale(1.05);
-        }
-        
-        .group:hover .group-hover\\:translate-y-0 {
-          transform: translateY(0);
-        }
-        
-        /* Better touch targets for mobile */
-        @media (max-width: 640px) {
-          button {
-            min-height: 44px;
-          }
-        }
-        
-        /* Improved gradient backgrounds */
-        .bg-gradient-to-br {
-          background-attachment: fixed;
-        }
-        
-        /* Loading animation improvements */
-        .animate-pulse {
-          animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-        
-        @keyframes pulse {
-          0%, 100% {
-            opacity: 1;
-          }
-          50% {
-            opacity: .7;
-          }
-        }
-        
-        /* Enhanced backdrop blur */
-        .backdrop-blur-xl {
-          backdrop-filter: blur(24px);
-          -webkit-backdrop-filter: blur(24px);
-        }
-        
-        .backdrop-blur-sm {
-          backdrop-filter: blur(4px);
-          -webkit-backdrop-filter: blur(4px);
-        }
-        
-        /* Better shadow variations */
-        .shadow-soft {
-          box-shadow: 0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04);
-        }
-        
-        /* Improved text rendering */
-        * {
-          -webkit-font-smoothing: antialiased;
-          -moz-osx-font-smoothing: grayscale;
-        }
-        
-        /* Better dark mode transitions */
-        .dark * {
-          transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
-        }
-        
-        /* Custom pink variations for better UX */
-        .text-pink-25 { color: #fef7f7; }
-        .bg-pink-25 { background-color: #fef7f7; }
-        .from-pink-25 { --tw-gradient-from: #fef7f7; }
-        .to-rose-25 { --tw-gradient-to: #fef2f2; }
-        
-        /* Performance optimizations */
-        .gpu-accelerated {
-          transform: translate3d(0, 0, 0);
-          will-change: transform;
-        }
-        
-        /* Improved touch feedback */
-        .active\\:scale-\\[0\\.98\\]:active {
-          transform: scale(0.98);
-        }
-        
-        /* Better loading states */
-        .loading-shimmer {
-          background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%);
-          background-size: 200% 100%;
-          animation: shimmer 1.5s infinite;
-        }
-        
-        @keyframes shimmer {
-          0% { background-position: -200% 0; }
-          100% { background-position: 200% 0; }
-        }
+        .animate-pulse { animation: pulse 2s cubic-bezier(0.4,0,0.6,1) infinite; }
+        @keyframes pulse { 0%,100%{opacity:1}50%{opacity:.7} }
       `}</style>
     </div>
   )
