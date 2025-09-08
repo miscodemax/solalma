@@ -10,6 +10,7 @@ import { ThemeProvider } from "./composants/theme-provider";
 // import Script from "next/script";
 import { createClient } from "@/lib/supabase";
 import PWAInstallPrompt from "./composants/pwaInstallPrompt";
+import SimplePWAInstall from "./composants/pwaInstallPrompt";
 //import { SessionContextProvider } from "@supabase/auth-helpers-react";
 //import { createClient } from "./lib/supabase"
 
@@ -74,7 +75,7 @@ export default async function RootLayout({
               <Toaster />
             </main>
 
-            <PWAInstallPrompt />
+            <SimplePWAInstall />
 
             {/* Bottom navbar pour mobile uniquement */}
             <BottomNavbar />
