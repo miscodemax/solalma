@@ -1,4 +1,4 @@
-"use client";
+'use client'
 
 import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -19,13 +19,13 @@ export default function PWAInstallPrompt() {
         setIsIOS(iOS);
         setIsStandalone(standalone);
 
-        if (standalone) return;
+        if (standalone) return; // déjà installé, pas besoin
 
         if (iOS) {
-            // iOS : affiche le prompt après 3 secondes
-            setTimeout(() => setOpen(true), 3000);
+            // iOS : affiche après 2 secondes
+            setTimeout(() => setOpen(true), 2000);
         } else {
-            // Android/Desktop : capture beforeinstallprompt
+            // Android / desktop
             const handler = (e: any) => {
                 e.preventDefault();
                 setDeferredPrompt(e);
@@ -40,6 +40,7 @@ export default function PWAInstallPrompt() {
         if (!deferredPrompt) return;
         setIsInstalling(true);
         await deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
         setIsInstalling(false);
         setOpen(false);
         setDeferredPrompt(null);
@@ -50,7 +51,7 @@ export default function PWAInstallPrompt() {
         setDeferredPrompt(null);
     };
 
-    if (isStandalone || (!deferredPrompt && !isIOS)) return null;
+    if (isStandalone) return null; // déjà installé, ne rien afficher
 
     return (
         <Dialog open={open} onOpenChange={(open) => !open && handleDismiss()}>
