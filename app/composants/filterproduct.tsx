@@ -3,7 +3,7 @@ import { useEffect, useState } from "react"
 import {
   Dialog, DialogContent
 } from "@/components/ui/dialog"
-import { Filter, Share2, ShoppingBag, Gift, ArrowUp, X, Users, Zap } from "lucide-react"
+import { Filter, Share2, ShoppingBag, Gift, Zap } from "lucide-react"
 import ProductCard from "./product-card"
 
 // Skeleton Components
@@ -30,7 +30,16 @@ function ProductCardSkeletonGrid({ count }: { count: number }) {
   )
 }
 
-// PriceFilter (palette épurée)
+// 🎨 Identité visuelle Sangse
+const BRAND = {
+  yellow: "#F6C445", // Jaune safran (accent)
+  yellowHover: "#E2AE32",
+  blue: "#1C2B49", // Bleu nuit (contraste)
+  grayLight: "#F8F9FB",
+  grayDark: "#111827"
+}
+
+// PriceFilter (palette Sangse)
 function PriceFilter({
   onChange, selectedIndex, onSelect, onClose
 }: {
@@ -50,16 +59,16 @@ function PriceFilter({
   ]
 
   return (
-    <div className="p-5">
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-center">Budget 💰</h3>
+    <div className="p-5 bg-white dark:bg-gray-900">
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 text-center">Budget 💰</h3>
       <div className="grid grid-cols-2 gap-3 mb-6">
         {ranges.map(({ label, emoji }, i) => (
           <button
             key={i}
             onClick={() => { onSelect(i); onChange(ranges[i].range) }}
             className={`p-3 rounded-xl text-sm transition font-medium border ${selectedIndex === i
-                ? "bg-green-500 text-white shadow border-green-500"
-                : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-green-50 border-gray-200"
+                ? "bg-[#F6C445] text-[#1C2B49] shadow border-[#F6C445]"
+                : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 border-gray-200 dark:border-gray-700"
               }`}
           >
             <div className="text-base mb-1">{emoji}</div>
@@ -71,7 +80,7 @@ function PriceFilter({
       <div className="flex gap-3">
         <button
           onClick={onClose}
-          className="flex-1 py-3 bg-green-500 text-white rounded-xl font-semibold hover:bg-green-600 transition"
+          className="flex-1 py-3 rounded-xl font-semibold text-[#1C2B49] bg-[#F6C445] hover:bg-[#E2AE32] transition"
         >
           Appliquer
         </button>
@@ -99,12 +108,6 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
   const [filterOpen, setFilterOpen] = useState(false)
   const [loading, setLoading] = useState(true)
 
-  const BRAND = {
-    green: "#25A18E",
-    gray: "#F9FAFB",
-    text: "#111827"
-  }
-
   useEffect(() => {
     const t = setTimeout(() => setLoading(false), 900)
     return () => clearTimeout(t)
@@ -115,21 +118,21 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
   )
 
   return (
-    <div className="min-h-screen pt-6" style={{ backgroundColor: BRAND.gray }}>
+    <div className="min-h-screen pt-6 bg-[#F8F9FB] dark:bg-[#111827]">
       {/* Header */}
-      <div className="sticky top-0 z-40 bg-white border-b border-gray-200">
+      <div className="sticky top-0 z-40 bg-white dark:bg-[#1C2B49] border-b border-gray-200 dark:border-gray-700">
         <div className="px-4 py-3 max-w-7xl mx-auto flex items-center justify-between gap-4">
           <button
             onClick={() => setFilterOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 font-medium hover:bg-green-50 transition"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition"
           >
             <Filter size={16} />
             <span>{selectedIndex === 0 ? "Tous les prix" : "Filtré"}</span>
-            {priceRange && <Zap size={12} className="text-green-500" />}
+            {priceRange && <Zap size={12} className="text-[#F6C445]" />}
           </button>
 
           <button
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-500 text-white font-semibold hover:bg-green-600 transition"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold bg-[#F6C445] text-[#1C2B49] hover:bg-[#E2AE32] transition"
           >
             <Share2 size={16} />
             <span>Partager</span>
@@ -145,8 +148,8 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
         ) : filteredProducts.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <ShoppingBag size={40} className="text-gray-400 mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900">Aucun produit</h3>
-            <p className="text-gray-600 text-sm mb-4">Essaie un autre budget</p>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Aucun produit</h3>
+            <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">Essaie un autre budget</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 py-6">
