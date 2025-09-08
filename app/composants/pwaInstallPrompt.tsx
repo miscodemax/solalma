@@ -66,7 +66,7 @@ export default function SimplePWAInstall() {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 50 }}
                         transition={{ duration: 0.3 }}
-                        className="fixed bottom-6 left-4 right-4 z-50"
+                        className="fixed bottom-16 left-4 right-4 z-[100]"
                     >
                         <div className="bg-white shadow-xl border rounded-2xl p-4 flex items-start space-x-3 max-w-sm mx-auto">
                             <div className="bg-yellow-400 text-white p-2 rounded-xl">
@@ -75,18 +75,31 @@ export default function SimplePWAInstall() {
                             <div className="flex-1">
                                 <h3 className="font-semibold text-gray-800">Installer Sangse</h3>
                                 <p className="text-sm text-gray-600">
-                                    {isIOS
-                                        ? "Ajoutez l'app à votre écran d’accueil"
-                                        : 'Installation rapide disponible'}
+                                    Accédez plus vite à vos produits préférés, recevez une
+                                    expérience fluide sans passer par le navigateur 🚀
                                 </p>
 
                                 <div className="mt-3 flex space-x-2">
-                                    <Button
-                                        onClick={handleInstall}
-                                        className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-white"
+                                    {/* Bouton avec animation pulse */}
+                                    <motion.div
+                                        animate={{
+                                            scale: [1, 1.05, 1],
+                                        }}
+                                        transition={{
+                                            duration: 1.5,
+                                            repeat: Infinity,
+                                            ease: 'easeInOut',
+                                        }}
+                                        className="flex-1"
                                     >
-                                        {isIOS ? 'Voir instructions' : 'Installer'}
-                                    </Button>
+                                        <Button
+                                            onClick={handleInstall}
+                                            className="w-full bg-yellow-400 hover:bg-yellow-500 text-white"
+                                        >
+                                            {isIOS ? 'Voir instructions' : 'Installer'}
+                                        </Button>
+                                    </motion.div>
+
                                     <Button
                                         variant="ghost"
                                         size="icon"
@@ -107,6 +120,8 @@ export default function SimplePWAInstall() {
                     <DialogHeader>
                         <DialogTitle>Installer sur iOS</DialogTitle>
                         <DialogDescription>
+                            Pour ajouter Sangse à votre écran d’accueil :
+                            <br />
                             1. Appuyez sur <span className="font-medium">Partager</span> (icône
                             en bas de l’écran) <br />
                             2. Sélectionnez{' '}
