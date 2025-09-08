@@ -32,14 +32,14 @@ function ProductCardSkeletonGrid({ count }: { count: number }) {
 
 // 🎨 Identité visuelle Sangse
 const BRAND = {
-  yellow: "#F6C445", // Jaune safran (accent)
+  yellow: "#F6C445", // Jaune safran
   yellowHover: "#E2AE32",
-  blue: "#1C2B49", // Bleu nuit (contraste)
+  blue: "#1C2B49",   // Bleu nuit
   grayLight: "#F8F9FB",
   grayDark: "#111827"
 }
 
-// PriceFilter (palette Sangse)
+// PriceFilter
 function PriceFilter({
   onChange, selectedIndex, onSelect, onClose
 }: {
@@ -49,13 +49,13 @@ function PriceFilter({
   onClose: () => void
 }) {
   const ranges = [
-    { label: "Tous les prix", range: null, tip: "Tous les produits", emoji: "💎" },
-    { label: "500 - 3K", range: [500, 3000], tip: "Petits prix", emoji: "🛍️" },
-    { label: "3K - 7K", range: [3000, 7000], tip: "Bon rapport", emoji: "✨" },
-    { label: "7K - 10K", range: [7000, 10000], tip: "Style équilibré", emoji: "🌟" },
-    { label: "10K - 15K", range: [10000, 15000], tip: "Qualité assurée", emoji: "💫" },
-    { label: "15K - 20K", range: [15000, 20000], tip: "Premium", emoji: "👑" },
-    { label: "20K+", range: [20001, Infinity], tip: "Coup de cœur", emoji: "❤️" },
+    { label: "Tous les prix", range: null, emoji: "💎" },
+    { label: "500 - 3K", range: [500, 3000], emoji: "🛍️" },
+    { label: "3K - 7K", range: [3000, 7000], emoji: "✨" },
+    { label: "7K - 10K", range: [7000, 10000], emoji: "🌟" },
+    { label: "10K - 15K", range: [10000, 15000], emoji: "💫" },
+    { label: "15K - 20K", range: [15000, 20000], emoji: "👑" },
+    { label: "20K+", range: [20001, Infinity], emoji: "❤️" },
   ]
 
   return (
@@ -67,8 +67,8 @@ function PriceFilter({
             key={i}
             onClick={() => { onSelect(i); onChange(ranges[i].range) }}
             className={`p-3 rounded-xl text-sm transition font-medium border ${selectedIndex === i
-                ? "bg-[#F6C445] text-[#1C2B49] shadow border-[#F6C445]"
-                : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 border-gray-200 dark:border-gray-700"
+              ? "bg-[#F6C445] text-[#1C2B49] shadow border-[#F6C445]"
+              : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 border-gray-200 dark:border-gray-700"
               }`}
           >
             <div className="text-base mb-1">{emoji}</div>
@@ -107,6 +107,7 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [filterOpen, setFilterOpen] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [visibleCount, setVisibleCount] = useState(12)
 
   useEffect(() => {
     const t = setTimeout(() => setLoading(false), 900)
@@ -116,6 +117,8 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
   const filteredProducts = displayProducts.filter(
     p => !priceRange || (p.price >= priceRange[0] && p.price <= priceRange[1])
   )
+
+  const productsToShow = filteredProducts.slice(0, visibleCount)
 
   return (
     <div className="min-h-screen pt-6 bg-[#F8F9FB] dark:bg-[#111827]">
@@ -148,15 +151,29 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
         ) : filteredProducts.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <ShoppingBag size={40} className="text-gray-400 mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Aucun produit</h3>
-            <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">Essaie un autre budget</p>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Aucun produit trouvé</h3>
+            <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">Essaie un autre budget ou reviens plus tard ✨</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 py-6">
-            {filteredProducts.map(p => (
-              <ProductCard key={p.id} product={p} userId={userId} />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 py-6">
+              {productsToShow.map(p => (
+                <ProductCard key={p.id} product={p} userId={userId} />
+              ))}
+            </div>
+
+            {/* Voir plus button (mobile first) */}
+            {visibleCount < filteredProducts.length && (
+              <div className="flex justify-center pb-12">
+                <button
+                  onClick={() => setVisibleCount(visibleCount + 12)}
+                  className="px-6 py-3 rounded-full bg-[#F6C445] text-[#1C2B49] font-semibold shadow hover:bg-[#E2AE32] active:scale-95 transition"
+                >
+                  Voir plus
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
 
