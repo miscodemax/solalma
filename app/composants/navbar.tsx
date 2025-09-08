@@ -100,8 +100,8 @@ export default function Navbar({ products }: { products: Product[] }) {
   return (
     <>
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-200 ${scrolled
-          ? 'bg-white/95 dark:bg-gray-900/95 backdrop-blur-lg shadow-sm border-b border-gray-200/20 dark:border-gray-700/20'
-          : 'bg-white/90 dark:bg-gray-900/90 backdrop-blur-md'
+          ? 'bg-white/95 dark:bg-[#0A1A2F]/95 backdrop-blur-lg shadow-sm border-b border-gray-200/20 dark:border-gray-700/20'
+          : 'bg-white/90 dark:bg-[#0A1A2F]/90 backdrop-blur-md'
         }`}>
 
         <div className="max-w-7xl mx-auto px-4">
@@ -111,7 +111,7 @@ export default function Navbar({ products }: { products: Product[] }) {
 
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2 group">
-              <ShoppingBag className="w-6 h-6 text-blue-600 dark:text-blue-400 transition-transform group-hover:scale-110" />
+              <ShoppingBag className="w-6 h-6 text-yellow-600 dark:text-yellow-500 transition-transform group-hover:scale-110" />
               <div className="hidden sm:block">
                 <TextLogo />
               </div>
@@ -124,8 +124,8 @@ export default function Navbar({ products }: { products: Product[] }) {
                   key={href}
                   href={href}
                   className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${pathname === href
-                      ? 'text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-900/30'
-                      : 'text-gray-600 dark:text-gray-300 hover:text-blue-600 hover:bg-gray-50 dark:hover:bg-gray-800/50'
+                      ? 'text-yellow-600 bg-yellow-50 dark:text-yellow-400 dark:bg-yellow-900/30'
+                      : 'text-gray-600 dark:text-gray-300 hover:text-yellow-600 hover:bg-gray-50 dark:hover:bg-gray-800/50'
                     }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -136,7 +136,7 @@ export default function Navbar({ products }: { products: Product[] }) {
 
             {/* Search */}
             <div className="flex-1 max-w-sm mx-4 lg:mx-8">
-              <div className="bg-gray-50 dark:bg-gray-800/70 rounded-xl border border-gray-200/50 dark:border-gray-700/50 hover:border-blue-300 dark:hover:border-blue-600 transition-colors">
+              <div className="bg-gray-50 dark:bg-gray-800/70 rounded-xl border border-gray-200/50 dark:border-gray-700/50 hover:border-yellow-400 dark:hover:border-yellow-500 transition-colors">
                 <Search products={products} />
               </div>
             </div>
@@ -147,7 +147,10 @@ export default function Navbar({ products }: { products: Product[] }) {
               {/* Desktop sell button */}
               <Link
                 href="/dashboard/add"
-                className="hidden lg:flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium shadow-sm transition-all hover:scale-105"
+                className="hidden lg:flex items-center gap-2 px-4 py-2 
+                           bg-yellow-500 hover:bg-yellow-600 
+                           text-white rounded-lg font-medium shadow-sm 
+                           transition-all hover:scale-105"
               >
                 <ShoppingCart className="w-4 h-4" />
                 Vendre
@@ -160,13 +163,13 @@ export default function Navbar({ products }: { products: Product[] }) {
               {/* Desktop user */}
               {user && (
                 <DropdownMenu>
-                  <DropdownMenuTrigger className="hidden lg:block focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-full">
+                  <DropdownMenuTrigger className="hidden lg:block focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 rounded-full">
                     <Image
                       src={avatar || 'https://icons.veryicon.com/png/o/miscellaneous/standard/avatar-15.png'}
                       alt="Profile"
                       width={32}
                       height={32}
-                      className="rounded-full border-2 border-gray-200 dark:border-gray-700 hover:border-blue-300 transition-colors"
+                      className="rounded-full border-2 border-gray-200 dark:border-gray-700 hover:border-yellow-400 transition-colors"
                     />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
@@ -192,8 +195,8 @@ export default function Navbar({ products }: { products: Product[] }) {
                 <button
                   onClick={() => setOpen(!open)}
                   className={`p-2 rounded-lg transition-all ${open
-                      ? 'bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400'
-                      : 'bg-gray-50 text-gray-600 dark:bg-gray-800/70 dark:text-gray-300 hover:bg-blue-50 hover:text-blue-600'
+                    ? 'bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400'
+                    : 'bg-gray-50 text-gray-600 dark:bg-gray-800/70 dark:text-gray-300 hover:bg-yellow-50 hover:text-yellow-600'
                     }`}
                   aria-label={open ? "Fermer" : "Menu"}
                 >
@@ -213,8 +216,8 @@ export default function Navbar({ products }: { products: Product[] }) {
             <button
               onClick={resetCategory}
               className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${!category
-                  ? 'text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-900/30'
-                  : 'text-gray-600 dark:text-gray-300 hover:text-blue-600 hover:bg-gray-50 dark:hover:bg-gray-800/50'
+                  ? 'text-yellow-600 bg-yellow-50 dark:text-yellow-400 dark:bg-yellow-900/30'
+                  : 'text-gray-600 dark:text-gray-300 hover:text-yellow-600 hover:bg-gray-50 dark:hover:bg-gray-800/50'
                 }`}
             >
               🏷️ Tout
@@ -224,8 +227,8 @@ export default function Navbar({ products }: { products: Product[] }) {
                 key={cat.label}
                 onClick={() => handleCategory(cat.label)}
                 className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${category === cat.label
-                    ? 'text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-900/30'
-                    : 'text-gray-600 dark:text-gray-300 hover:text-blue-600 hover:bg-gray-50 dark:hover:bg-gray-800/50'
+                    ? 'text-yellow-600 bg-yellow-50 dark:text-yellow-400 dark:bg-yellow-900/30'
+                    : 'text-gray-600 dark:text-gray-300 hover:text-yellow-600 hover:bg-gray-50 dark:hover:bg-gray-800/50'
                   }`}
               >
                 {cat.emoji} {cat.label.replace('_', ' ')}
@@ -234,133 +237,6 @@ export default function Navbar({ products }: { products: Product[] }) {
           </div>
         </div>
       </nav>
-
-      {/* Mobile menu */}
-      {open && (
-        <div className="lg:hidden fixed inset-0 z-40 bg-black/30 backdrop-blur-sm" onClick={() => setOpen(false)}>
-          <div
-            ref={mobileMenuRef}
-            className="absolute right-0 top-0 h-full w-80 max-w-full bg-white dark:bg-gray-900 shadow-xl overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-
-            {/* Header */}
-            <div className="p-4 border-b border-gray-100 dark:border-gray-800">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <ShoppingBag className="w-6 h-6 text-blue-600" />
-                  <TextLogo />
-                </div>
-                <button
-                  onClick={() => setOpen(false)}
-                  className="p-1.5 text-gray-400 hover:text-gray-600 rounded-md"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* User mobile */}
-              {user && (
-                <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-                  <Image
-                    src={avatar || 'https://icons.veryicon.com/png/o/miscellaneous/standard/avatar-15.png'}
-                    alt="Profile"
-                    width={36}
-                    height={36}
-                    className="rounded-full border-2 border-blue-200 dark:border-blue-700"
-                  />
-                  <div>
-                    <p className="font-medium text-gray-900 dark:text-white">Mon compte</p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Gérer mon profil</p>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Menu content */}
-            <div className="p-4 space-y-6">
-
-              {/* Quick sell */}
-              <Link
-                href="/dashboard/add"
-                onClick={() => setOpen(false)}
-                className="flex items-center gap-3 p-3 bg-blue-600 text-white rounded-lg font-medium shadow-sm"
-              >
-                <ShoppingCart className="w-5 h-5" />
-                Vendre un produit
-              </Link>
-
-              {/* Navigation */}
-              <div className="space-y-1">
-                {navLinks.map(({ href, label, icon: Icon }) => (
-                  <Link
-                    key={href}
-                    href={href}
-                    onClick={() => setOpen(false)}
-                    className={`flex items-center gap-3 p-3 rounded-lg font-medium transition-colors ${pathname === href
-                        ? 'text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-900/30'
-                        : 'text-gray-700 dark:text-gray-200 hover:text-blue-600 hover:bg-gray-50 dark:hover:bg-gray-800/50'
-                      }`}
-                  >
-                    <Icon className="w-5 h-5" />
-                    {label}
-                  </Link>
-                ))}
-              </div>
-
-              {/* Categories */}
-              <div>
-                <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">Catégories</h3>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    onClick={resetCategory}
-                    className={`flex items-center gap-2 p-2.5 rounded-lg text-sm font-medium transition-colors ${!category
-                        ? 'text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-900/30'
-                        : 'text-gray-600 dark:text-gray-300 hover:text-blue-600 hover:bg-gray-50 dark:hover:bg-gray-800/50'
-                      }`}
-                  >
-                    🏷️ Tout
-                  </button>
-                  {categories.map((cat) => (
-                    <button
-                      key={cat.label}
-                      onClick={() => handleCategory(cat.label)}
-                      className={`flex items-center gap-2 p-2.5 rounded-lg text-sm font-medium transition-colors ${category === cat.label
-                          ? 'text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-900/30'
-                          : 'text-gray-600 dark:text-gray-300 hover:text-blue-600 hover:bg-gray-50 dark:hover:bg-gray-800/50'
-                        }`}
-                    >
-                      <span>{cat.emoji}</span>
-                      <span className="text-xs">{cat.label.replace('_', ' ')}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* User actions */}
-              {user && (
-                <div className="border-t border-gray-100 dark:border-gray-800 pt-4 space-y-1">
-                  <Link
-                    href={`/profile/${user.id}`}
-                    onClick={() => setOpen(false)}
-                    className="flex items-center gap-3 p-3 text-gray-700 dark:text-gray-200 hover:text-blue-600 hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-lg transition-colors"
-                  >
-                    <User className="w-5 h-5" />
-                    Mon profil
-                  </Link>
-                  <button
-                    onClick={() => { handleLogout(); setOpen(false) }}
-                    className="flex items-center gap-3 p-3 w-full text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
-                  >
-                    <LogOut className="w-5 h-5" />
-                    Déconnexion
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Spacer */}
       <div className="h-14 lg:h-20" />
