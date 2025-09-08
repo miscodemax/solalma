@@ -30,14 +30,7 @@ function ProductCardSkeletonGrid({ count }: { count: number }) {
   )
 }
 
-// 🎨 Identité visuelle Sangse
-const BRAND = {
-  yellow: "#F6C445", // Jaune safran
-  yellowHover: "#E2AE32",
-  blue: "#1C2B49",   // Bleu nuit
-  grayLight: "#F8F9FB",
-  grayDark: "#111827"
-}
+
 
 // PriceFilter
 function PriceFilter({

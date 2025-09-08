@@ -53,7 +53,7 @@ export default function LikeButton({ productId, userId }: { productId: number; u
       <button
         onClick={toggleLike}
         aria-label={liked ? "Retirer des favoris" : "Ajouter aux favoris"}
-        className="focus:outline-none focus-visible:ring-2 focus-visible:ring-[#6366F1] rounded-full transition-all"
+        className="focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1B2A41] rounded-full transition-all"
       >
         <AnimatePresence initial={false} mode="wait">
           {liked ? (
@@ -63,7 +63,7 @@ export default function LikeButton({ productId, userId }: { productId: number; u
               animate={{ scale: 1.3, opacity: 1 }}
               exit={{ scale: 0.8, opacity: 0 }}
               transition={{ type: "spring", stiffness: 600, damping: 12 }}
-              className="text-[#FFD6BA] text-xl"
+              className="text-[#F4B400] text-xl drop-shadow-sm"
             >
               <AiFillHeart />
             </motion.div>
@@ -74,7 +74,7 @@ export default function LikeButton({ productId, userId }: { productId: number; u
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.8, opacity: 0 }}
               transition={{ type: "spring", stiffness: 400, damping: 15 }}
-              className="text-[#E5E7EB] hover:text-[#6366F1] text-xl"
+              className="text-gray-400 hover:text-[#1B2A41] text-xl"
             >
               <AiOutlineHeart />
             </motion.div>
@@ -95,7 +95,7 @@ export default function LikeButton({ productId, userId }: { productId: number; u
             {Array.from({ length: 12 }).map((_, i) => (
               <motion.div
                 key={i}
-                className="w-2 h-2 rounded-full bg-[#FFD6BA] dark:bg-[#6366F1] absolute"
+                className="w-2 h-2 rounded-full bg-[#F4B400] dark:bg-[#1B2A41] absolute"
                 initial={{ x: 0, y: 0, scale: 1 }}
                 animate={{
                   x: (Math.random() - 0.5) * 100,
