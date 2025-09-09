@@ -99,9 +99,9 @@ export default async function UserProfilePage({ params }: { params: { id: string
   const getBadge = () => {
     if (!averageRating) return null
     const rating = parseFloat(averageRating)
-    if (rating >= 4.5) return { label: "Vendeur d'Or", icon: "🥇", color: "from-[#F6C445] to-yellow-600" }
+    if (rating >= 4.5) return { label: "Vendeur d'Or", icon: "🥇", color: "from-[#F4B400] to-[#FFD766]" }
     if (rating >= 4.0) return { label: "Vendeur Fiable", icon: "🥈", color: "from-gray-300 to-gray-500" }
-    if (rating >= 3.5) return { label: "Bon Vendeur", icon: "🥉", color: "from-orange-300 to-orange-500" }
+    if (rating >= 3.5) return { label: "Bon Vendeur", icon: "🥉", color: "from-[#8B5E34] to-[#8B5E34]" }
     return null
   }
 
@@ -109,7 +109,7 @@ export default async function UserProfilePage({ params }: { params: { id: string
     return Array.from({ length: 5 }, (_, i) => (
       <FaStar
         key={i}
-        className={`w-4 h-4 ${i < Math.floor(rating) ? 'text-[#F6C445]' : 'text-gray-300 dark:text-gray-600'
+        className={`w-4 h-4 ${i < Math.floor(rating) ? 'text-[#F4B400]' : 'text-gray-300 dark:text-gray-600'
           }`}
       />
     ))
@@ -122,14 +122,17 @@ export default async function UserProfilePage({ params }: { params: { id: string
 
   if (!profile) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#F9F9F9] to-[#F3F4F6] dark:from-[#1C1C1C] dark:to-[#2a2a2a]">
         <div className="text-center space-y-4">
-          <div className="w-20 h-20 mx-auto bg-red-100 rounded-full flex items-center justify-center">
+          <div className="w-20 h-20 mx-auto bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
             <span className="text-2xl">😕</span>
           </div>
-          <p className="text-lg font-semibold text-red-600">Profil introuvable</p>
-          <Link href="/" className="inline-block bg-[#F6C445] text-[#1C2B49] px-6 py-3 rounded-xl font-bold">
-            Retour à l accueil
+          <p className="text-lg font-semibold text-red-600 dark:text-red-400">Profil introuvable</p>
+          <Link
+            href="/"
+            className="inline-block bg-gradient-to-r from-[#F4B400] to-[#FFD766] text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+          >
+            Retour à l'accueil
           </Link>
         </div>
       </div>
@@ -137,11 +140,11 @@ export default async function UserProfilePage({ params }: { params: { id: string
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 space-y-6">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 space-y-6 bg-gradient-to-br from-[#F9F9F9] via-white to-[#F3F4F6] dark:from-[#1C1C1C] dark:via-[#2a2a2a] dark:to-[#1C1C1C] min-h-screen">
       <BackButton />
 
       {/* Header */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#F6C445]/10 via-white to-[#1C2B49]/5 dark:from-[#1C2B49] dark:via-gray-800 dark:to-[#1C2B49] shadow-xl border border-[#F6C445]/30 dark:border-[#1C2B49]">
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#F4B400]/10 via-white to-[#FFD766]/5 dark:from-[#1C1C1C] dark:via-gray-800 dark:to-[#1C1C1C] shadow-xl border border-[#F4B400]/30 dark:border-gray-600">
         {badge && (
           <div className="absolute top-4 right-4 z-10">
             <div className={`bg-gradient-to-r ${badge.color} text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1`}>
@@ -158,49 +161,49 @@ export default async function UserProfilePage({ params }: { params: { id: string
                 src={profile.avatar_url || "/default-avatar.png"}
                 alt={`Boutique de ${profile.username}`}
                 fill
-                className="rounded-full object-cover border-4 border-white dark:border-[#1C2B49] shadow-lg"
+                className="rounded-full object-cover border-4 border-white dark:border-[#1C1C1C] shadow-lg"
               />
               {badge && (
-                <div className="absolute -bottom-2 -right-2 bg-[#F6C445] rounded-full p-2 border-4 border-white dark:border-[#1C2B49]">
+                <div className="absolute -bottom-2 -right-2 bg-[#F4B400] rounded-full p-2 border-4 border-white dark:border-[#1C1C1C]">
                   <HiBadgeCheck className="w-4 h-4 text-white" />
                 </div>
               )}
             </div>
 
             <div className="flex-1 text-center sm:text-left space-y-3">
-              <h1 className="text-3xl font-black text-gray-900 dark:text-white mb-2">
+              <h1 className="text-3xl font-black text-[#1C1C1C] dark:text-white mb-2">
                 {profile.username}
               </h1>
-              <p className="text-gray-600 dark:text-gray-300 text-base leading-relaxed">
+              <p className="text-[#1C1C1C] dark:text-gray-300 text-base leading-relaxed">
                 {profile.bio || "✨ Passionnée de mode, je partage mes coups de cœur avec vous !"}
               </p>
 
               <div className="flex flex-wrap justify-center sm:justify-start gap-4 text-sm">
-                <div className="flex items-center gap-2 bg-white/50 dark:bg-[#1C2B49]/50 px-3 py-2 rounded-xl">
-                  <FaBox className="text-[#F6C445]" />
-                  <span className="font-semibold">{totalProducts}</span>
-                  <span className="text-gray-600 dark:text-gray-400">articles</span>
+                <div className="flex items-center gap-2 bg-white/70 dark:bg-[#1C1C1C]/50 px-3 py-2 rounded-xl border border-[#F4B400]/20">
+                  <FaBox className="text-[#F4B400]" />
+                  <span className="font-semibold text-[#1C1C1C] dark:text-white">{totalProducts}</span>
+                  <span className="text-[#1C1C1C] dark:text-gray-400">articles</span>
                 </div>
 
                 {ratings.length > 0 ? (
-                  <div className="flex items-center gap-2 bg-white/50 dark:bg-[#1C2B49]/50 px-3 py-2 rounded-xl">
+                  <div className="flex items-center gap-2 bg-white/70 dark:bg-[#1C1C1C]/50 px-3 py-2 rounded-xl border border-[#F4B400]/20">
                     <div className="flex items-center gap-1">
                       {renderStars(parseFloat(averageRating!))}
                     </div>
-                    <span className="font-semibold">{averageRating}</span>
-                    <span className="text-gray-600 dark:text-gray-400">({ratings.length} avis)</span>
+                    <span className="font-semibold text-[#1C1C1C] dark:text-white">{averageRating}</span>
+                    <span className="text-[#1C1C1C] dark:text-gray-400">({ratings.length} avis)</span>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2 bg-white/50 dark:bg-[#1C2B49]/50 px-3 py-2 rounded-xl">
-                    <HiTrendingUp className="text-[#F6C445]" />
-                    <span className="text-gray-600 dark:text-gray-400">Nouveau vendeur</span>
+                  <div className="flex items-center gap-2 bg-white/70 dark:bg-[#1C1C1C]/50 px-3 py-2 rounded-xl border border-[#F4B400]/20">
+                    <HiTrendingUp className="text-[#F4B400]" />
+                    <span className="text-[#1C1C1C] dark:text-gray-400">Nouveau vendeur</span>
                   </div>
                 )}
               </div>
             </div>
           </div>
 
-          <div className="mt-6 pt-6 border-t border-[#F6C445]/30 dark:border-[#1C2B49]">
+          <div className="mt-6 pt-6 border-t border-[#F4B400]/30 dark:border-gray-600">
             <div className="flex flex-wrap justify-center sm:justify-start gap-3">
               <Link
                 href={`https://wa.me/?text=${encodeURIComponent(
@@ -220,13 +223,13 @@ export default async function UserProfilePage({ params }: { params: { id: string
                 <>
                   <Link
                     href="/profile/update"
-                    className="bg-[#F6C445] hover:bg-yellow-500 text-[#1C2B49] px-6 py-3 rounded-xl flex items-center gap-2 font-bold shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
+                    className="bg-gradient-to-r from-[#F4B400] to-[#FFD766] hover:from-[#FFD766] hover:to-[#F4B400] text-white px-6 py-3 rounded-xl flex items-center gap-2 font-bold shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
                   >
                     ✏️ Modifier profil
                   </Link>
                   <Link
                     href="/dashboard/products"
-                    className="bg-[#1C2B49] hover:bg-[#24375e] text-white px-6 py-3 rounded-xl flex items-center gap-2 font-bold shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
+                    className="bg-gradient-to-r from-[#1C1C1C] to-[#1C1C1C] hover:from-[#2a2a2a] hover:to-[#2a2a2a] text-white px-6 py-3 rounded-xl flex items-center gap-2 font-bold shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
                   >
                     📦 Gérer produits
                   </Link>
@@ -239,12 +242,12 @@ export default async function UserProfilePage({ params }: { params: { id: string
 
       <section className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-            <div className="w-1 h-8 bg-gradient-to-b from-[#F6C445] to-[#1C2B49] rounded-full"></div>
+          <h2 className="text-2xl font-bold text-[#1C1C1C] dark:text-white flex items-center gap-3">
+            <div className="w-1 h-8 bg-gradient-to-b from-[#F4B400] to-[#FFD766] rounded-full"></div>
             Ma Collection
           </h2>
           {totalProducts > 0 && (
-            <span className="bg-[#F6C445] text-[#1C2B49] px-3 py-1 rounded-full text-sm font-bold">
+            <span className="bg-gradient-to-r from-[#F4B400] to-[#FFD766] text-white px-3 py-1 rounded-full text-sm font-bold shadow-lg">
               {totalProducts} articles
             </span>
           )}
@@ -255,7 +258,7 @@ export default async function UserProfilePage({ params }: { params: { id: string
       </section>
 
       {!isOwner && products.length > 0 && (
-        <div className="bg-gradient-to-r from-[#F6C445] to-[#1C2B49] rounded-3xl p-6 text-center text-white">
+        <div className="bg-gradient-to-r from-[#F4B400] via-[#FFD766] to-[#F4B400] rounded-3xl p-6 text-center text-white shadow-xl">
           <h3 className="text-xl font-bold mb-2">💝 Un coup de cœur ?</h3>
           <p className="mb-4 opacity-90">Contactez {profile.username} directement via WhatsApp pour commander</p>
           <a
@@ -264,13 +267,22 @@ export default async function UserProfilePage({ params }: { params: { id: string
             )}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 bg-white text-[#1C2B49] px-6 py-3 rounded-xl font-bold hover:bg-gray-100 transition-colors"
+            className="inline-flex items-center gap-2 bg-white text-[#F4B400] px-6 py-3 rounded-xl font-bold hover:bg-gray-100 hover:shadow-lg transition-all duration-300 hover:scale-105"
           >
             <FaWhatsapp className="w-5 h-5" />
             Contacter maintenant
           </a>
         </div>
       )}
+
+      {/* Overlay de fond pour cohérence */}
+      <div className="fixed inset-0 opacity-[0.02] dark:opacity-[0.03] pointer-events-none z-0">
+        <div className="absolute inset-0" style={{
+          backgroundImage: `radial-gradient(circle at 25% 25%, #F4B400 1px, transparent 1px), 
+                           radial-gradient(circle at 75% 75%, #FFD766 1px, transparent 1px)`,
+          backgroundSize: '30px 30px'
+        }}></div>
+      </div>
     </div>
   )
 }
