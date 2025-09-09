@@ -57,7 +57,7 @@ export default async function FavoritesPage() {
   const premiumItems = products.filter(p => p.price > 50000).length
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-[#F9F9F9] via-white to-[#F3F4F6] dark:from-[#1C1C1C] dark:via-[#2a2a2a] dark:to-[#1C1C1C] relative overflow-hidden">
+    <main className="min-h-screen bg-gradient-to-br from-[#F9F9F9] via-white to-[#F3F4F6] dark:from-[#1C1C1C] dark:via-[#2a2a2a] dark:to-[#1C1C1C] relative overflow-hidden pt-9">
 
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05]">
@@ -241,7 +241,7 @@ export default async function FavoritesPage() {
             {/* Premium CTA */}
             <div className="group relative">
               <Link
-                href="/dashboard/add"
+                href="/dashboard/products"
                 className="inline-flex items-center gap-4 bg-gradient-to-r from-[#F4B400] via-[#FFD766] to-[#F4B400] hover:from-[#FFD766] hover:via-[#F4B400] hover:to-[#FFD766] text-white font-bold text-sm sm:text-base px-8 py-5 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:scale-105 hover:-translate-y-1"
               >
                 <div className="p-2 bg-white/20 rounded-2xl">
