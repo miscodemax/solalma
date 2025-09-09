@@ -12,9 +12,6 @@ import { Suspense } from "react"
 import ProductGallery from "@/app/composants/productgallery"
 import Loader from "@/app/loading"
 
-
-
-
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const cookieStore = await cookies()
   const supabase = createServerClient(supabaseUrl, supabaseKey, {
@@ -64,12 +61,6 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   }
 }
 
-
-
-
-// Client-side filter logic
-
-
 export default async function UserProfilePage({ params }: { params: { id: string } }) {
   const cookieStore = await cookies()
   const supabase = createServerClient(supabaseUrl, supabaseKey, {
@@ -108,7 +99,7 @@ export default async function UserProfilePage({ params }: { params: { id: string
   const getBadge = () => {
     if (!averageRating) return null
     const rating = parseFloat(averageRating)
-    if (rating >= 4.5) return { label: "Vendeur d'Or", icon: "🥇", color: "from-yellow-400 to-yellow-600" }
+    if (rating >= 4.5) return { label: "Vendeur d'Or", icon: "🥇", color: "from-[#F6C445] to-yellow-600" }
     if (rating >= 4.0) return { label: "Vendeur Fiable", icon: "🥈", color: "from-gray-300 to-gray-500" }
     if (rating >= 3.5) return { label: "Bon Vendeur", icon: "🥉", color: "from-orange-300 to-orange-500" }
     return null
@@ -118,7 +109,7 @@ export default async function UserProfilePage({ params }: { params: { id: string
     return Array.from({ length: 5 }, (_, i) => (
       <FaStar
         key={i}
-        className={`w-4 h-4 ${i < Math.floor(rating) ? 'text-yellow-400' : 'text-gray-300 dark:text-gray-600'
+        className={`w-4 h-4 ${i < Math.floor(rating) ? 'text-[#F6C445]' : 'text-gray-300 dark:text-gray-600'
           }`}
       />
     ))
@@ -137,7 +128,7 @@ export default async function UserProfilePage({ params }: { params: { id: string
             <span className="text-2xl">😕</span>
           </div>
           <p className="text-lg font-semibold text-red-600">Profil introuvable</p>
-          <Link href="/" className="inline-block bg-[#D29587] text-white px-6 py-3 rounded-xl">
+          <Link href="/" className="inline-block bg-[#F6C445] text-[#1C2B49] px-6 py-3 rounded-xl font-bold">
             Retour à l accueil
           </Link>
         </div>
@@ -149,9 +140,8 @@ export default async function UserProfilePage({ params }: { params: { id: string
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 space-y-6">
       <BackButton />
 
-      {/* Header Premium */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-pink-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900 shadow-xl border border-pink-100 dark:border-gray-700">
-        {/* Badge flottant si vendeur premium */}
+      {/* Header */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#F6C445]/10 via-white to-[#1C2B49]/5 dark:from-[#1C2B49] dark:via-gray-800 dark:to-[#1C2B49] shadow-xl border border-[#F6C445]/30 dark:border-[#1C2B49]">
         {badge && (
           <div className="absolute top-4 right-4 z-10">
             <div className={`bg-gradient-to-r ${badge.color} text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1`}>
@@ -163,56 +153,46 @@ export default async function UserProfilePage({ params }: { params: { id: string
 
         <div className="p-6 sm:p-8">
           <div className="flex flex-col sm:flex-row items-center gap-6">
-            {/* Avatar avec statut en ligne */}
-            <div className="relative">
-              <div className="relative w-32 h-32 sm:w-36 sm:h-36 shrink-0">
-                <Image
-                  src={profile.avatar_url || "/default-avatar.png"}
-                  alt={`Boutique de ${profile.username}`}
-                  fill
-                  className="rounded-full object-cover border-4 border-white dark:border-gray-700 shadow-lg"
-                />
-                {/* Indicateur vérifié si badge */}
-                {badge && (
-                  <div className="absolute -bottom-2 -right-2 bg-green-500 rounded-full p-2 border-4 border-white dark:border-gray-800">
-                    <HiBadgeCheck className="w-4 h-4 text-white" />
-                  </div>
-                )}
-              </div>
+            <div className="relative w-32 h-32 sm:w-36 sm:h-36 shrink-0">
+              <Image
+                src={profile.avatar_url || "/default-avatar.png"}
+                alt={`Boutique de ${profile.username}`}
+                fill
+                className="rounded-full object-cover border-4 border-white dark:border-[#1C2B49] shadow-lg"
+              />
+              {badge && (
+                <div className="absolute -bottom-2 -right-2 bg-[#F6C445] rounded-full p-2 border-4 border-white dark:border-[#1C2B49]">
+                  <HiBadgeCheck className="w-4 h-4 text-white" />
+                </div>
+              )}
             </div>
 
-            {/* Infos vendeur */}
             <div className="flex-1 text-center sm:text-left space-y-3">
-              <div>
-                <h1 className="text-3xl font-black text-gray-900 dark:text-white mb-2">
-                  {profile.username}
-                </h1>
-                <p className="text-gray-600 dark:text-gray-300 text-base leading-relaxed">
-                  {profile.bio || "✨ Passionnée de mode, je partage mes coups de cœur avec vous !"}
-                </p>
-              </div>
+              <h1 className="text-3xl font-black text-gray-900 dark:text-white mb-2">
+                {profile.username}
+              </h1>
+              <p className="text-gray-600 dark:text-gray-300 text-base leading-relaxed">
+                {profile.bio || "✨ Passionnée de mode, je partage mes coups de cœur avec vous !"}
+              </p>
 
-              {/* Stats en ligne */}
               <div className="flex flex-wrap justify-center sm:justify-start gap-4 text-sm">
-                <div className="flex items-center gap-2 bg-white/50 dark:bg-gray-800/50 px-3 py-2 rounded-xl">
-                  <FaBox className="text-[#D29587]" />
+                <div className="flex items-center gap-2 bg-white/50 dark:bg-[#1C2B49]/50 px-3 py-2 rounded-xl">
+                  <FaBox className="text-[#F6C445]" />
                   <span className="font-semibold">{totalProducts}</span>
                   <span className="text-gray-600 dark:text-gray-400">articles</span>
                 </div>
 
-                {ratings.length > 0 && (
-                  <div className="flex items-center gap-2 bg-white/50 dark:bg-gray-800/50 px-3 py-2 rounded-xl">
+                {ratings.length > 0 ? (
+                  <div className="flex items-center gap-2 bg-white/50 dark:bg-[#1C2B49]/50 px-3 py-2 rounded-xl">
                     <div className="flex items-center gap-1">
                       {renderStars(parseFloat(averageRating!))}
                     </div>
                     <span className="font-semibold">{averageRating}</span>
                     <span className="text-gray-600 dark:text-gray-400">({ratings.length} avis)</span>
                   </div>
-                )}
-
-                {!ratings.length && (
-                  <div className="flex items-center gap-2 bg-white/50 dark:bg-gray-800/50 px-3 py-2 rounded-xl">
-                    <HiTrendingUp className="text-blue-500" />
+                ) : (
+                  <div className="flex items-center gap-2 bg-white/50 dark:bg-[#1C2B49]/50 px-3 py-2 rounded-xl">
+                    <HiTrendingUp className="text-[#F6C445]" />
                     <span className="text-gray-600 dark:text-gray-400">Nouveau vendeur</span>
                   </div>
                 )}
@@ -220,10 +200,8 @@ export default async function UserProfilePage({ params }: { params: { id: string
             </div>
           </div>
 
-          {/* Actions principales */}
-          <div className="mt-6 pt-6 border-t border-pink-100 dark:border-gray-700">
+          <div className="mt-6 pt-6 border-t border-[#F6C445]/30 dark:border-[#1C2B49]">
             <div className="flex flex-wrap justify-center sm:justify-start gap-3">
-
               <Link
                 href={`https://wa.me/?text=${encodeURIComponent(
                   `🔗 Découvre la boutique de ${profile.username} sur Sangse.shop : https://sangse.shop/profile/${id}`
@@ -236,22 +214,19 @@ export default async function UserProfilePage({ params }: { params: { id: string
                 Partager sur WhatsApp
               </Link>
 
-              <CopyButton
-                text={`https://sangse.shop/profile/${id}`}
-                platform="Copier le lien"
-              />
+              <CopyButton text={`https://sangse.shop/profile/${id}`} platform="Copier le lien" />
 
               {isOwner && (
                 <>
                   <Link
                     href="/profile/update"
-                    className="bg-[#D29587] hover:bg-[#bb7e70] text-white px-6 py-3 rounded-xl flex items-center gap-2 font-semibold shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
+                    className="bg-[#F6C445] hover:bg-yellow-500 text-[#1C2B49] px-6 py-3 rounded-xl flex items-center gap-2 font-bold shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
                   >
                     ✏️ Modifier profil
                   </Link>
                   <Link
                     href="/dashboard/products"
-                    className="bg-purple-500 hover:bg-purple-600 text-white px-6 py-3 rounded-xl flex items-center gap-2 font-semibold shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
+                    className="bg-[#1C2B49] hover:bg-[#24375e] text-white px-6 py-3 rounded-xl flex items-center gap-2 font-bold shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
                   >
                     📦 Gérer produits
                   </Link>
@@ -262,28 +237,25 @@ export default async function UserProfilePage({ params }: { params: { id: string
         </div>
       </div>
 
-      {/* Section Produits améliorée */}
       <section className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-            <div className="w-1 h-8 bg-gradient-to-b from-[#D29587] to-purple-500 rounded-full"></div>
+            <div className="w-1 h-8 bg-gradient-to-b from-[#F6C445] to-[#1C2B49] rounded-full"></div>
             Ma Collection
           </h2>
           {totalProducts > 0 && (
-            <span className="bg-[#D29587] text-white px-3 py-1 rounded-full text-sm font-semibold">
+            <span className="bg-[#F6C445] text-[#1C2B49] px-3 py-1 rounded-full text-sm font-bold">
               {totalProducts} articles
             </span>
           )}
         </div>
         <Suspense fallback={<Loader />}>
-          {/* Filtrage par catégorie/prix */}
           <ProductGallery products={products} userId={user?.id} />
         </Suspense>
       </section>
 
-      {/* Call to action pour visiteurs */}
       {!isOwner && products.length > 0 && (
-        <div className="bg-gradient-to-r from-[#D29587] to-purple-500 rounded-3xl p-6 text-center text-white">
+        <div className="bg-gradient-to-r from-[#F6C445] to-[#1C2B49] rounded-3xl p-6 text-center text-white">
           <h3 className="text-xl font-bold mb-2">💝 Un coup de cœur ?</h3>
           <p className="mb-4 opacity-90">Contactez {profile.username} directement via WhatsApp pour commander</p>
           <a
@@ -292,7 +264,7 @@ export default async function UserProfilePage({ params }: { params: { id: string
             )}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 bg-white text-[#D29587] px-6 py-3 rounded-xl font-bold hover:bg-gray-100 transition-colors"
+            className="inline-flex items-center gap-2 bg-white text-[#1C2B49] px-6 py-3 rounded-xl font-bold hover:bg-gray-100 transition-colors"
           >
             <FaWhatsapp className="w-5 h-5" />
             Contacter maintenant
