@@ -26,7 +26,7 @@ const categories = [
 
 const navLinks = [
   { href: '/', icon: HomeIcon, label: 'Accueil' },
-  { href: '/dashboard/add', icon: ShoppingCart, label: 'Vendre' },
+  { href: '/about', icon: ShoppingCart, label: 'à-propos' },
   { href: '/dashboard/products', icon: ShoppingBag, label: 'Mes produits' },
   { href: '/favoris', icon: Heart, label: 'Favoris' },
 ]
@@ -100,8 +100,8 @@ export default function Navbar({ products }: { products: Product[] }) {
   return (
     <>
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-200 ${scrolled
-          ? 'bg-white/95 dark:bg-[#0A1A2F]/95 backdrop-blur-lg shadow-sm border-b border-gray-200/20 dark:border-gray-700/20'
-          : 'bg-white/90 dark:bg-[#0A1A2F]/90 backdrop-blur-md'
+        ? 'bg-white/95 dark:bg-[#0A1A2F]/95 backdrop-blur-lg shadow-sm border-b border-gray-200/20 dark:border-gray-700/20'
+        : 'bg-white/90 dark:bg-[#0A1A2F]/90 backdrop-blur-md'
         }`}>
 
         <div className="max-w-7xl mx-auto px-4">
@@ -124,8 +124,8 @@ export default function Navbar({ products }: { products: Product[] }) {
                   key={href}
                   href={href}
                   className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${pathname === href
-                      ? 'text-yellow-600 bg-yellow-50 dark:text-yellow-400 dark:bg-yellow-900/30'
-                      : 'text-gray-600 dark:text-gray-300 hover:text-yellow-600 hover:bg-gray-50 dark:hover:bg-gray-800/50'
+                    ? 'text-yellow-600 bg-yellow-50 dark:text-yellow-400 dark:bg-yellow-900/30'
+                    : 'text-gray-600 dark:text-gray-300 hover:text-yellow-600 hover:bg-gray-50 dark:hover:bg-gray-800/50'
                     }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -216,8 +216,8 @@ export default function Navbar({ products }: { products: Product[] }) {
             <button
               onClick={resetCategory}
               className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${!category
-                  ? 'text-yellow-600 bg-yellow-50 dark:text-yellow-400 dark:bg-yellow-900/30'
-                  : 'text-gray-600 dark:text-gray-300 hover:text-yellow-600 hover:bg-gray-50 dark:hover:bg-gray-800/50'
+                ? 'text-yellow-600 bg-yellow-50 dark:text-yellow-400 dark:bg-yellow-900/30'
+                : 'text-gray-600 dark:text-gray-300 hover:text-yellow-600 hover:bg-gray-50 dark:hover:bg-gray-800/50'
                 }`}
             >
               🏷️ Tout
@@ -227,8 +227,8 @@ export default function Navbar({ products }: { products: Product[] }) {
                 key={cat.label}
                 onClick={() => handleCategory(cat.label)}
                 className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${category === cat.label
-                    ? 'text-yellow-600 bg-yellow-50 dark:text-yellow-400 dark:bg-yellow-900/30'
-                    : 'text-gray-600 dark:text-gray-300 hover:text-yellow-600 hover:bg-gray-50 dark:hover:bg-gray-800/50'
+                  ? 'text-yellow-600 bg-yellow-50 dark:text-yellow-400 dark:bg-yellow-900/30'
+                  : 'text-gray-600 dark:text-gray-300 hover:text-yellow-600 hover:bg-gray-50 dark:hover:bg-gray-800/50'
                   }`}
               >
                 {cat.emoji} {cat.label.replace('_', ' ')}
