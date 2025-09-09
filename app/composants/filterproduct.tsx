@@ -89,12 +89,9 @@ function PriceFilter({
 }
 
 export default function FilteredProducts({ products = [], userId = "demo" }) {
-  const mockProducts = [
-    { id: 1, title: "Robe Hijab Moderne Premium", description: "Élégante et confortable", price: 15000, image_url: "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=400" },
-    { id: 2, title: "Set Skincare Glow", description: "Routine peau éclatante", price: 8500, image_url: "https://images.unsplash.com/photo-1556228720-195a672e8a03?w=400" },
-  ]
 
-  const displayProducts = products.length > 0 ? products : mockProducts
+
+  const displayProducts = products
 
   const [priceRange, setPriceRange] = useState<[number, number] | null>(null)
   const [selectedIndex, setSelectedIndex] = useState(0)
