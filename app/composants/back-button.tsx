@@ -1,21 +1,35 @@
-"use client";
+"use client"
 
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react"; // Icône flèche
+import { useRouter } from "next/navigation"
+import { motion } from "framer-motion"
+import { ArrowLeftCircle } from "lucide-react"
 
 export default function BackButton() {
-  const router = useRouter();
+  const router = useRouter()
 
   return (
-    <Button
+    <motion.button
       onClick={() => router.back()}
-      variant="outline"
-      className="flex items-center gap-2 px-4 py-2 rounded-full text-sm hover:bg-[#A8D5BA]/10 transition-colors duration-200 border-[#A8D5BA]/40 bg-[#FAFAFA]/80 backdrop-blur-sm"
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
+      className="group flex items-center gap-2 px-5 py-2.5 my-5 rounded-full
+                 border border-[#F4B400]/40 bg-white/80 backdrop-blur-lg
+                 text-[#1C1C1C] dark:text-white 
+                 hover:bg-[#F4B400] hover:text-white hover:border-[#F4B400]
+                 shadow-sm hover:shadow-lg transition-all duration-300"
       aria-label="Retour en arrière"
     >
-      <ArrowLeft size={18} className="text-[#6366F1]" />
-      <span className="text-[#6366F1] font-medium">Retour</span>
-    </Button>
-  );
+      <motion.div
+        whileHover={{ x: -3 }}
+        transition={{ type: "spring", stiffness: 300 }}
+      >
+        <ArrowLeftCircle
+          className="w-5 h-5 text-[#F4B400] group-hover:text-white transition-colors duration-300"
+        />
+      </motion.div>
+      <span className="font-medium">Retour</span>
+    </motion.button>
+  )
 }
