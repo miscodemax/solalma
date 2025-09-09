@@ -15,7 +15,6 @@ import TextLogo from './textLogo'
 import { createClient } from '@/lib/supabase'
 import Image from 'next/image'
 import Search from './search'
-import { motion, AnimatePresence } from 'framer-motion'
 
 const categories = [
   { label: 'vetement', emoji: '👗' },
@@ -161,6 +160,35 @@ export default function Navbar({ products }: { products: Product[] }) {
                 <ThemeToggle />
               </div>
 
+              {/* Desktop user */}
+              {user && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger className="hidden lg:block focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 rounded-full">
+                    <Image
+                      src={avatar || 'https://icons.veryicon.com/png/o/miscellaneous/standard/avatar-15.png'}
+                      alt="Profile"
+                      width={32}
+                      height={32}
+                      className="rounded-full border-2 border-gray-200 dark:border-gray-700 hover:border-yellow-400 transition-colors"
+                    />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem onClick={() => router.push(`/profile/${user.id}`)}>
+                      <User className="w-4 h-4 mr-2" /> Mon profil
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => router.push('/dashboard/products')}>
+                      <ShoppingBag className="w-4 h-4 mr-2" /> Mes produits
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => router.push('/favoris')}>
+                      <Heart className="w-4 h-4 mr-2" /> Favoris
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleLogout} className="text-red-600">
+                      <LogOut className="w-4 h-4 mr-2" /> Déconnexion
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+
               {/* Mobile menu button */}
               <div className="lg:hidden flex items-center gap-1">
                 <ThemeToggle />
@@ -182,74 +210,33 @@ export default function Navbar({ products }: { products: Product[] }) {
               </div>
             </div>
           </div>
-        </div>
-      </nav>
 
-      {/* Mobile menu (slide-in) */}
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            ref={mobileMenuRef}
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
-            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className="fixed inset-y-0 right-0 z-50 w-4/5 max-w-sm bg-white dark:bg-[#0A1A2F] shadow-xl p-6 flex flex-col"
-          >
-            {/* Header */}
-            <div className="flex justify-between items-center mb-6">
-              <TextLogo />
+          {/* Desktop categories */}
+          <div className="hidden lg:flex items-center gap-1 py-2 border-t border-gray-100 dark:border-gray-800/50">
+            <button
+              onClick={resetCategory}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${!category
+                ? 'text-yellow-600 bg-yellow-50 dark:text-yellow-400 dark:bg-yellow-900/30'
+                : 'text-gray-600 dark:text-gray-300 hover:text-yellow-600 hover:bg-gray-50 dark:hover:bg-gray-800/50'
+                }`}
+            >
+              🏷️ Tout
+            </button>
+            {categories.map((cat) => (
               <button
-                onClick={() => setOpen(false)}
-                className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-red-50 dark:hover:bg-red-900/30"
-              >
-                <X className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-              </button>
-            </div>
-
-            {/* Links */}
-            <div className="flex flex-col gap-4">
-              {navLinks.map(({ href, label, icon: Icon }) => (
-                <Link
-                  key={href}
-                  href={href}
-                  onClick={() => setOpen(false)}
-                  className="flex items-center gap-3 px-3 py-2 rounded-lg text-lg font-medium text-gray-700 dark:text-gray-200 hover:bg-yellow-50 dark:hover:bg-gray-800/50 hover:text-yellow-600 transition-colors"
-                >
-                  <Icon className="w-5 h-5" />
-                  {label}
-                </Link>
-              ))}
-            </div>
-
-            {/* Categories */}
-            <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4 flex flex-col gap-2">
-              <span className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">Catégories</span>
-              <button
-                onClick={resetCategory}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-base font-medium transition-colors ${!category
+                key={cat.label}
+                onClick={() => handleCategory(cat.label)}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${category === cat.label
                   ? 'text-yellow-600 bg-yellow-50 dark:text-yellow-400 dark:bg-yellow-900/30'
                   : 'text-gray-600 dark:text-gray-300 hover:text-yellow-600 hover:bg-gray-50 dark:hover:bg-gray-800/50'
                   }`}
               >
-                🏷️ Tout
+                {cat.emoji} {cat.label.replace('_', ' ')}
               </button>
-              {categories.map((cat) => (
-                <button
-                  key={cat.label}
-                  onClick={() => handleCategory(cat.label)}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-base font-medium transition-colors ${category === cat.label
-                    ? 'text-yellow-600 bg-yellow-50 dark:text-yellow-400 dark:bg-yellow-900/30'
-                    : 'text-gray-600 dark:text-gray-300 hover:text-yellow-600 hover:bg-gray-50 dark:hover:bg-gray-800/50'
-                    }`}
-                >
-                  {cat.emoji} {cat.label.replace('_', ' ')}
-                </button>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            ))}
+          </div>
+        </div>
+      </nav>
 
       {/* Spacer */}
       <div className="h-14 lg:h-20" />
