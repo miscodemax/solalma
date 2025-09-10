@@ -62,15 +62,15 @@ export default function ProductsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#FAFAFA] dark:bg-black">
-        <p className="text-[#374151] dark:text-white">Chargement...</p>
+      <div className="min-h-screen flex items-center justify-center bg-[#FAF9F6] dark:bg-black">
+        <p className="text-[#1A1A1A] dark:text-white">Chargement...</p>
       </div>
     )
   }
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#FAFAFA] dark:bg-black">
+      <div className="min-h-screen flex items-center justify-center bg-[#FAF9F6] dark:bg-black">
         <AuthModal />
       </div>
     )
@@ -78,7 +78,7 @@ export default function ProductsPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#FAFAFA] dark:bg-black">
+      <div className="min-h-screen flex items-center justify-center bg-[#FAF9F6] dark:bg-black">
         <p className="text-red-500">{error}</p>
       </div>
     )
@@ -94,115 +94,115 @@ export default function ProductsPage() {
   }).length
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#FAFAFA] via-[#F5E6CC]/20 to-[#A8D5BA]/10 dark:from-[#0a0a0a] dark:via-[#111111] dark:to-[#0f0f0f] relative overflow-hidden">
-      {/* Animated Background Elements - Palette Sangse */}
+    <div className="min-h-screen bg-gradient-to-br from-[#FAF9F6] via-[#F4C430]/5 to-[#FFD55A]/10 dark:from-[#0a0a0a] dark:via-[#111111] dark:to-[#0f0f0f] relative overflow-hidden">
+      {/* Animated Background Elements - Palette Safran */}
       <div className="absolute inset-0 opacity-30">
-        <div className="absolute top-20 left-10 w-32 h-32 bg-[#A8D5BA]/20 rounded-full blur-xl animate-pulse"></div>
-        <div className="absolute top-40 right-20 w-48 h-48 bg-[#FFD6BA]/20 rounded-full blur-xl animate-bounce" style={{ animationDuration: '6s' }}></div>
-        <div className="absolute bottom-32 left-1/4 w-40 h-40 bg-[#6366F1]/10 rounded-full blur-2xl animate-ping" style={{ animationDuration: '4s' }}></div>
+        <div className="absolute top-20 left-10 w-32 h-32 bg-[#F4C430]/20 rounded-full blur-xl animate-pulse"></div>
+        <div className="absolute top-40 right-20 w-48 h-48 bg-[#FFD55A]/20 rounded-full blur-xl animate-bounce" style={{ animationDuration: '6s' }}></div>
+        <div className="absolute bottom-32 left-1/4 w-40 h-40 bg-[#E9961A]/10 rounded-full blur-2xl animate-ping" style={{ animationDuration: '4s' }}></div>
       </div>
 
       <div className="relative z-10 px-4 py-8">
         <div className="max-w-7xl mx-auto">
           <BackButton />
 
-          {/* Header Hero Section - Palette Sangse */}
+          {/* Header Hero Section - Palette Safran */}
           <div className="mb-12">
-            <div className="relative bg-gradient-to-r from-[#6366F1] to-[#A8D5BA] dark:from-[#5855eb] dark:to-[#96c7a8] p-8 rounded-3xl shadow-2xl overflow-hidden">
+            <div className="relative bg-gradient-to-r from-[#F4C430] to-[#E9961A] dark:from-[#F4C430] dark:to-[#E9961A] p-8 rounded-3xl shadow-2xl overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
               <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-12 -translate-x-12"></div>
 
               <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
                 <div className="flex items-center gap-6">
-                  <div className="bg-white/20 backdrop-blur-sm p-4 rounded-2xl shadow-lg">
-                    <Store className="w-8 h-8 text-white" />
+                  <div className="bg-[#1A1A1A]/20 backdrop-blur-sm p-4 rounded-2xl shadow-lg">
+                    <Store className="w-8 h-8 text-[#1A1A1A]" />
                   </div>
                   <div>
-                    <h1 className="text-4xl font-black text-white mb-2 tracking-tight">
+                    <h1 className="text-4xl font-black text-[#1A1A1A] mb-2 tracking-tight">
                       Votre Empire Commercial 👑
                     </h1>
-                    <p className="text-white/90 text-lg font-medium">
+                    <p className="text-[#1A1A1A]/90 text-lg font-medium">
                       Dirigez votre boutique avec style et panache !
                     </p>
                   </div>
                 </div>
 
                 <div className="flex gap-4">
-                  <div className="bg-white/20 backdrop-blur-sm p-4 rounded-xl text-center min-w-[80px]">
-                    <div className="text-2xl font-bold text-white">{totalProducts}</div>
-                    <div className="text-white/80 text-sm">Produits</div>
+                  <div className="bg-[#1A1A1A]/20 backdrop-blur-sm p-4 rounded-xl text-center min-w-[80px]">
+                    <div className="text-2xl font-bold text-[#1A1A1A]">{totalProducts}</div>
+                    <div className="text-[#1A1A1A]/80 text-sm">Produits</div>
                   </div>
-                  <div className="bg-white/20 backdrop-blur-sm p-4 rounded-xl text-center min-w-[120px]">
-                    <div className="text-2xl font-bold text-white">{totalValue.toLocaleString()}</div>
-                    <div className="text-white/80 text-sm">FCFA</div>
+                  <div className="bg-[#1A1A1A]/20 backdrop-blur-sm p-4 rounded-xl text-center min-w-[120px]">
+                    <div className="text-2xl font-bold text-[#1A1A1A]">{totalValue.toLocaleString()}</div>
+                    <div className="text-[#1A1A1A]/80 text-sm">FCFA</div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Dashboard Stats - Palette Sangse */}
+          {/* Dashboard Stats - Palette Safran */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-            <div className="bg-white/80 dark:bg-[#1a1a1a]/80 backdrop-blur-sm border border-[#E5E7EB]/50 dark:border-[#333]/50 rounded-2xl p-6 shadow-lg">
+            <div className="bg-white/80 dark:bg-[#1a1a1a]/80 backdrop-blur-sm border border-[#F4C430]/20 dark:border-[#333]/50 rounded-2xl p-6 shadow-lg">
               <div className="flex items-center gap-4">
-                <div className="bg-gradient-to-r from-[#6366F1] to-[#A8D5BA] p-3 rounded-xl shadow-md">
-                  <Package className="w-6 h-6 text-white" />
+                <div className="bg-gradient-to-r from-[#F4C430] to-[#FFD55A] p-3 rounded-xl shadow-md">
+                  <Package className="w-6 h-6 text-[#1A1A1A]" />
                 </div>
                 <div>
-                  <p className="text-sm text-[#374151] dark:text-[#aaa]">Total Produits</p>
-                  <p className="text-2xl font-bold text-[#374151] dark:text-white">{totalProducts}</p>
+                  <p className="text-sm text-[#1A1A1A]/70 dark:text-[#aaa]">Total Produits</p>
+                  <p className="text-2xl font-bold text-[#1A1A1A] dark:text-white">{totalProducts}</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white/80 dark:bg-[#1a1a1a]/80 backdrop-blur-sm border border-[#E5E7EB]/50 dark:border-[#333]/50 rounded-2xl p-6 shadow-lg">
+            <div className="bg-white/80 dark:bg-[#1a1a1a]/80 backdrop-blur-sm border border-[#F4C430]/20 dark:border-[#333]/50 rounded-2xl p-6 shadow-lg">
               <div className="flex items-center gap-4">
-                <div className="bg-gradient-to-r from-[#A8D5BA] to-[#FFD6BA] p-3 rounded-xl shadow-md">
-                  <TrendingUp className="w-6 h-6 text-white" />
+                <div className="bg-gradient-to-r from-[#E9961A] to-[#F4C430] p-3 rounded-xl shadow-md">
+                  <TrendingUp className="w-6 h-6 text-[#1A1A1A]" />
                 </div>
                 <div>
-                  <p className="text-sm text-[#374151] dark:text-[#aaa]">Nouveaux (7j)</p>
-                  <p className="text-2xl font-bold text-[#374151] dark:text-white">{recentProducts}</p>
+                  <p className="text-sm text-[#1A1A1A]/70 dark:text-[#aaa]">Nouveaux (7j)</p>
+                  <p className="text-2xl font-bold text-[#1A1A1A] dark:text-white">{recentProducts}</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white/80 dark:bg-[#1a1a1a]/80 backdrop-blur-sm border border-[#E5E7EB]/50 dark:border-[#333]/50 rounded-2xl p-6 shadow-lg">
+            <div className="bg-white/80 dark:bg-[#1a1a1a]/80 backdrop-blur-sm border border-[#F4C430]/20 dark:border-[#333]/50 rounded-2xl p-6 shadow-lg">
               <div className="flex items-center gap-4">
-                <div className="bg-gradient-to-r from-[#FFD6BA] to-[#6366F1] p-3 rounded-xl shadow-md">
-                  <Star className="w-6 h-6 text-white" />
+                <div className="bg-gradient-to-r from-[#FFD55A] to-[#E9961A] p-3 rounded-xl shadow-md">
+                  <Star className="w-6 h-6 text-[#1A1A1A]" />
                 </div>
                 <div>
-                  <p className="text-sm text-[#374151] dark:text-[#aaa]">Valeur Totale</p>
-                  <p className="text-2xl font-bold text-[#374151] dark:text-white">{totalValue.toLocaleString()} FCFA</p>
+                  <p className="text-sm text-[#1A1A1A]/70 dark:text-[#aaa]">Valeur Totale</p>
+                  <p className="text-2xl font-bold text-[#1A1A1A] dark:text-white">{totalValue.toLocaleString()} FCFA</p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Action Bar - Palette Sangse */}
-          <div className="bg-white/80 dark:bg-[#1a1a1a]/80 backdrop-blur-sm border border-[#E5E7EB]/50 dark:border-[#333]/50 rounded-2xl p-6 mb-8 shadow-lg">
+          {/* Action Bar - Palette Safran */}
+          <div className="bg-white/80 dark:bg-[#1a1a1a]/80 backdrop-blur-sm border border-[#F4C430]/20 dark:border-[#333]/50 rounded-2xl p-6 mb-8 shadow-lg">
             <div className="flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between">
               <div className="flex flex-1 gap-3">
                 <div className="relative flex-1 max-w-md">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#374151] dark:text-[#aaa]" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#1A1A1A]/70 dark:text-[#aaa]" />
                   <input
                     type="text"
                     placeholder="Rechercher vos produits..."
-                    className="w-full pl-10 pr-4 py-3 bg-[#FAFAFA]/50 dark:bg-[#2a2a2a]/50 border border-[#E5E7EB] dark:border-[#333] rounded-xl text-[#374151] dark:text-white"
+                    className="w-full pl-10 pr-4 py-3 bg-[#FAF9F6]/50 dark:bg-[#2a2a2a]/50 border border-[#F4C430]/30 dark:border-[#333] rounded-xl text-[#1A1A1A] dark:text-white"
                   />
                 </div>
-                <button className="px-4 py-3 bg-[#FAFAFA] dark:bg-[#2a2a2a] border border-[#E5E7EB] dark:border-[#333] rounded-xl text-[#374151] dark:text-white">
+                <button className="px-4 py-3 bg-[#FAF9F6] dark:bg-[#2a2a2a] border border-[#F4C430]/30 dark:border-[#333] rounded-xl text-[#1A1A1A] dark:text-white">
                   <Filter className="w-4 h-4" />
                 </button>
-                <button className="px-4 py-3 bg-[#FAFAFA] dark:bg-[#2a2a2a] border border-[#E5E7EB] dark:border-[#333] rounded-xl text-[#374151] dark:text-white">
+                <button className="px-4 py-3 bg-[#FAF9F6] dark:bg-[#2a2a2a] border border-[#F4C430]/30 dark:border-[#333] rounded-xl text-[#1A1A1A] dark:text-white">
                   <Grid className="w-4 h-4" />
                 </button>
               </div>
 
               <Link
                 href="/dashboard/add"
-                className="bg-gradient-to-r from-[#6366F1] to-[#A8D5BA] text-white px-6 py-3 rounded-xl shadow-lg font-semibold flex items-center gap-2"
+                className="bg-gradient-to-r from-[#F4C430] to-[#E9961A] text-[#1A1A1A] px-6 py-3 rounded-xl shadow-lg font-semibold flex items-center gap-2"
               >
                 <Plus className="w-4 h-4" />
                 Créer un produit
@@ -210,22 +210,22 @@ export default function ProductsPage() {
             </div>
           </div>
 
-          {/* Products Grid - Palette Sangse */}
+          {/* Products Grid - Palette Safran */}
           {products.length === 0 ? (
             <div className="text-center py-20">
-              <div className="bg-white/80 dark:bg-[#1a1a1a]/80 backdrop-blur-sm border border-[#E5E7EB]/50 dark:border-[#333]/50 rounded-3xl p-12 shadow-lg max-w-lg mx-auto">
-                <div className="w-32 h-32 mx-auto mb-6 bg-gradient-to-br from-[#A8D5BA]/20 to-[#6366F1]/20 rounded-full flex items-center justify-center">
-                  <Package className="w-16 h-16 text-[#6366F1]" />
+              <div className="bg-white/80 dark:bg-[#1a1a1a]/80 backdrop-blur-sm border border-[#F4C430]/20 dark:border-[#333]/50 rounded-3xl p-12 shadow-lg max-w-lg mx-auto">
+                <div className="w-32 h-32 mx-auto mb-6 bg-gradient-to-br from-[#F4C430]/20 to-[#E9961A]/20 rounded-full flex items-center justify-center">
+                  <Package className="w-16 h-16 text-[#E9961A]" />
                 </div>
-                <h3 className="text-2xl font-bold text-[#374151] dark:text-white mb-4">
+                <h3 className="text-2xl font-bold text-[#1A1A1A] dark:text-white mb-4">
                   Votre vitrine vous attend ! ✨
                 </h3>
-                <p className="text-[#374151]/70 dark:text-[#aaa] mb-8 leading-relaxed">
+                <p className="text-[#1A1A1A]/70 dark:text-[#aaa] mb-8 leading-relaxed">
                   Commencez à bâtir votre empire commercial en ajoutant votre premier produit.
                 </p>
                 <Link
                   href="/dashboard/add"
-                  className="inline-flex items-center gap-2 bg-gradient-to-r from-[#6366F1] to-[#A8D5BA] text-white px-8 py-4 rounded-xl shadow-lg font-semibold"
+                  className="inline-flex items-center gap-2 bg-gradient-to-r from-[#F4C430] to-[#E9961A] text-[#1A1A1A] px-8 py-4 rounded-xl shadow-lg font-semibold"
                 >
                   <Plus className="w-5 h-5" />
                   Ajouter mon premier produit
@@ -237,7 +237,7 @@ export default function ProductsPage() {
               {products.map((product, index) => (
                 <div
                   key={product.id}
-                  className="group bg-white/80 dark:bg-[#1a1a1a]/80 backdrop-blur-sm border border-[#E5E7EB]/50 dark:border-[#333]/50 rounded-2xl shadow-lg overflow-hidden"
+                  className="group bg-white/80 dark:bg-[#1a1a1a]/80 backdrop-blur-sm border border-[#F4C430]/20 dark:border-[#333]/50 rounded-2xl shadow-lg overflow-hidden"
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
                   <div className="relative overflow-hidden rounded-t-2xl">
@@ -246,30 +246,30 @@ export default function ProductsPage() {
                       alt={product.title}
                     />
                     {recentProducts > 0 && new Date(product.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) && (
-                      <div className="absolute top-3 left-3 bg-gradient-to-r from-[#A8D5BA] to-[#6366F1] text-white text-xs font-bold px-2 py-1 rounded-full shadow-md">
+                      <div className="absolute top-3 left-3 bg-gradient-to-r from-[#F4C430] to-[#E9961A] text-[#1A1A1A] text-xs font-bold px-2 py-1 rounded-full shadow-md">
                         ✨ Nouveau
                       </div>
                     )}
                   </div>
 
                   <div className="p-6">
-                    <h3 className="text-lg font-bold text-[#374151] dark:text-white line-clamp-1 mb-3">
+                    <h3 className="text-lg font-bold text-[#1A1A1A] dark:text-white line-clamp-1 mb-3">
                       {product.title}
                     </h3>
-                    <p className="text-xs text-[#374151]/60 dark:text-[#888] mb-3">
+                    <p className="text-xs text-[#1A1A1A]/60 dark:text-[#888] mb-3">
                       📅 Ajouté le {new Date(product.created_at).toLocaleDateString('fr-FR')}
                     </p>
-                    <p className="text-sm text-[#374151]/70 dark:text-[#bbb] mb-4 line-clamp-2">
+                    <p className="text-sm text-[#1A1A1A]/70 dark:text-[#bbb] mb-4 line-clamp-2">
                       {product.description}
                     </p>
 
                     <div className="flex items-center justify-between">
-                      <span className="text-xl font-black text-[#6366F1]">
+                      <span className="text-xl font-black text-[#E9961A]">
                         {parseFloat(product.price).toLocaleString()} FCFA
                       </span>
                       <div className="flex gap-2">
                         <Link href={`/dashboard/edit/${product.id}`}>
-                          <button className="text-[#6366F1] border-2 border-[#6366F1] px-3 py-1.5 rounded-lg text-sm font-semibold">
+                          <button className="text-[#E9961A] border-2 border-[#E9961A] px-3 py-1.5 rounded-lg text-sm font-semibold">
                             Modifier
                           </button>
                         </Link>
@@ -284,11 +284,11 @@ export default function ProductsPage() {
 
           {products.length > 0 && (
             <div className="mt-16 text-center">
-              <div className="bg-gradient-to-r from-[#A8D5BA]/20 to-[#6366F1]/10 dark:from-[#96c7a8]/10 dark:to-[#5855eb]/10 backdrop-blur-sm border border-[#A8D5BA]/30 rounded-3xl p-8 max-w-2xl mx-auto">
-                <h3 className="text-2xl font-bold text-[#374151] dark:text-white mb-4">
+              <div className="bg-gradient-to-r from-[#F4C430]/20 to-[#FFD55A]/10 dark:from-[#F4C430]/10 dark:to-[#E9961A]/10 backdrop-blur-sm border border-[#F4C430]/30 rounded-3xl p-8 max-w-2xl mx-auto">
+                <h3 className="text-2xl font-bold text-[#1A1A1A] dark:text-white mb-4">
                   🎉 Félicitations, entrepreneur !
                 </h3>
-                <p className="text-[#374151]/70 dark:text-[#aaa] leading-relaxed">
+                <p className="text-[#1A1A1A]/70 dark:text-[#aaa] leading-relaxed">
                   Votre boutique grandit jour après jour. Continuez à ajouter des produits
                   et regardez votre empire commercial prospérer !
                 </p>

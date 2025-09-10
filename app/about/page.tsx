@@ -535,7 +535,7 @@ export default function AboutPage() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <Link href="/dashboard/add">
+                <Link href="/dashboard/products">
                   <a className="bg-white text-[#E9961A] px-10 py-5 rounded-full text-xl font-bold shadow-xl flex items-center gap-3 hover:shadow-2xl transition-all duration-300">
                     <Store className="w-6 h-6" />
                     Créer mon catalogue maintenant
@@ -544,7 +544,7 @@ export default function AboutPage() {
                 </Link>
               </motion.div>
 
-              <Link href="/produits">
+              <Link href="/">
                 <a className="text-[#1A1A1A] hover:text-[#1A1A1A]/80 font-semibold px-6 py-3 border-2 border-[#1A1A1A]/30 hover:border-[#1A1A1A]/50 rounded-full transition-all duration-300 flex items-center gap-2">
                   Voir ce qui se vend déjà
                   <Eye className="w-4 h-4" />
