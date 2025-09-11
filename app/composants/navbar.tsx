@@ -212,7 +212,7 @@ export default function Navbar({ products }: { products: Product[] }) {
           </div>
 
           {/* Desktop categories */}
-          <div className="hidden lg:flex items-center gap-1 py-2 border-t border-gray-100 dark:border-gray-800/50">
+          <div className="lg:flex items-center gap-1 py-2 border-t border-gray-100 dark:border-gray-800/50">
             <button
               onClick={resetCategory}
               className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${!category
