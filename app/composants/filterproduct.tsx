@@ -221,8 +221,8 @@ function PopularProductsCarousel({ products }: { products: any[] }) {
               key={index}
               onClick={() => setCurrentIndex(index)}
               className={`transition-all duration-300 ${index === currentIndex
-                  ? 'w-8 h-3 bg-gradient-to-r from-[#F6C445] to-[#FFD700] rounded-full shadow-lg'
-                  : 'w-3 h-3 bg-gray-300 dark:bg-gray-600 rounded-full hover:bg-gray-400 dark:hover:bg-gray-500 hover:scale-110'
+                ? 'w-8 h-3 bg-gradient-to-r from-[#F6C445] to-[#FFD700] rounded-full shadow-lg'
+                : 'w-3 h-3 bg-gray-300 dark:bg-gray-600 rounded-full hover:bg-gray-400 dark:hover:bg-gray-500 hover:scale-110'
                 }`}
             />
           ))}
@@ -299,8 +299,8 @@ function PriceFilter({
             key={i}
             onClick={() => { onSelect(i); onChange(ranges[i].range) }}
             className={`p-4 rounded-xl text-sm transition-all duration-300 font-medium border group ${selectedIndex === i
-                ? "bg-gradient-to-r from-[#F6C445] to-[#FFD700] text-[#1C2B49] shadow-lg border-[#F6C445] scale-105"
-                : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 border-gray-200 dark:border-gray-700 hover:scale-102"
+              ? "bg-gradient-to-r from-[#F6C445] to-[#FFD700] text-[#1C2B49] shadow-lg border-[#F6C445] scale-105"
+              : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 border-gray-200 dark:border-gray-700 hover:scale-102"
               }`}
           >
             <div className="text-lg mb-1 group-hover:animate-bounce">{emoji}</div>
@@ -357,7 +357,7 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
   const productsToShow = filteredProducts.slice(0, visibleCount)
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#F8F9FB] via-white to-[#F8F9FB] dark:from-[#111827] dark:via-[#1C2B49] dark:to-[#111827]">
+    <div className="min-h-screen bg-gradient-to-b pt-5 from-[#F8F9FB] via-white to-[#F8F9FB] dark:from-[#111827] dark:via-[#1C2B49] dark:to-[#111827]">
 
       {/* Header avec effet parallax */}
       <div
