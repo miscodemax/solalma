@@ -171,8 +171,8 @@ function PopularProductsCarousel({ products }: { products: any[] }) {
               key={index}
               onClick={() => setCurrentIndex(index)}
               className={`w-2 h-2 rounded-full transition-all duration-300 ${index === currentIndex
-                  ? 'bg-[#F6C445] w-6'
-                  : 'bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500'
+                ? 'bg-[#F6C445] w-6'
+                : 'bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500'
                 }`}
             />
           ))}
@@ -249,8 +249,8 @@ function PriceFilter({
             key={i}
             onClick={() => { onSelect(i); onChange(ranges[i].range) }}
             className={`p-4 rounded-xl text-sm transition-all duration-300 font-medium border group ${selectedIndex === i
-                ? "bg-gradient-to-r from-[#F6C445] to-[#FFD700] text-[#1C2B49] shadow-lg border-[#F6C445] scale-105"
-                : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 border-gray-200 dark:border-gray-700 hover:scale-102"
+              ? "bg-gradient-to-r from-[#F6C445] to-[#FFD700] text-[#1C2B49] shadow-lg border-[#F6C445] scale-105"
+              : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 border-gray-200 dark:border-gray-700 hover:scale-102"
               }`}
           >
             <div className="text-lg mb-1 group-hover:animate-bounce">{emoji}</div>
@@ -324,7 +324,7 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
             <div className="w-1 h-1 bg-gray-400 rounded-full" />
             <div className="flex items-center gap-1">
               <Star className="w-3 h-3 text-[#F6C445] fill-[#F6C445]" />
-              <span>Livraison rapide</span>
+              <span>Meilleurs prix</span>
             </div>
           </div>
 
@@ -339,13 +339,21 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
               {priceRange && <Zap size={12} className="text-[#F6C445] animate-pulse" />}
             </button>
 
-            <button
+            <a
+              href={`https://wa.me/?text=${encodeURIComponent(
+                "Hey 👋 je viens de découvrir Sangse, une marketplace 100% sénégalaise 🌍✨ Tu devrais vraiment jeter un coup d'œil 👉 https://sangse.com"
+
+              )}`}
+              target="_blank"
+              rel="noopener noreferrer"
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold bg-gradient-to-r from-[#F6C445] to-[#FFD700] text-[#1C2B49] hover:from-[#FFD700] hover:to-[#F6C445] transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
             >
               <Share2 size={16} />
               <span>Partager</span>
               <Gift size={14} className="animate-bounce" />
-            </button>
+            </a>
+
+
           </div>
         </div>
       </div>
