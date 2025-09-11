@@ -190,6 +190,7 @@ export default function Navbar({ products }: { products: Product[] }) {
               )}
 
               {/* Mobile menu button */}
+              {/* Mobile menu button */}
               <div className="lg:hidden flex items-center gap-1">
                 <ThemeToggle />
                 <button
@@ -201,13 +202,98 @@ export default function Navbar({ products }: { products: Product[] }) {
                   aria-label={open ? "Fermer" : "Menu"}
                 >
                   <div className="relative w-5 h-5">
-                    <Menu className={`absolute transition-all duration-200 ${open ? 'rotate-90 opacity-0 scale-75' : 'rotate-0 opacity-100 scale-100'
-                      }`} />
-                    <X className={`absolute transition-all duration-200 ${open ? 'rotate-0 opacity-100 scale-100' : '-rotate-90 opacity-0 scale-75'
-                      }`} />
+                    <Menu
+                      className={`absolute transition-all duration-200 ${open ? 'rotate-90 opacity-0 scale-75' : 'rotate-0 opacity-100 scale-100'
+                        }`}
+                    />
+                    <X
+                      className={`absolute transition-all duration-200 ${open ? 'rotate-0 opacity-100 scale-100' : '-rotate-90 opacity-0 scale-75'
+                        }`}
+                    />
                   </div>
                 </button>
               </div>
+
+              {/* Mobile menu drawer */}
+              {open && (
+                <div
+                  ref={mobileMenuRef}
+                  className="fixed inset-0 z-40 lg:hidden"
+                >
+                  {/* overlay */}
+                  <div
+                    className="absolute inset-0 bg-black/40"
+                    onClick={() => setOpen(false)}
+                  />
+
+                  {/* drawer */}
+                  <div className="absolute top-0 right-0 w-72 h-full bg-white dark:bg-[#0A1A2F] shadow-xl flex flex-col">
+                    {/* Header */}
+                    <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+                      <TextLogo />
+                      <button
+                        onClick={() => setOpen(false)}
+                        className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+                      >
+                        <X className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                      </button>
+                    </div>
+
+                    {/* Navigation links */}
+                    <div className="flex flex-col p-4 gap-2 border-b border-gray-200 dark:border-gray-700">
+                      {navLinks.map(({ href, label, icon: Icon }) => (
+                        <Link
+                          key={href}
+                          href={href}
+                          onClick={() => setOpen(false)}
+                          className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${pathname === href
+                            ? 'text-yellow-600 bg-yellow-50 dark:text-yellow-400 dark:bg-yellow-900/30'
+                            : 'text-gray-700 dark:text-gray-300 hover:text-yellow-600 hover:bg-gray-50 dark:hover:bg-gray-800/50'
+                            }`}
+                        >
+                          <Icon className="w-4 h-4" />
+                          {label}
+                        </Link>
+                      ))}
+                      <Link
+                        href="/dashboard/add"
+                        onClick={() => setOpen(false)}
+                        className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium bg-yellow-500 hover:bg-yellow-600 text-white transition-all"
+                      >
+                        <ShoppingCart className="w-4 h-4" />
+                        Vendre
+                      </Link>
+                    </div>
+
+                    {/* Categories */}
+                    <div className="flex flex-col p-4 gap-2 overflow-y-auto">
+                      <span className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 px-2">Catégories</span>
+                      <button
+                        onClick={resetCategory}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${!category
+                          ? 'text-yellow-600 bg-yellow-50 dark:text-yellow-400 dark:bg-yellow-900/30'
+                          : 'text-gray-700 dark:text-gray-300 hover:text-yellow-600 hover:bg-gray-50 dark:hover:bg-gray-800/50'
+                          }`}
+                      >
+                        🏷️ Tout
+                      </button>
+                      {categories.map((cat) => (
+                        <button
+                          key={cat.label}
+                          onClick={() => handleCategory(cat.label)}
+                          className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${category === cat.label
+                            ? 'text-yellow-600 bg-yellow-50 dark:text-yellow-400 dark:bg-yellow-900/30'
+                            : 'text-gray-700 dark:text-gray-300 hover:text-yellow-600 hover:bg-gray-50 dark:hover:bg-gray-800/50'
+                            }`}
+                        >
+                          {cat.emoji} {cat.label.replace('_', ' ')}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
             </div>
           </div>
 
