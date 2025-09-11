@@ -233,35 +233,42 @@ function PopularProductsCarousel({ products }: { products: any[] }) {
 }
 
 // Composant Back to Top
+
+
+
 function BackToTopButton() {
   const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
     const toggleVisibility = () => {
-      setIsVisible(window.pageYOffset > 300)
+      setIsVisible(window.scrollY > 300)
     }
 
-    window.addEventListener('scroll', toggleVisibility)
-    return () => window.removeEventListener('scroll', toggleVisibility)
+    window.addEventListener("scroll", toggleVisibility)
+    return () => window.removeEventListener("scroll", toggleVisibility)
   }, [])
 
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
-      behavior: 'smooth'
+      behavior: "smooth",
     })
   }
 
   return (
     <button
       onClick={scrollToTop}
-      className={`fixed bottom-6 right-6 z-50 w-12 h-12 bg-gradient-to-r from-[#F6C445] to-[#FFD700] text-[#1C2B49] rounded-full shadow-lg hover:shadow-xl transition-all duration-300 ${isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-0'
-        } hover:scale-110 active:scale-95`}
+      aria-label="Retour en haut"
+      className={`fixed bottom-4 right-4 z-40 flex items-center justify-center w-10 h-10 rounded-full bg-white/80 text-[#1C2B49] shadow-md backdrop-blur-md border border-gray-200 transition-all duration-300 ${isVisible
+        ? "opacity-100 scale-100"
+        : "opacity-0 scale-0 pointer-events-none"
+        } hover:bg-white hover:shadow-lg active:scale-95`}
     >
-      <ArrowUp className="w-5 h-5 mx-auto" />
+      <ArrowUp className="w-4 h-4" />
     </button>
   )
 }
+
 
 // PriceFilter amélioré
 function PriceFilter({
