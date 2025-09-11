@@ -86,6 +86,9 @@ export default async function ProductDetailPage({ params }: Props) {
     .select("*")
     .eq("user_id", product?.user_id)
 
+  console.log(allProducts.length);
+
+
   const allImages = [
     product.image_url,
     ...(productImages?.map((img) => img.image_url) || []),
@@ -100,7 +103,7 @@ export default async function ProductDetailPage({ params }: Props) {
     .select("id, title, price, image_url")
     .eq("category", product.category)
     .neq("id", product.id)
-    .limit(4)
+    .limit(8)
 
   const { data: allRatings } = await supabase
     .from("ratings_sellers")
