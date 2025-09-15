@@ -2,7 +2,7 @@
 import { useState, useMemo } from "react"
 import ProductCard from "@/app/composants/product-card"
 import CategoryFilter from "@/app/composants/categoriefilter"
-import PriceFilter from "./pricefilter"
+import MinMaxPriceFilter from "./minmaxpricefilter"
 import { FaBox } from "react-icons/fa"
 
 type Product = {
@@ -40,7 +40,7 @@ export default function ProductGallery({
             {/* Filtres */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
                 <CategoryFilter selectedCategory={category} onSelect={setCategory} />
-                <PriceFilter
+                <MinMaxPriceFilter
                     minPrice={minPrice}
                     maxPrice={maxPrice}
                     setMinPrice={setMinPrice}
