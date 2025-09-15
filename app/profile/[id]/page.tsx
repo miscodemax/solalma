@@ -252,9 +252,7 @@ export default async function UserProfilePage({ params }: { params: { id: string
             </span>
           )}
         </div>
-        <Suspense fallback={<Loader />}>
-          <PriceFilter />
-        </Suspense>
+        
       </section>
 
       {!isOwner && products.length > 0 && (
