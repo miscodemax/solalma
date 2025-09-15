@@ -116,20 +116,47 @@ export default function SimplePWAInstall() {
 
             {/* Dialog iOS instructions */}
             <Dialog open={showIOSDialog} onOpenChange={setShowIOSDialog}>
-                <DialogContent className="rounded-2xl">
+                <DialogContent className="rounded-2xl p-6">
                     <DialogHeader>
-                        <DialogTitle>Installer sur iOS</DialogTitle>
-                        <DialogDescription>
-                            Pour ajouter Sangse à votre écran d’accueil :
-                            <br />
-                            1. Appuyez sur <span className="font-medium">Partager</span> (icône
-                            en bas de l’écran) <br />
-                            2. Sélectionnez{' '}
-                            <span className="font-medium">Ajouter à l’écran d’accueil</span>
+                        <DialogTitle className="text-lg font-bold text-gray-800">
+                            Installer Sangse sur iPhone
+                        </DialogTitle>
+                        <DialogDescription className="text-sm text-gray-600">
+                            Suivez ces étapes simples 👇
                         </DialogDescription>
                     </DialogHeader>
+
+                    <div className="mt-4 space-y-4">
+                        {/* Étape 1 */}
+                        <div className="flex items-center gap-3">
+                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-yellow-100 text-yellow-600 font-bold">
+                                1
+                            </div>
+                            <p className="text-sm text-gray-700">
+                                Appuyez sur l’icône <span className="font-medium">Partager</span>
+                                en bas de votre écran.
+                            </p>
+
+                        </div>
+
+                        {/* Étape 2 */}
+                        <div className="flex items-center gap-3">
+                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-yellow-100 text-yellow-600 font-bold">
+                                2
+                            </div>
+                            <p className="text-sm text-gray-700">
+                                Choisissez <span className="font-medium">Ajouter à l’écran d’accueil</span>.
+                            </p>
+
+                        </div>
+                    </div>
+
+                    <div className="mt-6 text-center text-sm text-gray-500">
+                        Votre app Sangse sera disponible directement comme une application 🚀
+                    </div>
                 </DialogContent>
             </Dialog>
+
         </>
     )
 }
