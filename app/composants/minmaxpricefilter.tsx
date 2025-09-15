@@ -35,6 +35,19 @@ export default function MinMaxPriceFilter({
         }
     }, [isOpen])
 
+    // Bloquer le scroll sur mobile quand le dropdown est ouvert
+    useEffect(() => {
+        if (isOpen) {
+            document.body.style.overflow = 'hidden'
+        } else {
+            document.body.style.overflow = 'unset'
+        }
+
+        return () => {
+            document.body.style.overflow = 'unset'
+        }
+    }, [isOpen])
+
     const formatNumber = (num) => {
         if (!num) return ""
         return new Intl.NumberFormat('fr-FR').format(num)
@@ -44,7 +57,7 @@ export default function MinMaxPriceFilter({
         // Validation des valeurs
         const minVal = tempMin ? parseInt(tempMin.toString().replace(/\s/g, '')) : ""
         const maxVal = tempMax ? parseInt(tempMax.toString().replace(/\s/g, '')) : ""
-
+        
         if (minVal && maxVal && minVal > maxVal) {
             // Inverser si min > max
             setMinPrice(maxVal.toString())
@@ -74,6 +87,18 @@ export default function MinMaxPriceFilter({
 
     const formatDisplayText = () => {
         if (!minPrice && !maxPrice) return "Budget"
+        
+        // Version courte pour mobile
+        const isMobile = window.innerWidth < 640
+        if (isMobile) {
+            if (minPrice && maxPrice) {
+                return `${formatNumber(minPrice)}-${formatNumber(maxPrice)}`
+            }
+            if (minPrice) return `${formatNumber(minPrice)}+`
+            if (maxPrice) return `<${formatNumber(maxPrice)}`
+        }
+        
+        // Version complète pour desktop
         if (minPrice && maxPrice) {
             return `${formatNumber(minPrice)} - ${formatNumber(maxPrice)} FCFA`
         }
@@ -85,153 +110,180 @@ export default function MinMaxPriceFilter({
     const hasActiveFilter = minPrice || maxPrice
 
     return (
-        <div className="relative" ref={dropdownRef}>
-            {/* Bouton déclencheur avec icône */}
-            <button
-                onClick={() => setIsOpen(!isOpen)}
-                className={`
-                    flex items-center gap-2.5 px-4 py-2.5 rounded-full text-sm font-medium
-                    transition-all duration-300 border backdrop-blur-sm
-                    ${hasActiveFilter
-                        ? 'bg-gradient-to-r from-[#F4B400] to-[#E6A200] text-white border-[#F4B400] shadow-lg shadow-[#F4B400]/25 scale-105'
-                        : 'bg-white/90 dark:bg-[#2A2A2A]/90 text-[#1C1C1C] dark:text-white border-gray-200 dark:border-gray-600 hover:border-[#F4B400]/50 hover:shadow-md dark:hover:border-gray-500'
-                    }
-                    group
-                `}
-            >
-                {/* Icône prix */}
-                <svg
-                    className={`w-4 h-4 transition-all duration-200 ${hasActiveFilter ? 'scale-110' : 'group-hover:scale-105'}`}
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
+        <>
+            <div className="relative" ref={dropdownRef}>
+                {/* Bouton déclencheur optimisé mobile */}
+                <button
+                    onClick={() => setIsOpen(!isOpen)}
+                    className={`
+                        flex items-center gap-2 px-3 sm:px-4 py-2.5 rounded-full text-xs sm:text-sm font-medium
+                        transition-all duration-300 border backdrop-blur-sm min-w-0
+                        ${hasActiveFilter
+                            ? 'bg-gradient-to-r from-[#F4B400] to-[#E6A200] text-white border-[#F4B400] shadow-lg shadow-[#F4B400]/25' 
+                            : 'bg-white/90 dark:bg-[#2A2A2A]/90 text-[#1C1C1C] dark:text-white border-gray-200 dark:border-gray-600 hover:border-[#F4B400]/50 hover:shadow-md dark:hover:border-gray-500'
+                        }
+                        active:scale-95 touch-manipulation
+                    `}
                 >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                </svg>
+                    {/* Icône prix */}
+                    <svg 
+                        className="w-4 h-4 flex-shrink-0" 
+                        fill="none" 
+                        viewBox="0 0 24 24" 
+                        stroke="currentColor"
+                    >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                    </svg>
+                    
+                    <span className="truncate min-w-0">{formatDisplayText()}</span>
+                    
+                    {hasActiveFilter && (
+                        <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse flex-shrink-0" />
+                    )}
+                    
+                    <svg
+                        className={`w-3 h-3 sm:w-4 sm:h-4 transition-transform duration-300 flex-shrink-0 ${isOpen ? 'rotate-180' : ''}`}
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                    >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+            </div>
 
-                <span className="whitespace-nowrap">{formatDisplayText()}</span>
-
-                {hasActiveFilter && (
-                    <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
-                )}
-
-                <svg
-                    className={`w-4 h-4 transition-all duration-300 ${isOpen ? 'rotate-180' : 'group-hover:rotate-12'}`}
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-            </button>
-
-            {/* Dropdown avec animation */}
+            {/* Overlay mobile fullscreen */}
             {isOpen && (
-                <div className="absolute top-full mt-3 right-0 bg-white/95 dark:bg-[#2A2A2A]/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-700 p-5 w-80 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-                    <div className="space-y-5">
-                        {/* En-tête avec reset */}
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 bg-gradient-to-r from-[#F4B400] to-[#E6A200] rounded-full"></div>
-                                <h3 className="text-sm font-semibold text-[#1C1C1C] dark:text-white">
-                                    Définir mon budget
-                                </h3>
-                            </div>
-                            {hasActiveFilter && (
-                                <button
-                                    onClick={handleReset}
-                                    className="text-xs text-gray-500 hover:text-[#F4B400] transition-colors duration-200 font-medium"
-                                >
-                                    Tout effacer
-                                </button>
-                            )}
+                <>
+                    {/* Backdrop mobile */}
+                    <div className="sm:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-40" onClick={() => setIsOpen(false)} />
+                    
+                    {/* Modal mobile bottom sheet */}
+                    <div className={`
+                        fixed sm:absolute 
+                        inset-x-0 bottom-0 sm:inset-auto 
+                        sm:top-full sm:mt-3 sm:right-0 sm:left-auto sm:w-80
+                        bg-white/98 dark:bg-[#2A2A2A]/98 backdrop-blur-xl 
+                        rounded-t-3xl sm:rounded-2xl 
+                        shadow-2xl border-t sm:border border-gray-100 dark:border-gray-700 
+                        z-50 animate-in 
+                        slide-in-from-bottom-full sm:slide-in-from-top-2 
+                        sm:fade-in 
+                        duration-300 sm:duration-200
+                        max-h-[85vh] sm:max-h-none overflow-y-auto
+                    `}>
+                        {/* Handle mobile (indicateur de glissement) */}
+                        <div className="sm:hidden flex justify-center pt-3 pb-2">
+                            <div className="w-12 h-1 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
                         </div>
 
-                        {/* Inputs prix avec design amélioré */}
-                        <div className="space-y-3">
-                            <div className="flex items-end gap-3">
-                                <div className="flex-1">
-                                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">
-                                        Prix minimum
-                                    </label>
-                                    <div className="relative group">
-                                        <input
-                                            type="number"
-                                            value={tempMin}
-                                            onChange={(e) => setTempMin(e.target.value)}
-                                            placeholder="0"
-                                            className="w-full pl-3 pr-12 py-3 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-[#F4B400]/20 focus:border-[#F4B400] bg-white dark:bg-[#1C1C1C] text-[#1C1C1C] dark:text-white transition-all duration-200 group-hover:border-gray-300"
-                                            min="0"
-                                        />
-                                        <span className="absolute right-3 top-3 text-xs font-medium text-gray-500">FCFA</span>
-                                    </div>
+                        <div className="p-5 sm:p-5 space-y-6 sm:space-y-5 pb-8 sm:pb-5">
+                            {/* En-tête avec reset */}
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-2 h-2 bg-gradient-to-r from-[#F4B400] to-[#E6A200] rounded-full"></div>
+                                    <h3 className="text-base sm:text-sm font-semibold text-[#1C1C1C] dark:text-white">
+                                        Définir mon budget
+                                    </h3>
                                 </div>
-
-                                <div className="flex-shrink-0 pb-3">
-                                    <div className="w-6 h-px bg-gradient-to-r from-gray-300 to-gray-400 dark:from-gray-600 dark:to-gray-500"></div>
-                                </div>
-
-                                <div className="flex-1">
-                                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">
-                                        Prix maximum
-                                    </label>
-                                    <div className="relative group">
-                                        <input
-                                            type="number"
-                                            value={tempMax}
-                                            onChange={(e) => setTempMax(e.target.value)}
-                                            placeholder="Illimité"
-                                            className="w-full pl-3 pr-12 py-3 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-[#F4B400]/20 focus:border-[#F4B400] bg-white dark:bg-[#1C1C1C] text-[#1C1C1C] dark:text-white transition-all duration-200 group-hover:border-gray-300"
-                                            min={tempMin || "0"}
-                                        />
-                                        <span className="absolute right-3 top-3 text-xs font-medium text-gray-500">FCFA</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Suggestions populaires améliorées */}
-                        <div>
-                            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-3">
-                                🔥 Gammes populaires
-                            </label>
-                            <div className="grid grid-cols-2 gap-2">
-                                {[
-                                    { label: "Moins de 50K", min: "", max: "50000", icon: "💰" },
-                                    { label: "50K - 200K", min: "50000", max: "200000", icon: "🛍️" },
-                                    { label: "200K - 500K", min: "200000", max: "500000", icon: "⭐" },
-                                    { label: "Plus de 500K", min: "500000", max: "", icon: "💎" }
-                                ].map((suggestion, index) => (
+                                {hasActiveFilter && (
                                     <button
-                                        key={index}
-                                        onClick={() => handleQuickSelect(suggestion.min, suggestion.max)}
-                                        className="flex items-center gap-2 px-3 py-2.5 text-xs font-medium rounded-xl bg-gray-50 dark:bg-[#1C1C1C] text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-[#F4B400] hover:to-[#E6A200] hover:text-white transition-all duration-200 hover:scale-105 hover:shadow-md group"
+                                        onClick={handleReset}
+                                        className="text-sm sm:text-xs text-gray-500 hover:text-[#F4B400] transition-colors duration-200 font-medium active:scale-95"
                                     >
-                                        <span className="group-hover:scale-110 transition-transform">{suggestion.icon}</span>
-                                        <span>{suggestion.label}</span>
+                                        Effacer
                                     </button>
-                                ))}
+                                )}
                             </div>
-                        </div>
 
-                        {/* Boutons d'action avec design premium */}
-                        <div className="flex items-center gap-3 pt-2">
-                            <button
-                                onClick={() => setIsOpen(false)}
-                                className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors duration-200 rounded-xl hover:bg-gray-50 dark:hover:bg-[#1C1C1C]"
-                            >
-                                Fermer
-                            </button>
-                            <button
-                                onClick={handleApply}
-                                className="flex-1 px-4 py-2.5 bg-gradient-to-r from-[#F4B400] to-[#E6A200] text-white text-sm font-semibold rounded-xl hover:shadow-lg hover:shadow-[#F4B400]/30 transition-all duration-200 hover:scale-105"
-                            >
-                                Appliquer
-                            </button>
+                            {/* Inputs prix avec design mobile-first */}
+                            <div className="space-y-4 sm:space-y-3">
+                                <div className="flex flex-col sm:flex-row sm:items-end gap-4 sm:gap-3">
+                                    <div className="flex-1">
+                                        <label className="block text-sm sm:text-xs font-medium text-gray-600 dark:text-gray-400 mb-3 sm:mb-2">
+                                            Prix minimum
+                                        </label>
+                                        <div className="relative group">
+                                            <input
+                                                type="number"
+                                                value={tempMin}
+                                                onChange={(e) => setTempMin(e.target.value)}
+                                                placeholder="0"
+                                                className="w-full pl-4 pr-14 py-4 sm:py-3 text-base sm:text-sm border-2 border-gray-200 dark:border-gray-600 rounded-2xl sm:rounded-xl focus:ring-2 focus:ring-[#F4B400]/20 focus:border-[#F4B400] bg-white dark:bg-[#1C1C1C] text-[#1C1C1C] dark:text-white transition-all duration-200 touch-manipulation"
+                                                min="0"
+                                                inputMode="numeric"
+                                            />
+                                            <span className="absolute right-4 sm:right-3 top-4 sm:top-3 text-sm sm:text-xs font-medium text-gray-500">FCFA</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="flex-shrink-0 self-center sm:pb-3 flex justify-center">
+                                        <div className="w-8 h-px sm:w-6 bg-gradient-to-r from-gray-300 to-gray-400 dark:from-gray-600 dark:to-gray-500 rotate-90 sm:rotate-0"></div>
+                                    </div>
+                                    
+                                    <div className="flex-1">
+                                        <label className="block text-sm sm:text-xs font-medium text-gray-600 dark:text-gray-400 mb-3 sm:mb-2">
+                                            Prix maximum
+                                        </label>
+                                        <div className="relative group">
+                                            <input
+                                                type="number"
+                                                value={tempMax}
+                                                onChange={(e) => setTempMax(e.target.value)}
+                                                placeholder="Illimité"
+                                                className="w-full pl-4 pr-14 py-4 sm:py-3 text-base sm:text-sm border-2 border-gray-200 dark:border-gray-600 rounded-2xl sm:rounded-xl focus:ring-2 focus:ring-[#F4B400]/20 focus:border-[#F4B400] bg-white dark:bg-[#1C1C1C] text-[#1C1C1C] dark:text-white transition-all duration-200 touch-manipulation"
+                                                min={tempMin || "0"}
+                                                inputMode="numeric"
+                                            />
+                                            <span className="absolute right-4 sm:right-3 top-4 sm:top-3 text-sm sm:text-xs font-medium text-gray-500">FCFA</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Suggestions populaires optimisées mobile */}
+                            <div>
+                                <label className="block text-sm sm:text-xs font-medium text-gray-600 dark:text-gray-400 mb-4 sm:mb-3">
+                                    🔥 Gammes populaires
+                                </label>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-2">
+                                    {[
+                                        { label: "Moins de 2K", min: "", max: "2000", icon: "💰" },
+                                        { label: "2K - 7K", min: "2000", max: "7000", icon: "🛍️" },
+                                        { label: "7K - 15K", min: "7000", max: "15000", icon: "⭐" },
+                                        { label: "Plus de 15K", min: "15000", max: "", icon: "💎" }
+                                    ].map((suggestion, index) => (
+                                        <button
+                                            key={index}
+                                            onClick={() => handleQuickSelect(suggestion.min, suggestion.max)}
+                                            className="flex items-center gap-3 px-4 py-3.5 sm:py-2.5 text-sm sm:text-xs font-medium rounded-2xl sm:rounded-xl bg-gray-50 dark:bg-[#1C1C1C] text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-[#F4B400] hover:to-[#E6A200] hover:text-white transition-all duration-200 active:scale-95 touch-manipulation"
+                                        >
+                                            <span className="text-lg sm:text-base">{suggestion.icon}</span>
+                                            <span className="flex-1 text-left">{suggestion.label}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Boutons d'action mobile-first */}
+                            <div className="flex items-center gap-3 pt-4 sm:pt-2">
+                                <button
+                                    onClick={() => setIsOpen(false)}
+                                    className="flex-1 px-4 py-3.5 sm:py-2.5 text-base sm:text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors duration-200 rounded-2xl sm:rounded-xl hover:bg-gray-50 dark:hover:bg-[#1C1C1C] active:scale-95 touch-manipulation"
+                                >
+                                    Fermer
+                                </button>
+                                <button
+                                    onClick={handleApply}
+                                    className="flex-1 px-4 py-3.5 sm:py-2.5 bg-gradient-to-r from-[#F4B400] to-[#E6A200] text-white text-base sm:text-sm font-semibold rounded-2xl sm:rounded-xl hover:shadow-lg hover:shadow-[#F4B400]/30 transition-all duration-200 active:scale-95 touch-manipulation"
+                                >
+                                    Appliquer
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
+                </>
             )}
-        </div>
+        </>
     )
 }
