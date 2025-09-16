@@ -1,18 +1,32 @@
-import React from "react";
+"use client";
+
 import { Share2, ShoppingBag, MessageCircle, Facebook, Twitter, Mail } from "lucide-react";
 
-const ProductShareButton = ({ product, className = "", children, ...props }) => {
+interface Product {
+    id: string | number;
+    title: string;
+    price: number;
+    description?: string;
+}
+
+interface Props {
+    product: Product;
+    className?: string;
+    children?: React.ReactNode;
+}
+
+export default function ProductShareButton({ product, className = "", children, ...props }: Props) {
+    const productUrl = `https://sangse.shop/product/${product.id}`;
+
     const shareText = `🔥 Regarde ce ${product.title} à ${product.price.toLocaleString()} FCFA sur Sangse.shop !
   
 ✨ ${product.description || "Article en excellente condition"}
 
 🛍️ Achète maintenant sur la plateforme de vente en ligne du Sénégal !
 
-👆 Clique ici : https://sangse.shop/product/${product.id}
+👆 Clique ici : ${productUrl}
 
 #SangseShop #Shopping #Senegal #BonPlan`;
-
-    const productUrl = `https://sangse.shop/product/${product.id}`;
 
     const socialNetworks = [
         {
@@ -23,29 +37,23 @@ const ProductShareButton = ({ product, className = "", children, ...props }) => 
         {
             name: "Facebook",
             icon: Facebook,
-            url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-                productUrl
-            )}&quote=${encodeURIComponent(shareText)}`,
+            url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(productUrl)}&quote=${encodeURIComponent(shareText)}`,
         },
         {
             name: "Twitter",
             icon: Twitter,
-            url: `https://twitter.com/intent/tweet?text=${encodeURIComponent(
-                shareText
-            )}`,
+            url: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`,
         },
         {
             name: "Email",
             icon: Mail,
-            url: `mailto:?subject=${encodeURIComponent(
-                product.title + " - Sangse.shop"
-            )}&body=${encodeURIComponent(shareText)}`,
+            url: `mailto:?subject=${encodeURIComponent(product.title + " - Sangse.shop")}&body=${encodeURIComponent(shareText)}`,
         },
     ];
 
     const handleShare = async () => {
         try {
-            // ✅ Mobile → partage natif
+            // ✅ Cas 1 : Mobile → API Web Share
             if (navigator.share) {
                 await navigator.share({
                     title: `${product.title} - Sangse.shop`,
@@ -55,26 +63,26 @@ const ProductShareButton = ({ product, className = "", children, ...props }) => 
                 return;
             }
 
-            // ❌ Pas d'API → fallback social
-            const choice = confirm("Voulez-vous partager via WhatsApp ? (Annuler pour voir d'autres options)");
-            if (choice) {
-                window.open(socialNetworks[0].url, "_blank");
-            } else {
-                // petite sélection rapide
-                const otherChoice = confirm("Facebook (OK) ou Twitter (Annuler) ?");
-                const selected = otherChoice ? socialNetworks[1] : socialNetworks[2];
-                window.open(selected.url, "_blank");
+            // ❌ Cas 2 : Desktop → choix manuel
+            let options = "Choisis un réseau :\n\n";
+            socialNetworks.forEach((s, i) => {
+                options += `${i + 1}. ${s.name}\n`;
+            });
+
+            const choice = prompt(options);
+            const index = Number(choice) - 1;
+
+            if (index >= 0 && index < socialNetworks.length) {
+                window.open(socialNetworks[index].url, "_blank");
+                return;
             }
+
+            // 🚨 Cas 3 : Copier le lien
+            await navigator.clipboard.writeText(`${shareText}\n${productUrl}`);
+            alert("📋 Lien copié ! Colle-le où tu veux pour partager ce produit.");
         } catch (error) {
             console.error("Erreur lors du partage:", error);
-
-            // 🚨 Fallback ultime : copier dans le presse-papier
-            try {
-                await navigator.clipboard.writeText(`${shareText}\n${productUrl}`);
-                alert("📋 Lien copié ! Colle-le où tu veux pour partager ce produit.");
-            } catch (error) {
-                alert(error + "Impossible de copier, mais voici le lien : " + productUrl);
-            }
+            alert("Impossible de partager automatiquement. Voici le lien : " + productUrl);
         }
     };
 
@@ -94,6 +102,4 @@ const ProductShareButton = ({ product, className = "", children, ...props }) => 
             <ShoppingBag size={14} className="animate-pulse" />
         </button>
     );
-};
-
-export default ProductShareButton;
+}
