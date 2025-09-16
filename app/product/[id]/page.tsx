@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     cookies: {
       get: (name) => cookieStore.get(name)?.value,
     },
-  })
+  });
 
   // Récupérer le produit depuis Supabase
   const res = await supabase
@@ -39,17 +39,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const title = `${product.title} - ${product.price.toLocaleString()} FCFA sur Sangse.shop`;
   const description = `Découvre ${product.title} à seulement ${product.price.toLocaleString()} FCFA ! Achète vite sur Sangse.shop et contacte directement le vendeur.`;
 
-  // Générer URL publique si image dans Supabase Storage
-  let image: string;
-  if (product.image_url.startsWith("http")) {
-    image = product.image_url;
-  } else {
-    const { data: publicUrl } = supabase.storage
-      .from("product") // <--- ton bucket
-      .getPublicUrl(product.image_url);
-
-    image = publicUrl.publicUrl;
-  }
+  // URL absolue de l'image (publique)
+  const image = product.image_url.startsWith("http")
+    ? product.image_url
+    : `https://sangse.shop${product.image_url}`;
 
   return {
     title,
@@ -90,16 +83,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       ],
       creator: "@sangse",
     },
-
-    other: {
-      "og:image:alt": title,
-      "og:image:type": "image/jpeg",
-      "og:image:width": "1200",
-      "og:image:height": "1200",
-      "twitter:image:alt": title,
-    },
   };
 }
+
 
 
 
