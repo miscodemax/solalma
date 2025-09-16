@@ -40,7 +40,7 @@ export async function generateMetadata({
     "Voici ma boutique sur Sangse 🌸 Tu peux commander tous mes produits ici, c'est rapide et sécurisé. Tu peux même te connecter avec Google en 1 clic.";
 
   // Image profil carré 1200x1200 pour OG
-  const image = profile?.avatar_url || "https://sangse.shop/favicon.png";
+  const image = profile.avatar_url || "https://sangse.shop/favicon.png";
   const url = `https://sangse.shop/profile/${params.id}`;
 
   return {
@@ -48,7 +48,7 @@ export async function generateMetadata({
     description,
     alternates: { canonical: url },
     metadataBase: new URL("https://sangse.shop"),
-    icons: { icon: "/favicon.png" },
+    icons: { icon: image },
 
     openGraph: {
       type: "profile",

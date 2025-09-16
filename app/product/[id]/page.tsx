@@ -30,19 +30,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const title = `${product.title} - ${product.price.toLocaleString()} FCFA sur Sangse.shop`;
   const description = `Découvre ${product.title} à seulement ${product.price.toLocaleString()} FCFA ! Achète vite sur Sangse.shop et contacte directement le vendeur.`;
-
+  const url = `https://sangse.shop/product/${params.id}`;
   const image = product.image_url
-    ? product.image_url.startsWith("http")
-      ? product.image_url
-      : `https://sangse.shop${product.image_url}`
-    : "https://sangse.shop/placeholder.jpg";
+
 
   return {
     title,
     description,
     alternates: { canonical: url },
     metadataBase: new URL("https://sangse.shop"),
-    icons: { icon: "/favicon.png" },
+    icons: { icon: image },
 
     openGraph: {
       type: "website", // on garde website pour Next.js TS
