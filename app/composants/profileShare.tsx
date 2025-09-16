@@ -93,24 +93,25 @@ export default function SocialShareButton({
             {/* Bouton principal */}
             <button
                 onClick={handleShare}
-                className={`bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-xl flex items-center gap-2 font-semibold shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 ${className}`}
+                className={`px-6 py-3 rounded-xl flex items-center gap-2 font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 
+        bg-gradient-to-r from-[#F6C445] to-[#FFD700] text-[#1C2B49] ${className}`}
             >
                 <Share2 className="w-5 h-5" />
-                Partager sur les réseaux
+                {title}
             </button>
 
             {/* Modal fallback */}
             {isOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl">
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl border border-yellow-200 animate-in fade-in-50 slide-in-from-bottom-4">
                         {/* Header */}
                         <div className="flex justify-between items-center mb-6">
-                            <h3 className="text-xl font-bold text-gray-800">Partager</h3>
+                            <h3 className="text-xl font-bold text-[#1C2B49]">Partager</h3>
                             <button
                                 onClick={() => setIsOpen(false)}
-                                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                                className="p-2 hover:bg-yellow-50 rounded-full transition-colors"
                             >
-                                <X size={20} />
+                                <X size={20} className="text-gray-600" />
                             </button>
                         </div>
 
@@ -124,7 +125,7 @@ export default function SocialShareButton({
                                         href={n.url}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className={`${n.color} text-white p-4 rounded-xl font-medium flex items-center gap-3 transition-all hover:scale-105 active:scale-95`}
+                                        className={`${n.color} text-white p-4 rounded-xl font-medium flex items-center gap-3 shadow-md hover:shadow-lg transition-all hover:scale-105 active:scale-95`}
                                     >
                                         <Icon size={20} />
                                         <span>{n.name}</span>
@@ -137,10 +138,11 @@ export default function SocialShareButton({
                         <div className="border-t pt-4">
                             <button
                                 onClick={handleCopy}
-                                className="w-full p-3 rounded-xl font-medium flex items-center justify-center gap-3 transition-all bg-gray-100 hover:bg-gray-200 text-gray-700"
+                                className="w-full p-3 rounded-xl font-medium flex items-center justify-center gap-3 transition-all 
+                bg-gradient-to-r from-[#F6C445] to-[#FFD700] text-[#1C2B49] shadow-md hover:shadow-lg hover:scale-105"
                             >
                                 <Copy size={20} />
-                                {copied ? "✔ Copié !" : "Copier le lien"}
+                                {copied ? "✔ Lien copié !" : "Copier le lien"}
                             </button>
                         </div>
                     </div>
