@@ -49,7 +49,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
     // Open Graph pour Facebook, WhatsApp, LinkedIn, Insta
     openGraph: {
-      type: "product",
       locale: "fr_FR",
       siteName: "Sangse.shop",
       url,
