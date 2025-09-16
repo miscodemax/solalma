@@ -37,8 +37,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       : `https://sangse.shop${product.image_url}`
     : "https://sangse.shop/placeholder.jpg";
 
-  const url = `https://sangse.shop/product/${product.id}`;
-
   return {
     title,
     description,
@@ -47,7 +45,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     icons: { icon: "/favicon.png" },
 
     openGraph: {
-      type: "website",
+      type: "website", // on garde website pour Next.js TS
       locale: "fr_FR",
       siteName: "Sangse.shop",
       url,
@@ -55,9 +53,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description,
       images: [
         {
-          url: image,
+          url: image,         // URL absolue
           width: 1200,
-          height: 630,
+          height: 1200,       // carré pour WhatsApp/Facebook
           alt: `${product.title} - ${product.price.toLocaleString()} FCFA`,
           type: "image/jpeg",
         },
@@ -68,16 +66,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       card: "summary_large_image",
       title,
       description,
-      images: [
-        {
-          url: image,
-          width: 1200,
-          height: 630,
-          alt: `${product.title} - ${product.price.toLocaleString()} FCFA`,
-        },
-      ],
+      images: [{ url: image, width: 1200, height: 1200, alt: `${product.title} - ${product.price.toLocaleString()} FCFA` }],
       creator: "@sangse",
     },
+
+
 
     other: {
       "og:image:alt": `${product.title} - ${product.price.toLocaleString()} FCFA`,
