@@ -30,7 +30,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     .select("*")
     .eq("id", Number(params.id))
     .single();
-
+  const { data: productImages } = await supabase
+    .from("product_images")
+    .select("image_url")
+    .eq("product_id", Number(params.id))
   if (!res.data) return {};
 
   const product = res.data;
@@ -40,7 +43,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const description = `Découvre ${product.title} à seulement ${product.price.toLocaleString()} FCFA ! Achète vite sur Sangse.shop et contacte directement le vendeur.`;
 
   // URL absolue de l'image (publique)
-  const image = product.image_url
+  const image = productImages[0].image_url
 
   return {
     title,
