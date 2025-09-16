@@ -11,6 +11,7 @@ import BackButton from "@/app/composants/back-button"
 import { Suspense } from "react"
 import ProductGallery from "@/app/composants/productgallery"
 import Loader from "@/app/loading"
+import SocialShareButton from "@/app/composants/profileShare"
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const cookieStore = await cookies()
@@ -205,17 +206,11 @@ export default async function UserProfilePage({ params }: { params: { id: string
 
           <div className="mt-6 pt-6 border-t border-[#F4B400]/30 dark:border-gray-600">
             <div className="flex flex-wrap justify-center sm:justify-start gap-3">
-              <Link
-                href={`https://wa.me/?text=${encodeURIComponent(
-                  `🔗 Découvre la boutique de ${profile.username} sur Sangse.shop : https://sangse.shop/profile/${id}`
-                )}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-xl flex items-center gap-2 font-semibold shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
-              >
-                <FaWhatsapp className="w-5 h-5" />
-                Partager sur WhatsApp
-              </Link>
+              <SocialShareButton
+                shareText={`🔗 Découvre la boutique de ${profile.username} sur Sangse.shop : https://sangse.shop/profile/${id}`}
+                shareUrl={`https://sangse.shop/profile/${id}`}
+                title="Boutique Sangse.shop"
+              />
 
               <CopyButton text={`https://sangse.shop/profile/${id}`} platform="Copier le lien" />
 
