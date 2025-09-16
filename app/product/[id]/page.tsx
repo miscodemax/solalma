@@ -28,25 +28,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const [product] = await res.json();
   if (!product) return {};
 
-  // Assure-toi que l'image est une URL publique absolue
-  const image = product.image_url.startsWith("http")
-    ? product.image_url
-    : `https://YOUR_SUPABASE_BUCKET_URL/${product.image_url}`;
-
+  const url = `https://sangse.shop/product/${params.id}`;
   const title = `${product.title} - ${product.price.toLocaleString()} FCFA sur Sangse.shop`;
   const description = `Découvre ${product.title} à seulement ${product.price.toLocaleString()} FCFA ! Achète vite sur Sangse.shop et contacte directement le vendeur.`;
-  const url = `https://sangse.shop/product/${params.id}`;
+
+  // Assure-toi que l'image est publique (Supabase Storage par ex.)
+  const image = product.image_url.startsWith("http")
+    ? product.image_url
+    : `https://YOUR_PUBLIC_SUPABASE_BUCKET_URL/${product.image_url}`; // <--- lien public
 
   return {
     title,
     description,
     alternates: { canonical: url },
     metadataBase: new URL("https://sangse.shop"),
+    icons: { icon: "/favicon.png" },
 
-    // Icône du site (pas nécessaire pour les réseaux sociaux)
-    icons: { icon: image },
-
-    // Open Graph pour Facebook, WhatsApp
     openGraph: {
       type: "website",
       locale: "fr_FR",
@@ -58,14 +55,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         {
           url: image,
           width: 1200,
-          height: 1200, // carré recommandé pour WhatsApp/Facebook
+          height: 1200, // carré pour WhatsApp
           alt: title,
           type: "image/jpeg",
         },
       ],
     },
 
-    // Twitter Card
     twitter: {
       card: "summary_large_image",
       title,
@@ -81,7 +77,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       creator: "@sangse",
     },
 
-    // Métadonnées supplémentaires
     other: {
       "og:image:alt": title,
       "og:image:type": "image/jpeg",
