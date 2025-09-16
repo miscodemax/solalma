@@ -25,10 +25,11 @@ export async function generateMetadata({
     },
   });
 
+  const { id } = params
   const { data: profile } = await supabase
     .from("profiles")
     .select("username, avatar_url, bio")
-    .eq("id", params.id)
+    .eq("id", id)
     .single();
 
   const title = profile?.username
