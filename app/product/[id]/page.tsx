@@ -16,26 +16,36 @@ import type { Metadata } from "next"
 import BackButton from "@/app/composants/back-button"
 import ProductImageCarousel from "@/app/composants/ProductImageCarousel"
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const res = await fetch(`${supabaseUrl}/rest/v1/product?id=eq.${params.id}`, {
-    headers: {
-      apikey: supabaseKey,
-      Authorization: `Bearer ${supabaseKey}`,
-    },
-    cache: "no-store",
-  });
 
-  const [product] = await res.json();
-  if (!product) return {};
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const supabase = createServerClient({ supabaseUrl, supabaseKey });
+
+  // Récupérer le produit depuis Supabase
+  const res = await supabase
+    .from("product")
+    .select("*")
+    .eq("id", params.id)
+    .single();
+
+  if (!res.data) return {};
+
+  const product = res.data;
 
   const url = `https://sangse.shop/product/${params.id}`;
   const title = `${product.title} - ${product.price.toLocaleString()} FCFA sur Sangse.shop`;
   const description = `Découvre ${product.title} à seulement ${product.price.toLocaleString()} FCFA ! Achète vite sur Sangse.shop et contacte directement le vendeur.`;
 
-  // Assure-toi que l'image est publique (Supabase Storage par ex.)
-  const image = product.image_url.startsWith("http")
-    ? product.image_url
-    : `https://YOUR_PUBLIC_SUPABASE_BUCKET_URL/${product.image_url}`; // <--- lien public
+  // Générer URL publique si image dans Supabase Storage
+  let image: string;
+  if (product.image_url.startsWith("http")) {
+    image = product.image_url;
+  } else {
+    const { data: publicUrl } = supabase.storage
+      .from("products") // <--- ton bucket
+      .getPublicUrl(product.image_url);
+
+    image = publicUrl.publicUrl;
+  }
 
   return {
     title,
@@ -55,7 +65,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         {
           url: image,
           width: 1200,
-          height: 1200, // carré pour WhatsApp
+          height: 1200,
           alt: title,
           type: "image/jpeg",
         },
