@@ -17,42 +17,46 @@ import BackButton from "@/app/composants/back-button"
 import ProductImageCarousel from "@/app/composants/ProductImageCarousel"
 
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: { id: string };
+}): Promise<Metadata> {
+  const cookieStore = await cookies();
   const supabase = createServerClient(supabaseUrl, supabaseKey, {
     cookies: {
       get: (name) => cookieStore.get(name)?.value,
     },
   });
 
-  // Récupérer le produit depuis Supabase
-  const res = await supabase
-    .from("product")
-    .select("*")
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("username, avatar_url, bio")
     .eq("id", params.id)
     .single();
 
-  if (!res.data) return {};
+  const title = profile?.username
+    ? `Découvre la boutique de ${profile.username} sur Sangse.shop`
+    : "Profil vendeur - Sangse.shop";
 
-  const product = res.data;
+  const description =
+    profile?.bio ||
+    "Voici ma boutique sur Sangse 🌸 Commande tous mes produits ici rapidement et sécurisé.";
 
-  const url = `https://sangse.shop/product/${params.id}`;
-  const title = `${product.title} - ${product.price.toLocaleString()} FCFA sur Sangse.shop`;
-  const description = `Découvre ${product.title} à seulement ${product.price.toLocaleString()} FCFA ! Achète vite sur Sangse.shop et contacte directement le vendeur.`;
+  // URL publique absolue en HTTPS
+  const image = profile?.avatar_url?.startsWith("https")
+    ? profile.avatar_url
+    : `https://sangse.shop${profile?.avatar_url || "/favicon.png"}`;
 
-  // URL absolue de l'image (publique)
-  const image = product.image_url.startsWith("http")
-    ? product.image_url
-    : `https://sangse.shop${product.image_url}`;
+  const url = `https://sangse.shop/profile/${params.id}`;
 
   return {
     title,
     description,
     alternates: { canonical: url },
-    metadataBase: new URL("https://sangse.shop"),
-    icons: { icon: "/favicon.png" },
 
     openGraph: {
-      type: "website",
+      type: "profile",
       locale: "fr_FR",
       siteName: "Sangse.shop",
       url,
@@ -63,7 +67,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
           url: image,
           width: 1200,
           height: 1200,
-          alt: title,
+          alt: profile?.username || "Avatar vendeur",
           type: "image/jpeg",
         },
       ],
@@ -78,13 +82,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
           url: image,
           width: 1200,
           height: 1200,
-          alt: title,
+          alt: profile?.username || "Avatar vendeur",
         },
       ],
       creator: "@sangse",
     },
   };
 }
+
 
 
 

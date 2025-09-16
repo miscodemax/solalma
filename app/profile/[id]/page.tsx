@@ -40,7 +40,7 @@ export async function generateMetadata({
     "Voici ma boutique sur Sangse 🌸 Commande tous mes produits ici rapidement et sécurisé.";
 
   // URL publique absolue de l'image
-  const image = profile?.avatar_url?.startsWith("http")
+  const image = profile?.avatar_url?.startsWith("https")
     ? profile.avatar_url
     : `https://sangse.shop${profile?.avatar_url || "/favicon.png"}`;
 
