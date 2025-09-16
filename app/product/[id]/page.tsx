@@ -23,36 +23,56 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       Authorization: `Bearer ${supabaseKey}`,
     },
     cache: "no-store",
-  })
+  });
 
-  const [product] = await res.json()
+  const [product] = await res.json();
+  if (!product) return {};
 
-  if (!product) return {}
+  const title = `${product.title} - ${product.price.toLocaleString()} FCFA sur Sangse.shop`;
+  const description = `Découvre ${product.title} à seulement ${product.price.toLocaleString()} FCFA ! Achète vite sur Sangse.shop et contacte directement le vendeur.`;
+  const image = product.image_url || "https://sangse.shop/placeholder.jpg";
+  const url = `https://sangse.shop/product/${product.id}`;
 
   return {
-    title: product.title,
-    description: `Découvrez ${product.title} pour ${product.price} FCFA - Contactez directement le vendeur !`,
+    title,
+    description,
+    alternates: { canonical: url },
     openGraph: {
-      title: product.title,
-      description: `Découvrez ${product.title} pour ${product.price} FCFA - Contactez directement le vendeur !`,
-      url: `https://sangse.shop/product/${product.id}`,
+      title,
+      description,
+      url,
+      siteName: "Sangse.shop",
       images: [
         {
-          url: product.image_url || "https://sangse.shop/placeholder.jpg",
+          url: image,
           width: 1200,
-          height: 630,
-          alt: product.title,
+          height: 1200, // carré recommandé pour FB, WA, Insta
+          alt: `${product.title} - ${product.price.toLocaleString()} FCFA`,
         },
       ],
+
     },
     twitter: {
       card: "summary_large_image",
-      title: product.title,
-      description: `Découvrez ${product.title} pour ${product.price} FCFA - Contactez directement le vendeur !`,
-      images: [product.image_url || "https://sangse.shop/placeholder.jpg"],
+      title,
+      description,
+      images: [image],
     },
-  }
+    icons: {
+      icon: "/favicon.png",
+    },
+    metadataBase: new URL("https://sangse.shop"),
+    other: {
+      "og:locale": "fr_FR",
+      "og:type": "product",
+      "og:image:alt": `${product.title} - ${product.price.toLocaleString()} FCFA`,
+      "og:image:type": "image/jpeg",
+      "og:image:width": "1200",
+      "og:image:height": "1200",
+    },
+  };
 }
+
 
 type Props = {
   params: {

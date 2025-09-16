@@ -31,36 +31,57 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     ? `Découvre la boutique de ${profile.username} sur Sangse.shop`
     : "Profil vendeur - Sangse.shop"
 
-  const description = profile?.bio || "Voici ma boutique sur Sangse 🌸Tu peux commander tous mes produits ici, c'est rapide et sécurisé.Tu peux même te connecter avec Google en 1 clic."
+  const description =
+    profile?.bio ||
+    "Voici ma boutique sur Sangse 🌸 Tu peux commander tous mes produits ici, c'est rapide et sécurisé. Tu peux même te connecter avec Google en 1 clic."
+
+  // ⚠️ Mets une image carrée 1200x1200 optimisée pour les profils
   const image = profile?.avatar_url || "https://sangse.shop/default-avatar.png"
   const url = `https://sangse.shop/profile/${params.id}`
 
   return {
     title,
     description,
+    alternates: {
+      canonical: url,
+    },
     openGraph: {
       title,
       description,
       url,
       siteName: "Sangse.shop",
+      type: "profile", // 🔥 mieux que "website" pour un profil utilisateur
       images: [
         {
           url: image,
-          width: 600,
-          height: 600,
+          width: 1200,
+          height: 1200,
           alt: profile?.username || "Avatar vendeur",
         },
-      ],
-      type: "website",
+      ]
     },
     twitter: {
-      card: "summary_large_image",
+      card: "summary_large_image", // grand format
       title,
       description,
       images: [image],
     },
+    icons: {
+      icon: "/favicon.png",
+    },
+    // Balises supplémentaires (certaines plateformes les utilisent encore)
+    metadataBase: new URL("https://sangse.shop"),
+    other: {
+      "og:locale": "fr_FR",
+      "og:type": "profile",
+      "og:image:alt": profile?.username || "Avatar vendeur",
+      "og:image:type": "image/jpeg",
+      "og:image:width": "1200",
+      "og:image:height": "1200",
+    },
   }
 }
+
 
 export default async function UserProfilePage({ params }: { params: { id: string } }) {
   const cookieStore = await cookies()

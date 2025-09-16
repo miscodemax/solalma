@@ -25,12 +25,42 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Sangse - Marketplace Mode Féminine abordable | Vêtements, Hijabs & Accessoires tendance",
-  description: "Découvrez Sangse, la marketplace dédiée à la mode féminine à prix abordable. Trouvez des vêtements stylés, hijabs colorés, maquillage et accessoires tendance, livrés rapidement.",
+  title:
+    "Sangse - Marketplace Mode Féminine abordable | Vêtements, Hijabs & Accessoires tendance",
+  description:
+    "Découvrez Sangse, la marketplace dédiée à la mode féminine à prix abordable. Vêtements stylés, hijabs colorés, maquillage et accessoires tendance, livrés rapidement partout au Sénégal.",
   icons: {
-    icon: "/favicon.png", // <- lien vers le favicon
+    icon: "/favicon.png",
+  },
+  openGraph: {
+    type: "website",
+    locale: "fr_FR",
+    url: "https://sangse.shop",
+    siteName: "Sangse",
+    title:
+      "Sangse - Marketplace Mode Féminine abordable | Vêtements, Hijabs & Accessoires tendance",
+    description:
+      "Achetez et vendez vos vêtements, hijabs et accessoires facilement sur Sangse. La nouvelle marketplace mode au Sénégal ✨.",
+    images: [
+      {
+        url: "https://sangse.shop/og-image.jpg", // ✅ Mets une image 1200x630px bien optimisée
+        width: 1200,
+        height: 630,
+        alt: "Sangse - Marketplace Mode Féminine au Sénégal",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title:
+      "Sangse - Marketplace Mode Féminine abordable | Vêtements, Hijabs & Accessoires tendance",
+    description:
+      "Achetez et vendez vos vêtements, hijabs et accessoires facilement sur Sangse. La nouvelle marketplace mode au Sénégal ✨.",
+    images: ["https://sangse.shop/og-image.jpg"], // même image que Open Graph
+    creator: "@sangse", // si tu crées un compte Twitter pour la marque
   },
 };
+
 
 export default async function RootLayout({
   children,
