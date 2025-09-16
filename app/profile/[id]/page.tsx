@@ -37,18 +37,19 @@ export async function generateMetadata({
 
   const description =
     profile?.bio ||
-    "Voici ma boutique sur Sangse 🌸 Tu peux commander tous mes produits ici, c'est rapide et sécurisé. Tu peux même te connecter avec Google en 1 clic.";
+    "Voici ma boutique sur Sangse 🌸 Commande tous mes produits ici rapidement et sécurisé.";
 
-  // Image profil carré 1200x1200 pour OG
-  const image = profile?.avatar_url || "https://sangse.shop/favicon.png";
+  // URL publique absolue de l'image
+  const image = profile?.avatar_url?.startsWith("http")
+    ? profile.avatar_url
+    : `https://sangse.shop${profile?.avatar_url || "/favicon.png"}`;
+
   const url = `https://sangse.shop/profile/${params.id}`;
 
   return {
     title,
     description,
     alternates: { canonical: url },
-    metadataBase: new URL("https://sangse.shop"),
-    icons: { icon: "/favicon.png" },
 
     openGraph: {
       type: "profile",
@@ -82,16 +83,9 @@ export async function generateMetadata({
       ],
       creator: "@sangse",
     },
-
-    other: {
-      "og:image:alt": profile?.username || "Avatar vendeur",
-      "og:image:type": "image/jpeg",
-      "og:image:width": "1200",
-      "og:image:height": "1200",
-      "twitter:image:alt": profile?.username || "Avatar vendeur",
-    },
   };
 }
+
 
 
 
