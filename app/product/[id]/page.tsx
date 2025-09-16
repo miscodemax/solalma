@@ -9,9 +9,9 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import dayjs from "dayjs"
 import RatingSeller from "@/app/composants/ratingseller"
-import CopyButton from "@/app/composants/sharebutton"
-import { FaWhatsapp, FaCheckCircle, FaClock, FaMapMarkerAlt } from "react-icons/fa"
-import { HiPhone, HiShare } from "react-icons/hi2"
+import ProductShare from "@/app/composants/productShare"
+import { FaWhatsapp, FaClock, FaMapMarkerAlt } from "react-icons/fa"
+import { HiPhone } from "react-icons/hi2"
 import type { Metadata } from "next"
 import BackButton from "@/app/composants/back-button"
 import ProductImageCarousel from "@/app/composants/ProductImageCarousel"
@@ -162,26 +162,15 @@ export default async function ProductDetailPage({ params }: Props) {
             />
 
             {/* partage */}
-            <div className="bg-white dark:bg-[#1C2B49]/70 p-6 rounded-2xl border border-[#E5E7EB] shadow-lg">
-              <h3 className="font-bold text-[#1C2B49] dark:text-gray-200 mb-4 flex items-center text-lg">
-                <HiShare className="mr-3 text-[#F6C445] text-xl" />
-                Partager ce produit
-              </h3>
-              <div className="grid grid-cols-2 gap-4">
-                <a
-                  href={`https://wa.me/?text=${encodeURIComponent(
-                    `🔥 Regarde ce ${product.title} à ${product.price.toLocaleString()} FCFA sur Sangse.shop !\n👉 https://sangse.shop/product/${product.id}`
-                  )}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-4 rounded-xl font-semibold flex items-center justify-center gap-3 hover:scale-105 transition-all"
-                >
-                  <FaWhatsapp className="text-xl" />
-                  Partager
-                </a>
-                <CopyButton text={`https://sangse.shop/product/${product.id}`} platform="📋 Copier" />
-              </div>
-            </div>
+
+            <ProductShare
+              product={{
+                id: product.id,
+                title: product.title,
+                price: product.price
+              }}
+              className="w-full" // optionnel
+            />
           </div>
 
           {/* Infos produit */}
