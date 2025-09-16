@@ -13,44 +13,69 @@ import ProductGallery from "@/app/composants/productgallery"
 import Loader from "@/app/loading"
 import SocialShareButton from "@/app/composants/profileShare"
 
-export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
-  const cookieStore = await cookies()
+export async function generateMetadata({
+  params,
+}: {
+  params: { id: string };
+}): Promise<Metadata> {
+  const cookieStore = await cookies();
   const supabase = createServerClient(supabaseUrl, supabaseKey, {
     cookies: {
       get: (name) => cookieStore.get(name)?.value,
     },
-  })
+  });
 
   const { data: profile } = await supabase
     .from("profiles")
     .select("username, avatar_url, bio")
     .eq("id", params.id)
-    .single()
+    .single();
 
   const title = profile?.username
     ? `Découvre la boutique de ${profile.username} sur Sangse.shop`
-    : "Profil vendeur - Sangse.shop"
+    : "Profil vendeur - Sangse.shop";
 
   const description =
     profile?.bio ||
-    "Voici ma boutique sur Sangse 🌸 Tu peux commander tous mes produits ici, c'est rapide et sécurisé. Tu peux même te connecter avec Google en 1 clic."
+    "Voici ma boutique sur Sangse 🌸 Tu peux commander tous mes produits ici, c'est rapide et sécurisé. Tu peux même te connecter avec Google en 1 clic.";
 
-  // ⚠️ Mets une image carrée 1200x1200 optimisée pour les profils
-  const image = profile?.avatar_url || "https://sangse.shop/default-avatar.png"
-  const url = `https://sangse.shop/profile/${params.id}`
+  // Image profil ou fallback vers favicon
+  const image = profile?.avatar_url || "https://sangse.shop/favicon.png";
+  const url = `https://sangse.shop/profile/${params.id}`;
 
   return {
     title,
     description,
-    alternates: {
-      canonical: url,
+    alternates: { canonical: url },
+    metadataBase: new URL("https://sangse.shop"),
+    icons: {
+      icon: "/favicon.png",
     },
+
+    // Open Graph pour FB, WhatsApp, LinkedIn, Insta
     openGraph: {
+      type: "profile",
+      locale: "fr_FR",
+      siteName: "Sangse.shop",
+      url,
       title,
       description,
-      url,
-      siteName: "Sangse.shop",
-      type: "profile", // 🔥 mieux que "website" pour un profil utilisateur
+      images: [
+        {
+          url: image,
+          width: 1200,
+          height: 1200, // carré recommandé pour profils
+          alt: profile?.username || "Avatar vendeur",
+          type: "image/jpeg",
+        },
+      ],
+    },
+
+    // Twitter Card
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
       images: [
         {
           url: image,
@@ -58,28 +83,19 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
           height: 1200,
           alt: profile?.username || "Avatar vendeur",
         },
-      ]
+      ],
+      creator: "@sangse",
     },
-    twitter: {
-      card: "summary_large_image", // grand format
-      title,
-      description,
-      images: [image],
-    },
-    icons: {
-      icon: "/favicon.png",
-    },
-    // Balises supplémentaires (certaines plateformes les utilisent encore)
-    metadataBase: new URL("https://sangse.shop"),
+
+    // Fallbacks supplémentaires
     other: {
-      "og:locale": "fr_FR",
-      "og:type": "profile",
       "og:image:alt": profile?.username || "Avatar vendeur",
       "og:image:type": "image/jpeg",
       "og:image:width": "1200",
       "og:image:height": "1200",
+      "twitter:image:alt": profile?.username || "Avatar vendeur",
     },
-  }
+  };
 }
 
 

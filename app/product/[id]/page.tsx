@@ -30,48 +30,70 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const title = `${product.title} - ${product.price.toLocaleString()} FCFA sur Sangse.shop`;
   const description = `Découvre ${product.title} à seulement ${product.price.toLocaleString()} FCFA ! Achète vite sur Sangse.shop et contacte directement le vendeur.`;
-  const image = product.image_url || "https://sangse.shop/placeholder.jpg";
+
+  // Image OG : produit ou fallback vers logo du site
+  const image = product.image_url
+    ? product.image_url
+    : "https://sangse.shop/favicon.png"; // fallback
+
   const url = `https://sangse.shop/product/${product.id}`;
 
   return {
     title,
     description,
     alternates: { canonical: url },
+    metadataBase: new URL("https://sangse.shop"),
+    icons: {
+      icon: "/favicon.png",
+    },
+
+    // Open Graph pour Facebook, WhatsApp, LinkedIn, Insta
     openGraph: {
+      type: "product",
+      locale: "fr_FR",
+      siteName: "Sangse.shop",
+      url,
       title,
       description,
-      url,
-      siteName: "Sangse.shop",
       images: [
         {
           url: image,
           width: 1200,
-          height: 1200, // carré recommandé pour FB, WA, Insta
+          height: 630,
           alt: `${product.title} - ${product.price.toLocaleString()} FCFA`,
+          type: "image/jpeg",
         },
       ],
-
     },
+
+    // Twitter Card
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: [image],
+      images: [
+        {
+          url: image,
+          width: 1200,
+          height: 630,
+          alt: `${product.title} - ${product.price.toLocaleString()} FCFA`,
+        },
+      ],
+      creator: "@sangse",
     },
-    icons: {
-      icon: "/favicon.png",
-    },
-    metadataBase: new URL("https://sangse.shop"),
+
+    // Fallbacks supplémentaires pour s’assurer que les bots lisent bien
     other: {
-      "og:locale": "fr_FR",
-      "og:type": "product",
       "og:image:alt": `${product.title} - ${product.price.toLocaleString()} FCFA`,
       "og:image:type": "image/jpeg",
       "og:image:width": "1200",
-      "og:image:height": "1200",
+      "og:image:height": "630",
+      "twitter:image:alt": `${product.title} - ${product.price.toLocaleString()} FCFA`,
     },
   };
 }
+
+
 
 
 type Props = {

@@ -29,8 +29,9 @@ export const metadata: Metadata = {
     "Sangse - Marketplace Mode Féminine abordable | Vêtements, Hijabs & Accessoires tendance",
   description:
     "Découvrez Sangse, la marketplace dédiée à la mode féminine à prix abordable. Vêtements stylés, hijabs colorés, maquillage et accessoires tendance, livrés rapidement partout au Sénégal.",
+  metadataBase: new URL("https://sangse.shop"),
   icons: {
-    icon: "/favicon.png",
+    icon: "/favicon.png", // ton logo
   },
   openGraph: {
     type: "website",
@@ -43,10 +44,11 @@ export const metadata: Metadata = {
       "Achetez et vendez vos vêtements, hijabs et accessoires facilement sur Sangse. La nouvelle marketplace mode au Sénégal ✨.",
     images: [
       {
-        url: "https://sangse.shop/og-image.jpg", // ✅ Mets une image 1200x630px bien optimisée
-        width: 1200,
-        height: 630,
-        alt: "Sangse - Marketplace Mode Féminine au Sénégal",
+        url: "https://sangse.shop/favicon.png", // logo du site
+        width: 512, // taille standard pour favicon/logo carré
+        height: 512,
+        alt: "Sangse - Marketplace au Sénégal",
+        type: "image/png",
       },
     ],
   },
@@ -56,10 +58,25 @@ export const metadata: Metadata = {
       "Sangse - Marketplace Mode Féminine abordable | Vêtements, Hijabs & Accessoires tendance",
     description:
       "Achetez et vendez vos vêtements, hijabs et accessoires facilement sur Sangse. La nouvelle marketplace mode au Sénégal ✨.",
-    images: ["https://sangse.shop/og-image.jpg"], // même image que Open Graph
-    creator: "@sangse", // si tu crées un compte Twitter pour la marque
+    images: [
+      {
+        url: "https://sangse.shop/favicon.png", // logo du site
+        width: 512,
+        height: 512,
+        alt: "Sangse - Marketplace au Sénégal",
+        type: "image/png",
+      },
+    ],
+    creator: "@sangse",
+  },
+  other: {
+    "og:image:alt": "Sangse - Marketplace au Sénégal",
+    "og:image:type": "image/png",
+    "og:image:width": "512",
+    "og:image:height": "512",
   },
 };
+
 
 
 export default async function RootLayout({
