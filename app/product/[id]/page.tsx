@@ -9,7 +9,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import dayjs from "dayjs"
 import RatingSeller from "@/app/composants/ratingseller"
-import ProductShare from "@/app/composants/productShare"
+import ProductShareButton from "@/app/composants/productShare"
 import { FaWhatsapp, FaClock, FaMapMarkerAlt } from "react-icons/fa"
 import { HiPhone } from "react-icons/hi2"
 import type { Metadata } from "next"
@@ -163,14 +163,17 @@ export default async function ProductDetailPage({ params }: Props) {
 
             {/* partage */}
 
-            <ProductShare
+            <ProductShareButton
               product={{
                 id: product.id,
                 title: product.title,
-                price: product.price
+                price: product.price,
+                description: product.description // optionnel
               }}
-              className="w-full" // optionnel
-            />
+              className="w-full"
+            >
+              Partager ce produit
+            </ProductShareButton>
           </div>
 
           {/* Infos produit */}
