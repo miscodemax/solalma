@@ -40,9 +40,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const description = `Découvre ${product.title} à seulement ${product.price.toLocaleString()} FCFA ! Achète vite sur Sangse.shop et contacte directement le vendeur.`;
 
   // URL absolue de l'image (publique)
-  const image = product.image_url.startsWith("http")
-    ? product.image_url
-    : `https://sangse.shop${product.image_url}`;
+  const image = product.image_url
 
   return {
     title,
