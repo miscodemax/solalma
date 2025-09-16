@@ -3,7 +3,7 @@ import { useEffect, useState } from "react"
 import {
   Dialog, DialogContent
 } from "@/components/ui/dialog"
-import { Filter, Share2, ShoppingBag, Gift, Zap, Star } from "lucide-react"
+import { Filter, ShoppingBag, Zap, Star } from "lucide-react"
 import ProductCard from "./product-card"
 import BackToTopButton from "./BackToTopButton"
 import {
@@ -11,6 +11,7 @@ import {
 } from './skeletonComponents'
 import PopularProductsCarousel from "./popularProductsCaroussel"
 import PriceFilter from "./pricefilter"
+import ShareAllSocialButton from "./shareAllSocialButton"
 
 
 export default function FilteredProducts({ products = [], userId = "demo" }) {
@@ -41,13 +42,9 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
 
   const productsToShow = filteredProducts.slice(0, visibleCount)
 
-  const shareUrl = encodeURIComponent('https://sangse.com') // URL de ton site
-  const shareText = encodeURIComponent('Découvrez Sangse, la marketplace sénégalaise ! 🚀')
 
-  const handleShare = () => {
-    const whatsappUrl = `https://wa.me/?text=${shareText}%20${shareUrl}`
-    window.open(whatsappUrl, '_blank')
-  }
+
+
 
   return (
     <div className="min-h-screen bg-gradient-to-b pt-5 from-[#F8F9FB] via-white to-[#F8F9FB] dark:from-[#111827] dark:via-[#1C2B49] dark:to-[#111827]">
@@ -82,17 +79,9 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
               {priceRange && <Zap size={12} className="text-[#F6C445] animate-pulse" />}
             </button>
 
-            <button
-              onClick={handleShare}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold
-                 bg-gradient-to-r from-[#F6C445] to-[#FFD700] text-[#1C2B49]
-                 hover:from-[#FFD700] hover:to-[#F6C445]
-                 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
-            >
-              <Share2 size={16} />
-              <span>Partager</span>
-              <Gift size={14} className="animate-bounce" />
-            </button>
+            <ShareAllSocialButton>
+              Partager SangseShop
+            </ShareAllSocialButton>
           </div>
         </div>
       </div>
