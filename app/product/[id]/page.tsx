@@ -28,21 +28,27 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const [product] = await res.json();
   if (!product) return {};
 
+  // Assure-toi que l'image est une URL publique absolue
+  const image = product.image_url.startsWith("http")
+    ? product.image_url
+    : `https://YOUR_SUPABASE_BUCKET_URL/${product.image_url}`;
+
   const title = `${product.title} - ${product.price.toLocaleString()} FCFA sur Sangse.shop`;
   const description = `Découvre ${product.title} à seulement ${product.price.toLocaleString()} FCFA ! Achète vite sur Sangse.shop et contacte directement le vendeur.`;
   const url = `https://sangse.shop/product/${params.id}`;
-  const image = product.image_url
-
 
   return {
     title,
     description,
     alternates: { canonical: url },
     metadataBase: new URL("https://sangse.shop"),
+
+    // Icône du site (pas nécessaire pour les réseaux sociaux)
     icons: { icon: image },
 
+    // Open Graph pour Facebook, WhatsApp
     openGraph: {
-      type: "website", // on garde website pour Next.js TS
+      type: "website",
       locale: "fr_FR",
       siteName: "Sangse.shop",
       url,
@@ -50,34 +56,42 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description,
       images: [
         {
-          url: image,         // URL absolue
+          url: image,
           width: 1200,
-          height: 1200,       // carré pour WhatsApp/Facebook
-          alt: `${product.title} - ${product.price.toLocaleString()} FCFA`,
+          height: 1200, // carré recommandé pour WhatsApp/Facebook
+          alt: title,
           type: "image/jpeg",
         },
       ],
     },
 
+    // Twitter Card
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: [{ url: image, width: 1200, height: 1200, alt: `${product.title} - ${product.price.toLocaleString()} FCFA` }],
+      images: [
+        {
+          url: image,
+          width: 1200,
+          height: 1200,
+          alt: title,
+        },
+      ],
       creator: "@sangse",
     },
 
-
-
+    // Métadonnées supplémentaires
     other: {
-      "og:image:alt": `${product.title} - ${product.price.toLocaleString()} FCFA`,
+      "og:image:alt": title,
       "og:image:type": "image/jpeg",
       "og:image:width": "1200",
-      "og:image:height": "630",
-      "twitter:image:alt": `${product.title} - ${product.price.toLocaleString()} FCFA`,
+      "og:image:height": "1200",
+      "twitter:image:alt": title,
     },
   };
 }
+
 
 
 
