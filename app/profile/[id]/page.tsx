@@ -39,7 +39,7 @@ export async function generateMetadata({
     profile?.bio ||
     "Voici ma boutique sur Sangse 🌸 Tu peux commander tous mes produits ici, c'est rapide et sécurisé. Tu peux même te connecter avec Google en 1 clic.";
 
-  // Image profil ou fallback vers favicon
+  // Image profil carré 1200x1200 pour OG
   const image = profile?.avatar_url || "https://sangse.shop/favicon.png";
   const url = `https://sangse.shop/profile/${params.id}`;
 
@@ -48,11 +48,8 @@ export async function generateMetadata({
     description,
     alternates: { canonical: url },
     metadataBase: new URL("https://sangse.shop"),
-    icons: {
-      icon: "/favicon.png",
-    },
+    icons: { icon: "/favicon.png" },
 
-    // Open Graph pour FB, WhatsApp, LinkedIn, Insta
     openGraph: {
       type: "profile",
       locale: "fr_FR",
@@ -64,14 +61,13 @@ export async function generateMetadata({
         {
           url: image,
           width: 1200,
-          height: 1200, // carré recommandé pour profils
+          height: 1200,
           alt: profile?.username || "Avatar vendeur",
           type: "image/jpeg",
         },
       ],
     },
 
-    // Twitter Card
     twitter: {
       card: "summary_large_image",
       title,
@@ -87,7 +83,6 @@ export async function generateMetadata({
       creator: "@sangse",
     },
 
-    // Fallbacks supplémentaires
     other: {
       "og:image:alt": profile?.username || "Avatar vendeur",
       "og:image:type": "image/jpeg",
@@ -97,6 +92,7 @@ export async function generateMetadata({
     },
   };
 }
+
 
 
 export default async function UserProfilePage({ params }: { params: { id: string } }) {

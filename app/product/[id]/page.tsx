@@ -31,10 +31,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const title = `${product.title} - ${product.price.toLocaleString()} FCFA sur Sangse.shop`;
   const description = `Découvre ${product.title} à seulement ${product.price.toLocaleString()} FCFA ! Achète vite sur Sangse.shop et contacte directement le vendeur.`;
 
-  // Image OG : produit ou fallback vers logo du site
   const image = product.image_url
-    ? product.image_url
-    : "https://sangse.shop/favicon.png"; // fallback
+    ? product.image_url.startsWith("http")
+      ? product.image_url
+      : `https://sangse.shop${product.image_url}`
+    : "https://sangse.shop/placeholder.jpg";
 
   const url = `https://sangse.shop/product/${product.id}`;
 
@@ -43,12 +44,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     description,
     alternates: { canonical: url },
     metadataBase: new URL("https://sangse.shop"),
-    icons: {
-      icon: "/favicon.png",
-    },
+    icons: { icon: "/favicon.png" },
 
-    // Open Graph pour Facebook, WhatsApp, LinkedIn, Insta
     openGraph: {
+      type: "website",
       locale: "fr_FR",
       siteName: "Sangse.shop",
       url,
@@ -65,7 +64,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       ],
     },
 
-    // Twitter Card
     twitter: {
       card: "summary_large_image",
       title,
@@ -81,7 +79,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       creator: "@sangse",
     },
 
-    // Fallbacks supplémentaires pour s’assurer que les bots lisent bien
     other: {
       "og:image:alt": `${product.title} - ${product.price.toLocaleString()} FCFA`,
       "og:image:type": "image/jpeg",
@@ -91,6 +88,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     },
   };
 }
+
 
 
 
