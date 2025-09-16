@@ -45,7 +45,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     image = product.image_url;
   } else {
     const { data: publicUrl } = supabase.storage
-      .from("products") // <--- ton bucket
+      .from("product") // <--- ton bucket
       .getPublicUrl(product.image_url);
 
     image = publicUrl.publicUrl;
