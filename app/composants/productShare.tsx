@@ -1,46 +1,79 @@
-import React from 'react';
-import { Share2, ShoppingBag } from 'lucide-react';
+import React from "react";
+import { Share2, ShoppingBag, MessageCircle, Facebook, Twitter, Mail } from "lucide-react";
 
 const ProductShareButton = ({ product, className = "", children, ...props }) => {
-    const handleShare = async () => {
-        const shareText = `🔥 Regarde ce ${product.title} à ${product.price.toLocaleString()} FCFA sur Sangse.shop !\n\n✨ ${product.description || 'Article en excellente condition'}\n\n🛍️ Achète maintenant sur la plateforme de vente en ligne du Sénégal !\n\n👆 Clique ici : https://sangse.shop/product/${product.id}\n\n#SangseShop #Shopping #Senegal #BonPlan`;
+    const shareText = `🔥 Regarde ce ${product.title} à ${product.price.toLocaleString()} FCFA sur Sangse.shop !
+  
+✨ ${product.description || "Article en excellente condition"}
 
+🛍️ Achète maintenant sur la plateforme de vente en ligne du Sénégal !
+
+👆 Clique ici : https://sangse.shop/product/${product.id}
+
+#SangseShop #Shopping #Senegal #BonPlan`;
+
+    const productUrl = `https://sangse.shop/product/${product.id}`;
+
+    const socialNetworks = [
+        {
+            name: "WhatsApp",
+            icon: MessageCircle,
+            url: `https://wa.me/?text=${encodeURIComponent(shareText)}`,
+        },
+        {
+            name: "Facebook",
+            icon: Facebook,
+            url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+                productUrl
+            )}&quote=${encodeURIComponent(shareText)}`,
+        },
+        {
+            name: "Twitter",
+            icon: Twitter,
+            url: `https://twitter.com/intent/tweet?text=${encodeURIComponent(
+                shareText
+            )}`,
+        },
+        {
+            name: "Email",
+            icon: Mail,
+            url: `mailto:?subject=${encodeURIComponent(
+                product.title + " - Sangse.shop"
+            )}&body=${encodeURIComponent(shareText)}`,
+        },
+    ];
+
+    const handleShare = async () => {
         try {
-            // Vérifier si l'API Web Share est disponible (mobile principalement)
+            // ✅ Mobile → partage natif
             if (navigator.share) {
                 await navigator.share({
                     title: `${product.title} - Sangse.shop`,
                     text: shareText,
-                    url: `https://sangse.shop/product/${product.id}`
+                    url: productUrl,
                 });
-            } else {
-                // Fallback pour desktop - copier dans le presse-papier
-                await navigator.clipboard.writeText(shareText);
+                return;
+            }
 
-                // Afficher une notification de succès
-                alert("📋 Message copié ! Colle-le où tu veux pour partager ce produit avec tes amis !");
+            // ❌ Pas d'API → fallback social
+            const choice = confirm("Voulez-vous partager via WhatsApp ? (Annuler pour voir d'autres options)");
+            if (choice) {
+                window.open(socialNetworks[0].url, "_blank");
+            } else {
+                // petite sélection rapide
+                const otherChoice = confirm("Facebook (OK) ou Twitter (Annuler) ?");
+                const selected = otherChoice ? socialNetworks[1] : socialNetworks[2];
+                window.open(selected.url, "_blank");
             }
         } catch (error) {
             console.error("Erreur lors du partage:", error);
 
-            // Fallback ultime - ouvrir les réseaux sociaux populaires
-            const encodedText = encodeURIComponent(shareText);
-            const productUrl = `https://sangse.shop/product/${product.id}`;
-            const shareOptions = [
-                { name: "WhatsApp", url: `https://wa.me/?text=${encodedText}` },
-                { name: "Facebook", url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(productUrl)}&quote=${encodedText}` },
-                { name: "Twitter", url: `https://twitter.com/intent/tweet?text=${encodedText}` }
-            ];
-
-            const choice = confirm("Choisir un réseau social pour partager ?\n\n1. OK pour WhatsApp\n2. Annuler pour voir d'autres options");
-
-            if (choice) {
-                window.open(shareOptions[0].url, '_blank');
-            } else {
-                // Afficher les autres options
-                const otherChoice = confirm("Facebook (OK) ou Twitter (Annuler) ?");
-                const selectedOption = otherChoice ? shareOptions[1] : shareOptions[2];
-                window.open(selectedOption.url, '_blank');
+            // 🚨 Fallback ultime : copier dans le presse-papier
+            try {
+                await navigator.clipboard.writeText(`${shareText}\n${productUrl}`);
+                alert("📋 Lien copié ! Colle-le où tu veux pour partager ce produit.");
+            } catch (error) {
+                alert(error + "Impossible de copier, mais voici le lien : " + productUrl);
             }
         }
     };
@@ -62,7 +95,5 @@ const ProductShareButton = ({ product, className = "", children, ...props }) => 
         </button>
     );
 };
-
-
 
 export default ProductShareButton;
