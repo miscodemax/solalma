@@ -18,7 +18,11 @@ import ProductImageCarousel from "@/app/composants/ProductImageCarousel"
 
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const supabase = createServerClient({ supabaseUrl, supabaseKey });
+  const supabase = createServerClient(supabaseUrl, supabaseKey, {
+    cookies: {
+      get: (name) => cookieStore.get(name)?.value,
+    },
+  })
 
   // Récupérer le produit depuis Supabase
   const res = await supabase
