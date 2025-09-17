@@ -9,11 +9,10 @@ import { notFound } from "next/navigation"
 import dayjs from "dayjs"
 import RatingSeller from "@/app/composants/ratingseller"
 import ProductShareButton from "@/app/composants/productShare"
-import { FaWhatsapp, FaClock, FaMapMarkerAlt } from "react-icons/fa"
-import { HiPhone } from "react-icons/hi2"
 import type { Metadata } from "next"
 import BackButton from "@/app/composants/back-button"
 import ProductImageCarousel from "@/app/composants/ProductImageCarousel"
+import ProductContact from "../contact"
 
 type Props = {
   params: {
@@ -276,35 +275,10 @@ export default async function ProductDetailPage({ params }: Props) {
                 <RatingSeller sellerId={sellerId} initialAverage={averageRating} initialCount={ratingCount} />
               )}
             </div>
-
-            {/* Contact */}
-            <div className="space-y-6">
-              {whatsappLink ? (
-                <a
-                  href={whatsappLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-gradient-to-r from-green-500 via-green-600 to-emerald-600 text-white font-bold text-lg px-8 py-6 rounded-2xl hover:scale-105 transition flex items-center justify-center gap-4"
-                >
-                  <FaWhatsapp className="text-2xl" />
-                  Discuter sur WhatsApp
-                </a>
-              ) : (
-                <div className="bg-[#E5E7EB] text-[#1C2B49] px-8 py-6 rounded-2xl text-center">
-                  ❌ WhatsApp non disponible
-                </div>
-              )}
-
-              {product.whatsapp_number && (
-                <a
-                  href={`tel:${product.whatsapp_number}`}
-                  className="bg-[#1C2B49] text-white font-bold text-lg px-8 py-6 rounded-2xl hover:scale-105 transition flex items-center justify-center gap-4"
-                >
-                  <HiPhone className="text-2xl" />
-                  Appeler maintenant
-                </a>
-              )}
-            </div>
+            <ProductContact
+              whatsappLink={whatsappLink}
+              phoneNumber={product.whatsapp_number}
+            />
 
             {/* Description */}
             {product.description && (
