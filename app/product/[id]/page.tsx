@@ -29,7 +29,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       get: (name) => cookieStore.get(name)?.value,
     },
   })
-
   const { data: product } = await supabase
     .from("product")
     .select("*")
@@ -37,57 +36,32 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     .single()
 
   if (!product) {
-    return {
-      title: 'Produit non trouvé',
-    }
+    return { title: "Produit non trouvé" }
   }
 
-  // URL absolue pour l'image (OBLIGATOIRE pour Open Graph)
-  const imageUrl = product.image_url?.startsWith('http')
+  const imageUrl = product.image_url.startsWith("http")
     ? product.image_url
-    : `${process.env.NEXT_PUBLIC_SITE_URL || 'https://sangse.shop'}${product.image_url}`
-
-  const productUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'https://sangse.shop'}/product/${product.id}`
+    : `https://sangse.shop${product.image_url}`
 
   return {
-    title: `${product.title} - ${product.price.toLocaleString()} FCFA`,
-    description: product.description || `${product.title} à ${product.price.toLocaleString()} FCFA sur SangSé Shop`,
-
-    // Open Graph pour WhatsApp, Facebook, etc.
+    title: product.title,
+    description: product.description,
     openGraph: {
-      title: `${product.title} - ${product.price.toLocaleString()} FCFA`,
-      description: product.description || `${product.title} à ${product.price.toLocaleString()} FCFA sur SangSé Shop`,
-      url: productUrl,
-      siteName: 'SangSé Shop',
+      title: product.title,
+      description: product.description,
+      type: "website",
+      url: `https://sangse.shop/product/${product.id}`,
       images: [
         {
           url: imageUrl,
           width: 1200,
           height: 630,
-          alt: product.title,
         },
       ],
-      locale: 'fr_FR',
-      type: 'website',
-    },
-
-    // Twitter Card
-    twitter: {
-      card: 'summary_large_image',
-      title: `${product.title} - ${product.price.toLocaleString()} FCFA`,
-      description: product.description || `${product.title} à ${product.price.toLocaleString()} FCFA sur SangSé Shop`,
-      images: [imageUrl],
-    },
-
-    // Métadonnées supplémentaires
-    other: {
-      'product:price:amount': product.price.toString(),
-      'product:price:currency': 'XOF', // Franc CFA
-      'og:availability': 'instock',
-      'og:condition': 'new',
     },
   }
 }
+
 
 export default async function ProductDetailPage({ params }: Props) {
   const cookieStore = await cookies()
