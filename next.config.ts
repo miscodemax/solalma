@@ -1,11 +1,10 @@
 // @ts-nocheck
-import type { NextConfig } from "next";
 import withPWA from "next-pwa";
+import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   typescript: {
-    // ❌ Ignore les erreurs TypeScript au build
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: true, // ⚠️ à désactiver quand tu seras prêt à corriger les erreurs TS
   },
   images: {
     domains: [
@@ -16,13 +15,12 @@ const nextConfig: NextConfig = {
       "cdn.pixabay.com",
       "placekitten.com",
     ],
-    unoptimized: true, // désactive complètement l’optimisation
+    unoptimized: true, // ⚠️ utile pour le dev, mais en prod je recommande de l’enlever
   },
 };
 
-// ✅ Ajout PWA
 export default withPWA({
-  dest: "public", // génère le service worker dans /public
-  register: true,
-  skipWaiting: true,
+  dest: "public",   // service worker dans /public
+  register: true,   // auto-register
+  skipWaiting: true // active le nouveau SW sans attendre
 })(nextConfig);

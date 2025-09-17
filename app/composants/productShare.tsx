@@ -46,51 +46,60 @@ export default function ProductShareButton({
 
     const productUrl = `https://sangse.shop/product/${product.id}`;
 
-    const shareText = `🔥 Regarde ce ${product.title} à ${product.price.toLocaleString()} FCFA sur Sangse.shop !
-  
-✨ ${product.description || "Article en excellente condition"}
+    // Message plus court et optimisé pour WhatsApp
+    const whatsappText = `🔥 ${product.title} à ${product.price.toLocaleString()} FCFA
+    
+${product.description ? `✨ ${product.description.substring(0, 100)}...` : '✨ Article en excellente condition'}
 
-🛍️ Achète maintenant sur la plateforme de vente en ligne du Sénégal !
+🛍️ Voir sur SangSé Shop : ${productUrl}`;
 
-👆 Clique ici : ${productUrl}
+    // Message pour les autres plateformes
+    const generalText = `🔥 Regarde ce ${product.title} à ${product.price.toLocaleString()} FCFA sur SangSé Shop !
 
-#SangseShop #Shopping #Senegal #BonPlan`;
+${product.description ? `✨ ${product.description}` : '✨ Article en excellente condition'}
+
+🛍️ Achète maintenant sur la plateforme de vente en ligne du Sénégal !`;
 
     const socialNetworks = [
         {
             name: "WhatsApp",
             icon: MessageCircle,
-            url: `https://wa.me/?text=${encodeURIComponent(shareText)}`,
+            url: `https://wa.me/?text=${encodeURIComponent(whatsappText)}`,
+            color: "text-green-600",
+            bgColor: "hover:bg-green-50",
         },
         {
             name: "Facebook",
             icon: Facebook,
-            url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-                productUrl
-            )}&quote=${encodeURIComponent(shareText)}`,
+            url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(productUrl)}`,
+            color: "text-blue-600",
+            bgColor: "hover:bg-blue-50",
         },
         {
             name: "Twitter",
             icon: Twitter,
-            url: `https://twitter.com/intent/tweet?text=${encodeURIComponent(
-                shareText
-            )}`,
+            url: `https://twitter.com/intent/tweet?text=${encodeURIComponent(generalText)}&url=${encodeURIComponent(productUrl)}`,
+            color: "text-blue-400",
+            bgColor: "hover:bg-blue-50",
         },
         {
             name: "Email",
             icon: Mail,
             url: `mailto:?subject=${encodeURIComponent(
-                product.title + " - Sangse.shop"
-            )}&body=${encodeURIComponent(shareText)}`,
+                product.title + " - SangSé Shop"
+            )}&body=${encodeURIComponent(generalText + "\n\n" + productUrl)}`,
+            color: "text-gray-600",
+            bgColor: "hover:bg-gray-50",
         },
     ];
 
     const handleShareClick = async () => {
+        // Test du Web Share API natif
         if (navigator.share) {
             try {
                 await navigator.share({
-                    title: `${product.title} - Sangse.shop`,
-                    text: shareText,
+                    title: `${product.title} - SangSé Shop`,
+                    text: generalText,
                     url: productUrl,
                 });
                 return;
@@ -102,9 +111,21 @@ export default function ProductShareButton({
     };
 
     const handleCopy = async () => {
-        await navigator.clipboard.writeText(`${shareText}\n${productUrl}`);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+        try {
+            await navigator.clipboard.writeText(productUrl);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } catch (err) {
+            // Fallback pour les navigateurs qui ne supportent pas clipboard API
+            const textArea = document.createElement('textarea');
+            textArea.value = productUrl;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        }
     };
 
     const defaultClassName = `flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold
@@ -129,7 +150,7 @@ export default function ProductShareButton({
                 <DialogContent className="max-w-sm rounded-2xl border border-yellow-200">
                     <DialogHeader className="flex flex-row items-center justify-between">
                         <DialogTitle className="text-lg font-bold text-[#1C2B49]">
-                            Partager ce produit
+                            Partager ce produit 🚀
                         </DialogTitle>
                         <Button
                             variant="ghost"
@@ -145,16 +166,29 @@ export default function ProductShareButton({
                         Choisis une plateforme pour partager ce bon plan :
                     </DialogDescription>
 
-                    <div className="grid grid-cols-2 gap-3 py-4">
-                        {socialNetworks.map(({ name, icon: Icon, url }) => (
+                    {/* Aperçu du produit */}
+                    <div className="bg-gradient-to-r from-[#F6C445]/10 to-[#FFD700]/10 p-3 rounded-xl border border-yellow-200 mb-4">
+                        <h4 className="font-bold text-[#1C2B49] text-sm line-clamp-1">
+                            {product.title}
+                        </h4>
+                        <p className="text-[#F6C445] font-bold">
+                            {product.price.toLocaleString()} FCFA
+                        </p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 py-2">
+                        {socialNetworks.map(({ name, icon: Icon, url, color, bgColor }) => (
                             <Button
                                 key={name}
                                 variant="outline"
-                                onClick={() => window.open(url, "_blank")}
-                                className="flex items-center gap-2 rounded-xl border-yellow-300 text-[#1C2B49] hover:bg-yellow-100 transition"
+                                onClick={() => {
+                                    window.open(url, "_blank", "noopener,noreferrer");
+                                    setOpen(false);
+                                }}
+                                className={`flex items-center gap-2 rounded-xl border-gray-200 transition-colors ${bgColor}`}
                             >
-                                <Icon className="w-5 h-5" />
-                                {name}
+                                <Icon className={`w-5 h-5 ${color}`} />
+                                <span className="text-gray-700">{name}</span>
                             </Button>
                         ))}
                     </div>
@@ -170,6 +204,11 @@ export default function ProductShareButton({
                             {copied ? "Lien copié ✔" : "Copier le lien"}
                         </Button>
                     </DialogFooter>
+
+                    {/* Info sur les métadonnées */}
+                    <p className="text-xs text-gray-400 text-center mt-2">
+                        💡 L'image et les infos s'afficheront automatiquement sur WhatsApp
+                    </p>
                 </DialogContent>
             </Dialog>
         </>
