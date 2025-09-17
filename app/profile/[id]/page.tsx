@@ -6,26 +6,23 @@ import Link from "next/link"
 import CopyButton from "@/app/composants/sharebutton"
 import { FaWhatsapp, FaStar, FaBox } from "react-icons/fa"
 import { HiBadgeCheck, HiTrendingUp } from "react-icons/hi"
-import { Metadata } from "next"
+//import { Metadata } from "next"
 import BackButton from "@/app/composants/back-button"
 import { Suspense } from "react"
 import ProductGallery from "@/app/composants/productgallery"
 import Loader from "@/app/loading"
 import SocialShareButton from "@/app/composants/profileShare"
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { id: string };
-}): Promise<Metadata> {
-  const cookieStore = await cookies();
+// ✅ Métadonnées simples pour partage WhatsApp
+export async function generateMetadata({ params }: { params: { id: string } }) {
+  const { id } = params;
+
+  const cookieStore = await cookies()
   const supabase = createServerClient(supabaseUrl, supabaseKey, {
     cookies: {
       get: (name) => cookieStore.get(name)?.value,
     },
-  });
-
-  const { id } = params
+  })
   const { data: profile } = await supabase
     .from("profiles")
     .select("username, avatar_url, bio")
@@ -40,49 +37,29 @@ export async function generateMetadata({
     profile?.bio ||
     "Voici ma boutique sur Sangse 🌸 Commande tous mes produits ici rapidement et sécurisé.";
 
-  // URL publique absolue de l'image
+  // Toujours en https
   const image = profile?.avatar_url?.startsWith("https")
     ? profile.avatar_url
     : `https://sangse.shop${profile?.avatar_url || "/favicon.png"}`;
 
-  const url = `https://sangse.shop/profile/${params.id}`;
+  const url = `https://sangse.shop/profile/${id}`;
 
   return {
     title,
     description,
-    alternates: { canonical: url },
-
     openGraph: {
-      type: "profile",
-      locale: "fr_FR",
-      siteName: "Sangse.shop",
+      title,
+      description,
       url,
-      title,
-      description,
+      siteName: "Sangse.shop",
       images: [
         {
           url: image,
           width: 1200,
-          height: 1200,
-          alt: profile?.username || "Avatar vendeur",
-          type: "image/jpeg",
+          height: 630,
         },
       ],
-    },
-
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description,
-      images: [
-        {
-          url: image,
-          width: 1200,
-          height: 1200,
-          alt: profile?.username || "Avatar vendeur",
-        },
-      ],
-      creator: "@sangse",
+      type: "website",
     },
   };
 }
