@@ -1,6 +1,5 @@
 // app/product/[id]/page.tsx
 
-
 import { cookies } from "next/headers"
 import { createServerClient } from "@supabase/ssr"
 import { supabaseUrl, supabaseKey } from "../../../lib/supabase"
@@ -16,86 +15,77 @@ import type { Metadata } from "next"
 import BackButton from "@/app/composants/back-button"
 import ProductImageCarousel from "@/app/composants/ProductImageCarousel"
 
+type Props = {
+  params: {
+    id: string
+  }
+}
 
+// Fonction pour générer les métadonnées dynamiques
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const cookieStore = await cookies()
   const supabase = createServerClient(supabaseUrl, supabaseKey, {
     cookies: {
       get: (name) => cookieStore.get(name)?.value,
     },
-  });
+  })
 
-  // Récupérer le produit depuis Supabase
-  const res = await supabase
+  const { data: product } = await supabase
     .from("product")
     .select("*")
     .eq("id", Number(params.id))
-    .single();
-  const { data: productImages } = await supabase
-    .from("product_images")
-    .select("image_url")
-    .eq("product_id", Number(params.id))
-  if (!res.data) return {};
+    .single()
 
-  const product = res.data;
+  if (!product) {
+    return {
+      title: 'Produit non trouvé',
+    }
+  }
 
-  const url = `https://sangse.shop/product/${params.id}`;
-  const title = `${product.title} - ${product.price.toLocaleString()} FCFA sur Sangse.shop`;
-  const description = `Découvre ${product.title} à seulement ${product.price.toLocaleString()} FCFA ! Achète vite sur Sangse.shop et contacte directement le vendeur.`;
+  // URL absolue pour l'image (OBLIGATOIRE pour Open Graph)
+  const imageUrl = product.image_url?.startsWith('http')
+    ? product.image_url
+    : `${process.env.NEXT_PUBLIC_SITE_URL || 'https://sangse.shop'}${product.image_url}`
 
-  // URL absolue de l'image (publique)
-  const image = productImages[0].image_url
+  const productUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'https://sangse.shop'}/product/${product.id}`
 
   return {
-    title,
-    description,
-    alternates: { canonical: url },
-    metadataBase: new URL("https://sangse.shop"),
-    icons: { icon: "/favicon.png" },
+    title: `${product.title} - ${product.price.toLocaleString()} FCFA`,
+    description: product.description || `${product.title} à ${product.price.toLocaleString()} FCFA sur SangSé Shop`,
 
+    // Open Graph pour WhatsApp, Facebook, etc.
     openGraph: {
-      type: "website",
-      locale: "fr_FR",
-      siteName: "Sangse.shop",
-      url,
-      title,
-      description,
+      title: `${product.title} - ${product.price.toLocaleString()} FCFA`,
+      description: product.description || `${product.title} à ${product.price.toLocaleString()} FCFA sur SangSé Shop`,
+      url: productUrl,
+      siteName: 'SangSé Shop',
       images: [
         {
-          url: image,
+          url: imageUrl,
           width: 1200,
-          height: 1200,
-          alt: title,
-          type: "image/jpeg",
+          height: 630,
+          alt: product.title,
         },
       ],
+      locale: 'fr_FR',
+      type: 'website',
     },
 
+    // Twitter Card
     twitter: {
-      card: "summary_large_image",
-      title,
-      description,
-      images: [
-        {
-          url: image,
-          width: 1200,
-          height: 1200,
-          alt: title,
-        },
-      ],
-      creator: "@sangse",
+      card: 'summary_large_image',
+      title: `${product.title} - ${product.price.toLocaleString()} FCFA`,
+      description: product.description || `${product.title} à ${product.price.toLocaleString()} FCFA sur SangSé Shop`,
+      images: [imageUrl],
     },
-  };
-}
 
-
-
-
-
-
-
-type Props = {
-  params: {
-    id: string
+    // Métadonnées supplémentaires
+    other: {
+      'product:price:amount': product.price.toString(),
+      'product:price:currency': 'XOF', // Franc CFA
+      'og:availability': 'instock',
+      'og:condition': 'new',
+    },
   }
 }
 
@@ -126,7 +116,6 @@ export default async function ProductDetailPage({ params }: Props) {
     .eq("user_id", product?.user_id)
 
   console.log(allProducts.length);
-
 
   const allImages = [
     product.image_url,
@@ -171,6 +160,27 @@ export default async function ProductDetailPage({ params }: Props) {
 
   return (
     <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#1C2B49]">
+      {/* Structured Data pour Google */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org/",
+            "@type": "Product",
+            name: product.title,
+            image: product.image_url,
+            description: product.description,
+            offers: {
+              "@type": "Offer",
+              url: `https://sangse.shop/product/${product.id}`,
+              priceCurrency: "XOF",
+              price: product.price,
+              availability: "https://schema.org/InStock",
+            },
+          }),
+        }}
+      />
+
       {/* décorations */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-10 w-64 h-64 bg-[#F6C445]/20 rounded-full blur-3xl animate-pulse"></div>
@@ -201,13 +211,12 @@ export default async function ProductDetailPage({ params }: Props) {
             />
 
             {/* partage */}
-
             <ProductShareButton
               product={{
                 id: product.id,
                 title: product.title,
                 price: product.price,
-                description: product.description // optionnel
+                description: product.description
               }}
               className="w-full"
             >
