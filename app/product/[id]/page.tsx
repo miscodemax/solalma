@@ -6,6 +6,7 @@ import { supabaseUrl, supabaseKey } from "../../../lib/supabase"
 import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
+import { FaClock } from "react-icons/fa"
 import dayjs from "dayjs"
 import RatingSeller from "@/app/composants/ratingseller"
 import ProductShareButton from "@/app/composants/productShare"
@@ -213,12 +214,7 @@ export default async function ProductDetailPage({ params }: Props) {
                     ✨ Nouveau
                   </span>
                 )}
-                {product.location && (
-                  <span className="inline-flex items-center bg-[#E5E7EB]/50 text-[#1C2B49] px-4 py-2 rounded-full text-sm border border-[#E5E7EB]">
-                    <FaMapMarkerAlt className="mr-2" />
-                    {product.location}
-                  </span>
-                )}
+
                 <span className="text-sm text-[#1C2B49] bg-[#E5E7EB]/50 px-3 py-1 rounded-full border border-[#E5E7EB]">
                   <FaClock className="inline mr-1" />
                   {dayjs(product.created_at).format("DD/MM/YYYY")}
