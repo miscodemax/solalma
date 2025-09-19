@@ -126,6 +126,8 @@ export default async function UserProfilePage({ params }: { params: { id: string
   const totalProducts = products.length
   const isOwner = user?.id === id
 
+
+
   if (!profile) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#F9F9F9] to-[#F3F4F6] dark:from-[#1C1C1C] dark:to-[#2a2a2a]">
@@ -144,6 +146,9 @@ export default async function UserProfilePage({ params }: { params: { id: string
       </div>
     )
   }
+
+
+
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 space-y-6 bg-gradient-to-br from-[#F9F9F9] via-white to-[#F3F4F6] dark:from-[#1C1C1C] dark:via-[#2a2a2a] dark:to-[#1C1C1C] min-h-screen">
