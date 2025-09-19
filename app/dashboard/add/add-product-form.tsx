@@ -137,6 +137,8 @@ export default function AddProductForm({ userId }: Props) {
     }
   }
 
+  
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#FAF9F6] via-white to-[#F4C430]/5 dark:bg-gradient-to-br dark:from-[#1a1a1a] dark:via-[#222] dark:to-[#2a2a2a] py-4 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
