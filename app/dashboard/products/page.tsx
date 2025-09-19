@@ -24,7 +24,6 @@ export default function ProductsPage() {
   const [loading, setLoading] = useState(true)
   const [products, setProducts] = useState<Product[]>([])
   const [error, setError] = useState<string | null>(null)
-  const [showAuthModal, setShowAuthModal] = useState(false)
   const supabase = createClient()
 
   useEffect(() => {
@@ -72,20 +71,6 @@ export default function ProductsPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#FAF9F6] dark:bg-black">
         <AuthModal
-          isOpen={showAuthModal}
-          onClose={() => setShowAuthModal(false)}
-          onContinueWithoutAuth={() => {
-            // L'utilisateur peut continuer sans se connecter
-            console.log("Utilisateur continue sans connexion")
-          }}
-          title="Rejoignez notre communauté"
-          subtitle="Découvrez tous les avantages"
-          benefits={[
-            "Sauvegardez vos favoris",
-            "Notifications personnalisées",
-            "Historique sécurisé",
-            "Contact facilité"
-          ]}
         />
       </div>
     )
