@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Icons } from './icons'
-import { Loader2, AlertCircle } from 'lucide-react'
+import { Loader2, AlertCircle, ArrowLeft } from 'lucide-react'
 
 export default function AuthModal() {
   const supabase = createClient()
@@ -38,18 +38,30 @@ export default function AuthModal() {
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md animate-in fade-in zoom-in-95 duration-300 rounded-2xl shadow-xl">
+      <DialogContent
+        className="sm:max-w-sm w-[90%] mx-auto animate-in slide-in-from-bottom-5 duration-300 
+                   rounded-2xl shadow-lg p-6 bg-gradient-to-b from-white to-[#FFF8E1]"
+      >
+        {/* Bouton retour style mobile */}
+        <button
+          onClick={handleClose}
+          className="absolute left-4 top-4 text-gray-600 hover:text-gray-900"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </button>
+
         <DialogHeader>
-          <DialogTitle className="text-center text-2xl font-bold text-gray-900">
+          <DialogTitle className="text-center text-xl font-bold text-gray-900">
             Bienvenue 👋
           </DialogTitle>
-          <p className="text-center text-sm text-gray-500 mt-1">
-            Connectez-vous pour continuer et profiter pleinement de la plateforme.
+          <p className="text-center text-sm text-gray-600 mt-1">
+            Connectez-vous pour continuer et découvrir plus.
           </p>
         </DialogHeader>
 
         {error && (
-          <div className="flex items-center gap-2 text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-sm mt-3">
+          <div className="flex items-center gap-2 text-red-600 bg-red-50 border border-red-200 
+                          rounded-lg px-3 py-2 text-sm mt-4">
             <AlertCircle className="h-4 w-4" />
             <span>{error}</span>
           </div>
@@ -60,11 +72,14 @@ export default function AuthModal() {
             onClick={handleGoogleLogin}
             disabled={loading}
             aria-label="Se connecter avec Google"
-            className="w-full gap-2 bg-white text-gray-800 hover:bg-gray-50 border border-gray-200 shadow-sm transition-all rounded-lg py-5 font-medium"
+            className="w-full flex items-center justify-center gap-2 
+                       bg-white text-gray-900 border-2 border-[#F6C445] 
+                       hover:bg-[#FFF3C5] shadow-sm transition-all 
+                       rounded-xl py-4 font-semibold"
           >
             {loading ? (
               <>
-                <Loader2 className="animate-spin h-5 w-5 text-gray-600" />
+                <Loader2 className="animate-spin h-5 w-5 text-gray-700" />
                 Redirection...
               </>
             ) : (
@@ -75,8 +90,8 @@ export default function AuthModal() {
             )}
           </Button>
 
-          <p className="text-xs text-center text-gray-400">
-            Nous n’accédons jamais à vos emails ou contacts sans votre accord.
+          <p className="text-xs text-center text-gray-500">
+            🔒 Nous ne partagerons jamais vos données sans votre accord.
           </p>
         </div>
       </DialogContent>
