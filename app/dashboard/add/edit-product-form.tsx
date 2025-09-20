@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import Image from 'next/image'
-import ImageUploader from './imageuploader'
+import { Loader2, Plus, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 type Props = {
@@ -35,10 +35,57 @@ export default function EditProductForm({ product }: Props) {
   const [whatsappNumber, setWhatsappNumber] = useState(product.whatsapp_number || '')
   const [category, setCategory] = useState(product.category || categories[0].value)
   const [loading, setLoading] = useState(false)
+  const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
 
   const router = useRouter()
   const supabase = createClient()
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+
+    setUploading(true)
+    setError('')
+    const uploadedUrls: string[] = []
+
+    for (const file of files) {
+      if (file.size > 5 * 1024 * 1024) {
+        setError(`${file.name} est trop volumineux (max 5MB).`)
+        continue
+      }
+      if (!file.type.startsWith('image/')) {
+        setError(`${file.name} n'est pas une image valide.`)
+        continue
+      }
+
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('product')
+        .upload(fileName, file)
+
+      if (uploadError) {
+        setError(uploadError.message)
+        continue
+      }
+
+      const { data } = supabase.storage.from('product').getPublicUrl(fileName)
+      uploadedUrls.push(data.publicUrl)
+    }
+
+    if (uploadedUrls.length > 0) {
+      setImages((prev) => [...prev, ...uploadedUrls])
+    }
+
+    setUploading(false)
+    e.target.value = ''
+  }
+
+  const handleRemoveImage = (idx: number) => {
+    setImages((prev) => prev.filter((_, i) => i !== idx))
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -74,66 +121,78 @@ export default function EditProductForm({ product }: Props) {
     }
   }
 
-  const handleRemoveImage = (idx: number) => {
-    setImages((prev) => prev.filter((_, i) => i !== idx))
-  }
-
   return (
-    <div className="min-h-screen px-4 py-8 bg-neutral-100 dark:bg-dark-bg transition-colors duration-300">
+    <div className="min-h-screen px-4 py-8 bg-neutral-100 dark:bg-dark-bg">
       <Button
         variant="outline"
         size="lg"
         onClick={() => router.back()}
-        className="mb-10 font-bold border-primary text-primary hover:bg-primary hover:text-white dark:text-neutral-100 dark:border-neutral-100 dark:hover:bg-neutral-100 dark:hover:text-dark-bg"
+        className="mb-10 font-bold border-[#F6C445] text-[#F6C445] hover:bg-[#F6C445] hover:text-white dark:text-neutral-100 dark:border-neutral-100 dark:hover:bg-neutral-100 dark:hover:text-dark-bg"
       >
-        Retour
+        ← Retour
       </Button>
 
       <form
         onSubmit={handleSubmit}
-        className="max-w-xl mx-auto space-y-6 bg-white dark:bg-dark-card shadow-lg rounded-2xl p-8 border border-neutral-200 dark:border-neutral-700 animate-fade-in"
+        className="max-w-xl mx-auto space-y-6 bg-white dark:bg-dark-card shadow-lg rounded-2xl p-8 border border-neutral-200 dark:border-neutral-700"
       >
         {error && <p className="text-red-500 text-sm">{error}</p>}
 
-        {/* Image Section */}
-        <div className="flex flex-col items-center gap-6">
-          <ImageUploader
-            onUpload={(urls) => setImages((prev) => [...prev, ...urls])}
-          />
-          {images.length > 0 && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 w-full">
-              {images.map((url, idx) => (
-                <div
-                  key={idx}
-                  className="relative w-full aspect-square group rounded-xl overflow-hidden border border-neutral-200 dark:border-neutral-700 shadow-sm"
+        {/* Images Section */}
+        <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            {images.map((url, idx) => (
+              <div
+                key={idx}
+                className="relative w-full aspect-square group rounded-xl overflow-hidden border border-neutral-200 dark:border-neutral-700 shadow-sm"
+              >
+                <Image
+                  src={url}
+                  alt={`Image ${idx + 1}`}
+                  fill
+                  className="object-cover rounded-xl"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleRemoveImage(idx)}
+                  className="absolute top-2 right-2 bg-black/60 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition"
                 >
-                  <Image
-                    src={url}
-                    alt={`Image ${idx + 1}`}
-                    fill
-                    className="object-cover rounded-xl transition-transform duration-300 group-hover:scale-105"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveImage(idx)}
-                    className="absolute top-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full opacity-0 group-hover:opacity-100 transition"
-                  >
-                    ✕
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
+                  <X size={16} />
+                </button>
+              </div>
+            ))}
+
+            {/* Bouton ajout image */}
+            <label
+              htmlFor="upload-image"
+              className="cursor-pointer flex items-center justify-center w-full aspect-square rounded-xl border-2 border-dashed border-neutral-300 dark:border-neutral-700 hover:border-[#F6C445] transition bg-neutral-50 dark:bg-dark-bg"
+            >
+              {uploading ? (
+                <Loader2 className="animate-spin w-6 h-6 text-[#F6C445]" />
+              ) : (
+                <Plus className="w-8 h-8 text-neutral-500" />
+              )}
+              <input
+                id="upload-image"
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleImageUpload}
+                className="hidden"
+                disabled={uploading}
+              />
+            </label>
+          </div>
         </div>
 
-        {/* Product Info */}
+        {/* Infos produit */}
         <div className="space-y-4">
           <input
             type="text"
             placeholder="Titre du produit"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-700 dark:bg-dark-card dark:text-neutral-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary transition"
+            className="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-700 dark:bg-dark-card dark:text-neutral-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F6C445]"
             required
           />
           <input
@@ -141,7 +200,7 @@ export default function EditProductForm({ product }: Props) {
             placeholder="Prix (en FCFA)"
             value={price}
             onChange={(e) => setPrice(e.target.value)}
-            className="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-700 dark:bg-dark-card dark:text-neutral-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary transition"
+            className="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-700 dark:bg-dark-card dark:text-neutral-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F6C445]"
             required
             min={0}
             step="0.01"
@@ -150,7 +209,7 @@ export default function EditProductForm({ product }: Props) {
             placeholder="Description détaillée..."
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-700 dark:bg-dark-card dark:text-neutral-100 rounded-xl h-32 resize-none focus:outline-none focus:ring-2 focus:ring-primary transition"
+            className="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-700 dark:bg-dark-card dark:text-neutral-100 rounded-xl h-32 resize-none focus:outline-none focus:ring-2 focus:ring-[#F6C445]"
             required
           />
           <input
@@ -158,53 +217,30 @@ export default function EditProductForm({ product }: Props) {
             placeholder="Numéro WhatsApp (+221...)"
             value={whatsappNumber}
             onChange={(e) => setWhatsappNumber(e.target.value)}
-            className="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-700 dark:bg-dark-card dark:text-neutral-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary transition"
-            pattern="^\+?\d{7,15}$"
-            title="Entrez un numéro WhatsApp valide, avec indicatif pays"
+            className="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-700 dark:bg-dark-card dark:text-neutral-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F6C445]"
             required
           />
-          <div className="relative">
-            <label
-              htmlFor="category"
-              className={`absolute left-4 top-3 text-sm transition-all duration-200 ${category
-                  ? 'text-xs -top-2 bg-white dark:bg-dark-card px-1 text-primary'
-                  : 'text-neutral-500 dark:text-neutral-400'
-                }`}
-            >
-              Catégorie
-            </label>
-            <select
-              id="category"
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="w-full appearance-none px-4 pt-6 pb-3 border border-neutral-300 dark:border-neutral-700 dark:bg-dark-card dark:text-neutral-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary transition"
-              required
-            >
-              {categories.map((cat) => (
-                <option key={cat.value} value={cat.value}>
-                  {cat.label}
-                </option>
-              ))}
-            </select>
-            <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-gray-400 dark:text-gray-500">
-              <svg
-                className="h-5 w-5 transform transition-transform duration-300"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-              </svg>
-            </div>
-          </div>
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-700 dark:bg-dark-card dark:text-neutral-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F6C445]"
+            required
+          >
+            {categories.map((cat) => (
+              <option key={cat.value} value={cat.value}>
+                {cat.label}
+              </option>
+            ))}
+          </select>
         </div>
 
+        {/* Bouton submit */}
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-primary text-white font-semibold py-3 rounded-xl hover:bg-primary-dark transition disabled:opacity-60"
+          className="w-full bg-gradient-to-r from-[#F6C445] to-[#FFD700] text-[#1C2B49] font-semibold py-3 rounded-xl shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-95 transition disabled:opacity-60"
         >
-          {loading ? 'Modification en cours...' : 'Modifier le produit'}
+          {loading ? 'Modification en cours...' : '✅ Modifier le produit'}
         </button>
       </form>
     </div>
