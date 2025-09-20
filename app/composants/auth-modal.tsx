@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -9,6 +10,9 @@ import { Loader2, AlertCircle } from 'lucide-react'
 
 export default function AuthModal() {
   const supabase = createClient()
+  const router = useRouter()
+
+  const [open, setOpen] = useState(true)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -27,8 +31,13 @@ export default function AuthModal() {
     }
   }
 
+  const handleClose = () => {
+    setOpen(false)
+    router.back() // retourne à la page précédente
+  }
+
   return (
-    <Dialog open={true} onOpenChange={() => { }}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md animate-in fade-in zoom-in-95 duration-300 rounded-2xl shadow-xl">
         <DialogHeader>
           <DialogTitle className="text-center text-2xl font-bold text-gray-900">
