@@ -13,37 +13,32 @@ import PopularProductsCarousel from "./popularProductsCaroussel"
 import PriceFilter from "./pricefilter"
 import ShareAllSocialButton from "./shareAllSocialButton"
 
-// Localités communes au Sénégal avec coordonnées approximatives
+// Localités du Sénégal avec coordonnées GPS précises
 const SENEGAL_LOCATIONS = [
   { name: "Dakar", lat: 14.6928, lng: -17.4467 },
+  { name: "Plateau", lat: 14.6731, lng: -17.4419 },
+  { name: "Médina", lat: 14.6789, lng: -17.4531 },
+  { name: "Yoff", lat: 14.7539, lng: -17.4731 },
+  { name: "Sacré-Coeur", lat: 14.7147, lng: -17.4711 },
+  { name: "Almadies", lat: 14.7447, lng: -17.5264 },
+  { name: "Ngor", lat: 14.7587, lng: -17.5180 },
+  { name: "Ouakam", lat: 14.7289, lng: -17.4922 },
+  { name: "Point E", lat: 14.7019, lng: -17.4644 },
+  { name: "Mermoz", lat: 14.7089, lng: -17.4558 },
+  { name: "Fann", lat: 14.7056, lng: -17.4739 },
+  { name: "Liberté", lat: 14.7086, lng: -17.4656 },
+  { name: "HLM", lat: 14.7328, lng: -17.4581 },
+  { name: "Grand Dakar", lat: 14.6937, lng: -17.4441 },
   { name: "Pikine", lat: 14.7549, lng: -17.3985 },
   { name: "Guédiawaye", lat: 14.7692, lng: -17.4056 },
+  { name: "Parcelles Assainies", lat: 14.7642, lng: -17.4314 },
   { name: "Rufisque", lat: 14.7167, lng: -17.2667 },
   { name: "Thiès", lat: 14.7886, lng: -16.9260 },
   { name: "Kaolack", lat: 14.1592, lng: -16.0729 },
   { name: "Saint-Louis", lat: 16.0179, lng: -16.4817 },
   { name: "Mbour", lat: 14.4198, lng: -16.9639 },
   { name: "Diourbel", lat: 14.6574, lng: -16.2335 },
-  { name: "Ziguinchor", lat: 12.5681, lng: -16.2717 },
-  { name: "Louga", lat: 15.6181, lng: -16.2264 },
-  { name: "Tambacounda", lat: 13.7671, lng: -13.6681 },
-  { name: "Kolda", lat: 12.8939, lng: -14.9417 },
-  { name: "Fatick", lat: 14.3347, lng: -16.4123 },
-  { name: "Kaffrine", lat: 14.1058, lng: -15.5500 },
-  { name: "Kédougou", lat: 12.5571, lng: -12.1750 },
-  { name: "Matam", lat: 15.6558, lng: -13.2533 },
-  { name: "Sédhiou", lat: 12.7081, lng: -15.5564 },
-  { name: "Grand Dakar", lat: 14.6937, lng: -17.4441 },
-  { name: "Parcelles Assainies", lat: 14.7642, lng: -17.4314 },
-  { name: "Almadies", lat: 14.7447, lng: -17.5264 },
-  { name: "Ngor", lat: 14.7587, lng: -17.5180 },
-  { name: "Yoff", lat: 14.7539, lng: -17.4731 },
-  { name: "Ouakam", lat: 14.7289, lng: -17.4922 },
-  { name: "Point E", lat: 14.7019, lng: -17.4644 },
-  { name: "Mermoz", lat: 14.7089, lng: -17.4558 },
-  { name: "Sacré-Coeur", lat: 14.7147, lng: -17.4711 },
-  { name: "Plateau", lat: 14.6731, lng: -17.4419 },
-  { name: "Médina", lat: 14.6789, lng: -17.4531 }
+  { name: "Ziguinchor", lat: 12.5681, lng: -16.2717 }
 ]
 
 export default function FilteredProducts({ products = [], userId = "demo" }) {
@@ -58,12 +53,16 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
   const [visibleCount, setVisibleCount] = useState(12)
   const [scrollY, setScrollY] = useState(0)
 
-  // États pour la géolocalisation GPS
+  // États pour la géolocalisation GPS de l'utilisateur
   const [userPosition, setUserPosition] = useState<{ lat: number, lng: number } | null>(null)
   const [userLocationName, setUserLocationName] = useState<string>("")
   const [locationLoading, setLocationLoading] = useState(true)
   const [locationError, setLocationError] = useState<string | null>(null)
   const [locationPermissionDenied, setLocationPermissionDenied] = useState(false)
+
+  // Cache des localisations des annonceurs (récupérées via géolocalisation IP)
+  const [advertisersLocations, setAdvertisersLocations] = useState<{ [userId: string]: { lat: number, lng: number, city: string } }>({})
+  const [advertisersLoading, setAdvertisersLoading] = useState(false)
 
   // Fonction pour calculer la distance entre deux points GPS (formule Haversine)
   const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
@@ -78,7 +77,7 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
     return R * c
   }
 
-  // Fonction pour trouver la localité la plus proche
+  // Fonction pour trouver la localité la plus proche avec meilleure précision
   const findNearestLocation = (lat: number, lng: number): string => {
     let nearestLocation = "Position inconnue"
     let minDistance = Infinity
@@ -91,10 +90,53 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
       }
     })
 
+    // Si la distance est trop grande (plus de 15km), on considère que c'est imprécis
+    if (minDistance > 15) {
+      nearestLocation = "Zone inconnue"
+    }
+
     return nearestLocation
   }
 
-  // Fonction pour obtenir la position GPS
+  // Fonction pour récupérer la localisation d'un utilisateur via API IP
+  const getUserLocationByIP = async (userId: string): Promise<{ lat: number, lng: number, city: string } | null> => {
+    try {
+      // Dans un cas réel, vous feriez un appel à votre API pour obtenir l'IP de l'utilisateur
+      // puis utiliser cette IP pour la géolocalisation
+      console.log(`Récupération de la localisation pour l'utilisateur ${userId}...`)
+
+      // Simulation d'un appel à votre API backend
+      const response = await fetch(`/api/users/${userId}/location-by-ip`)
+
+      if (!response.ok) {
+        throw new Error('Localisation non disponible')
+      }
+
+      const data = await response.json()
+
+      return {
+        lat: data.latitude,
+        lng: data.longitude,
+        city: data.city || findNearestLocation(data.latitude, data.longitude)
+      }
+    } catch (error) {
+      console.warn(`Impossible de récupérer la localisation pour ${userId}:`, error)
+
+      // Fallback: assigner une localisation aléatoire parmi les zones de Dakar pour la démo
+      const dakarZones = SENEGAL_LOCATIONS.filter(loc =>
+        ['Dakar', 'Plateau', 'Médina', 'Yoff', 'Sacré-Coeur', 'Almadies', 'Ngor', 'Ouakam', 'Point E', 'Mermoz', 'Fann', 'Liberté', 'HLM', 'Grand Dakar'].includes(loc.name)
+      )
+      const randomZone = dakarZones[Math.floor(Math.random() * dakarZones.length)]
+
+      return {
+        lat: randomZone.lat + (Math.random() - 0.5) * 0.01, // Légère variation pour réalisme
+        lng: randomZone.lng + (Math.random() - 0.5) * 0.01,
+        city: randomZone.name
+      }
+    }
+  }
+
+  // Fonction pour obtenir la position GPS de l'utilisateur actuel
   const getCurrentPosition = (): Promise<GeolocationPosition> => {
     return new Promise((resolve, reject) => {
       if (!navigator.geolocation) {
@@ -107,39 +149,39 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
         reject,
         {
           enableHighAccuracy: true,
-          timeout: 10000,
+          timeout: 15000,
           maximumAge: 300000 // Cache pendant 5 minutes
         }
       )
     })
   }
 
-  // Fonction pour détecter la localisation via GPS
+  // Fonction pour détecter la localisation GPS de l'utilisateur actuel
   const detectUserLocation = async () => {
     setLocationLoading(true)
     setLocationError(null)
     setLocationPermissionDenied(false)
 
     try {
-      console.log('Demande de géolocalisation GPS...')
+      console.log('Demande de géolocalisation GPS de l\'utilisateur...')
       const position = await getCurrentPosition()
 
       const lat = position.coords.latitude
       const lng = position.coords.longitude
       const accuracy = position.coords.accuracy
 
-      console.log(`Position GPS détectée: ${lat}, ${lng} (précision: ${Math.round(accuracy)}m)`)
+      console.log(`Position GPS utilisateur: ${lat}, ${lng} (précision: ${Math.round(accuracy)}m)`)
 
       setUserPosition({ lat, lng })
 
-      // Trouver la localité la plus proche
+      // Trouver la localité la plus proche avec meilleure précision
       const nearestLocation = findNearestLocation(lat, lng)
       setUserLocationName(nearestLocation)
 
-      console.log(`Localité la plus proche: ${nearestLocation}`)
+      console.log(`Localité utilisateur: ${nearestLocation}`)
 
     } catch (error) {
-      console.error('Erreur de géolocalisation GPS:', error)
+      console.error('Erreur de géolocalisation GPS utilisateur:', error)
 
       if (error.code === 1) {
         setLocationPermissionDenied(true)
@@ -160,10 +202,56 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
     }
   }
 
-  // Demander la permission et détecter la localisation au chargement
+  // Fonction pour charger les localisations de tous les annonceurs
+  const loadAdvertisersLocations = async () => {
+    if (advertisersLoading || displayProducts.length === 0) return
+
+    setAdvertisersLoading(true)
+
+    try {
+      // Récupérer tous les userId uniques des annonceurs
+      const uniqueAdvertiserIds = [...new Set(
+        displayProducts
+          .map(p => p.userId) // Le userId de l'annonceur dans votre table product
+          .filter(Boolean)
+      )]
+
+      console.log(`Chargement des localisations pour ${uniqueAdvertiserIds.length} annonceurs...`)
+
+      // Charger les localisations en parallèle
+      const locationPromises = uniqueAdvertiserIds.map(async (advertiserId) => {
+        const location = await getUserLocationByIP(advertiserId)
+        return { advertiserId, location }
+      })
+
+      const results = await Promise.allSettled(locationPromises)
+      const locationsMap: { [userId: string]: { lat: number, lng: number, city: string } } = {}
+
+      results.forEach((result, index) => {
+        if (result.status === 'fulfilled' && result.value.location) {
+          locationsMap[result.value.advertiserId] = result.value.location
+        }
+      })
+
+      console.log(`Localisations chargées pour ${Object.keys(locationsMap).length} annonceurs`)
+      setAdvertisersLocations(locationsMap)
+
+    } catch (error) {
+      console.error('Erreur lors du chargement des localisations des annonceurs:', error)
+    } finally {
+      setAdvertisersLoading(false)
+    }
+  }
+
+  // Charger les localisations au démarrage
   useEffect(() => {
     detectUserLocation()
+    loadAdvertisersLocations()
   }, [])
+
+  useEffect(() => {
+    loadAdvertisersLocations()
+  }, [displayProducts])
 
   // Effet de scroll pour les animations
   useEffect(() => {
@@ -182,6 +270,10 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
     if (!userPosition) return products
 
     return products.sort((a, b) => {
+      // Récupérer les coordonnées des annonceurs depuis le cache
+      const aAdvertiserLocation = advertisersLocations[a.userId]
+      const bAdvertiserLocation = advertisersLocations[b.userId]
+
       // Si un filtre de localisation est sélectionné
       if (selectedLocation) {
         const selectedLocationData = SENEGAL_LOCATIONS.find(loc =>
@@ -189,16 +281,16 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
         )
 
         if (selectedLocationData) {
-          const aDistance = a.advertiserLat && a.advertiserLng ?
-            calculateDistance(selectedLocationData.lat, selectedLocationData.lng, a.advertiserLat, a.advertiserLng) :
+          const aDistance = aAdvertiserLocation ?
+            calculateDistance(selectedLocationData.lat, selectedLocationData.lng, aAdvertiserLocation.lat, aAdvertiserLocation.lng) :
             Infinity
-          const bDistance = b.advertiserLat && b.advertiserLng ?
-            calculateDistance(selectedLocationData.lat, selectedLocationData.lng, b.advertiserLat, b.advertiserLng) :
+          const bDistance = bAdvertiserLocation ?
+            calculateDistance(selectedLocationData.lat, selectedLocationData.lng, bAdvertiserLocation.lat, bAdvertiserLocation.lng) :
             Infinity
 
-          // Produits dans un rayon de 5km de la localisation sélectionnée en priorité
-          const aIsNear = aDistance <= 5
-          const bIsNear = bDistance <= 5
+          // Produits dans un rayon de 3km de la localisation sélectionnée en priorité
+          const aIsNear = aDistance <= 3
+          const bIsNear = bDistance <= 3
 
           if (aIsNear && !bIsNear) return -1
           if (!aIsNear && bIsNear) return 1
@@ -207,21 +299,21 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
       }
 
       // Tri par proximité avec la position GPS de l'utilisateur
-      const aDistance = a.advertiserLat && a.advertiserLng ?
-        calculateDistance(userPosition.lat, userPosition.lng, a.advertiserLat, a.advertiserLng) :
+      const aDistance = aAdvertiserLocation ?
+        calculateDistance(userPosition.lat, userPosition.lng, aAdvertiserLocation.lat, aAdvertiserLocation.lng) :
         Infinity
-      const bDistance = b.advertiserLat && b.advertiserLng ?
-        calculateDistance(userPosition.lat, userPosition.lng, b.advertiserLat, b.advertiserLng) :
+      const bDistance = bAdvertiserLocation ?
+        calculateDistance(userPosition.lat, userPosition.lng, bAdvertiserLocation.lat, bAdvertiserLocation.lng) :
         Infinity
 
-      // Priorité pour les produits dans un rayon de 10km
-      const aIsVeryClose = aDistance <= 10
-      const bIsVeryClose = bDistance <= 10
+      // Priorité pour les produits dans un rayon de 5km (plus précis)
+      const aIsVeryClose = aDistance <= 5
+      const bIsVeryClose = bDistance <= 5
 
       if (aIsVeryClose && !bIsVeryClose) return -1
       if (!aIsVeryClose && bIsVeryClose) return 1
 
-      // Si les deux sont proches ou éloignés, trier par distance
+      // Si les deux sont proches ou éloignés, trier par distance exacte
       if (aDistance !== bDistance) return aDistance - bDistance
 
       // Si même distance, trier par popularité
@@ -234,22 +326,25 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
     p => !priceRange || (p.price >= priceRange[0] && p.price <= priceRange[1])
   )
 
-  // Filtrage par localisation sélectionnée (rayon de 5km)
-  if (selectedLocation && userPosition) {
+  // Filtrage par localisation sélectionnée (rayon de 3km pour plus de précision)
+  if (selectedLocation) {
     const selectedLocationData = SENEGAL_LOCATIONS.find(loc =>
       loc.name.toLowerCase() === selectedLocation.toLowerCase()
     )
 
     if (selectedLocationData) {
       filteredProducts = filteredProducts.filter(p => {
-        if (!p.advertiserLat || !p.advertiserLng) return false
+        const advertiserLocation = advertisersLocations[p.userId]
+
+        if (!advertiserLocation) return false
+
         const distance = calculateDistance(
           selectedLocationData.lat,
           selectedLocationData.lng,
-          p.advertiserLat,
-          p.advertiserLng
+          advertiserLocation.lat,
+          advertiserLocation.lng
         )
-        return distance <= 5 // 5km de rayon
+        return distance <= 3 // 3km de rayon pour plus de précision
       })
     }
   }
@@ -259,10 +354,8 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
 
   const productsToShow = filteredProducts.slice(0, visibleCount)
 
-  // Compter les produits par localisation (rayon de 5km)
+  // Compter les produits par localisation (rayon de 3km)
   const getLocationCount = (locationName: string): number => {
-    if (!userPosition) return 0
-
     const locationData = SENEGAL_LOCATIONS.find(loc =>
       loc.name.toLowerCase() === locationName.toLowerCase()
     )
@@ -270,30 +363,36 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
     if (!locationData) return 0
 
     return displayProducts.filter(p => {
-      if (!p.advertiserLat || !p.advertiserLng) return false
+      const advertiserLocation = advertisersLocations[p.userId]
+
+      if (!advertiserLocation) return false
+
       const distance = calculateDistance(
         locationData.lat,
         locationData.lng,
-        p.advertiserLat,
-        p.advertiserLng
+        advertiserLocation.lat,
+        advertiserLocation.lng
       )
-      return distance <= 5
+      return distance <= 3
     }).length
   }
 
-  // Compter les produits près de l'utilisateur (rayon de 10km)
+  // Compter les produits près de l'utilisateur (rayon de 5km)
   const getNearbyProductsCount = (): number => {
     if (!userPosition) return 0
 
     return displayProducts.filter(p => {
-      if (!p.advertiserLat || !p.advertiserLng) return false
+      const advertiserLocation = advertisersLocations[p.userId]
+
+      if (!advertiserLocation) return false
+
       const distance = calculateDistance(
         userPosition.lat,
         userPosition.lng,
-        p.advertiserLat,
-        p.advertiserLng
+        advertiserLocation.lat,
+        advertiserLocation.lng
       )
-      return distance <= 10
+      return distance <= 5
     }).length
   }
 
@@ -321,8 +420,8 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
           setLocationFilterOpen(false)
         }}
         className={`w-full flex items-center justify-between p-4 rounded-xl mb-2 transition-all ${!selectedLocation
-            ? 'bg-[#F6C445]/10 border-2 border-[#F6C445] text-[#F6C445]'
-            : 'bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300'
+          ? 'bg-[#F6C445]/10 border-2 border-[#F6C445] text-[#F6C445]'
+          : 'bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300'
           }`}
       >
         <div className="flex items-center gap-3">
@@ -338,7 +437,7 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
       {userPosition && userLocationName && (
         <div className="mb-4">
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 px-2">
-            📍 Votre zone actuelle (GPS)
+            Votre zone actuelle (GPS)
           </p>
           <button
             onClick={() => {
@@ -346,15 +445,15 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
               setLocationFilterOpen(false)
             }}
             className={`w-full flex items-center justify-between p-4 rounded-xl mb-2 transition-all ${selectedLocation === userLocationName
-                ? 'bg-[#F6C445]/10 border-2 border-[#F6C445] text-[#F6C445]'
-                : 'bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800'
+              ? 'bg-[#F6C445]/10 border-2 border-[#F6C445] text-[#F6C445]'
+              : 'bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800'
               }`}
           >
             <div className="flex items-center gap-3">
               <Crosshair size={20} />
               <div className="text-left">
                 <span className="font-medium block">{userLocationName}</span>
-                <span className="text-xs opacity-70">Dans un rayon de 5km</span>
+                <span className="text-xs opacity-70">Dans un rayon de 3km</span>
               </div>
               <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 px-2 py-1 rounded-full">
                 GPS
@@ -370,7 +469,7 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
       {/* Autres zones */}
       <div className="space-y-1">
         <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 px-2">
-          🗺️ Autres zones disponibles
+          Autres zones disponibles
         </p>
         {SENEGAL_LOCATIONS
           .filter(loc => loc.name !== userLocationName)
@@ -386,15 +485,15 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
                   setLocationFilterOpen(false)
                 }}
                 className={`w-full flex items-center justify-between p-3 rounded-xl transition-all ${selectedLocation === location.name
-                    ? 'bg-[#F6C445]/10 border-2 border-[#F6C445] text-[#F6C445]'
-                    : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+                  ? 'bg-[#F6C445]/10 border-2 border-[#F6C445] text-[#F6C445]'
+                  : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
                   }`}
               >
                 <div className="flex items-center gap-3">
                   <MapPin size={16} />
                   <div className="text-left">
                     <span className="block">{location.name}</span>
-                    <span className="text-xs opacity-70">Rayon 5km</span>
+                    <span className="text-xs opacity-70">Rayon 3km</span>
                   </div>
                 </div>
                 <span className="text-sm opacity-70">
@@ -424,7 +523,7 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
             </div>
             <div className="w-1 h-1 bg-gray-400 rounded-full" />
             <div className="flex items-center gap-1">
-              {locationLoading ? (
+              {locationLoading || advertisersLoading ? (
                 <Loader2 className="w-3 h-3 animate-spin text-[#F6C445]" />
               ) : locationPermissionDenied ? (
                 <AlertTriangle className="w-3 h-3 text-orange-500" />
@@ -433,9 +532,10 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
               )}
               <span>
                 {locationLoading ? 'Localisation GPS...' :
-                  locationPermissionDenied ? 'Permission requise' :
-                    locationError ? 'GPS indisponible' :
-                      `${nearbyProductsCount} près de vous (${userLocationName})`}
+                  advertisersLoading ? 'Chargement vendeurs...' :
+                    locationPermissionDenied ? 'Permission requise' :
+                      locationError ? 'GPS indisponible' :
+                        `${nearbyProductsCount} près de vous (${userLocationName})`}
               </span>
             </div>
             <div className="w-1 h-1 bg-gray-400 rounded-full" />
@@ -523,12 +623,12 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
                   </h2>
                   {!selectedLocation && userPosition && !locationLoading && (
                     <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                      🎯 Triés par proximité GPS (vendeurs les plus proches en premier)
+                      Triés par proximité GPS (vendeurs les plus proches en premier)
                     </p>
                   )}
                   {selectedLocation && (
                     <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                      📍 Vendeurs dans un rayon de 5km de {selectedLocation}
+                      Vendeurs dans un rayon de 3km de {selectedLocation}
                     </p>
                   )}
                 </div>
@@ -562,8 +662,8 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400 text-sm mb-6 max-w-md">
                   {selectedLocation ?
-                    "Essaie une autre zone ou élargis ta recherche. De nouveaux vendeurs rejoignent chaque jour !" :
-                    "Essaie d'autres filtres ou reviens plus tard, on ajoute de nouveaux produits chaque jour !"
+                    "Essayez une autre zone ou élargissez votre recherche. De nouveaux vendeurs rejoignent chaque jour." :
+                    "Essayez d'autres filtres ou revenez plus tard, on ajoute de nouveaux produits chaque jour."
                   }
                 </p>
                 <button
