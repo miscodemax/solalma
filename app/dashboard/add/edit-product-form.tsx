@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import Image from 'next/image'
-import { Loader2, Plus, X, Upload, Edit3, Check, AlertCircle } from 'lucide-react'
+import { Loader2, X, Upload, Edit3, Check, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 type Props = {
