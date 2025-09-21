@@ -3,7 +3,7 @@ import { useEffect, useState } from "react"
 import {
   Dialog, DialogContent
 } from "@/components/ui/dialog"
-import { Filter, ShoppingBag, Zap, Star, MapPin, Navigation, Loader2, X } from "lucide-react"
+import { Filter, ShoppingBag, Zap, Star, MapPin, Navigation, Loader2, X, Crosshair, AlertTriangle } from "lucide-react"
 import ProductCard from "./product-card"
 import BackToTopButton from "./BackToTopButton"
 import {
@@ -13,14 +13,37 @@ import PopularProductsCarousel from "./popularProductsCaroussel"
 import PriceFilter from "./pricefilter"
 import ShareAllSocialButton from "./shareAllSocialButton"
 
-// Localités communes au Sénégal
+// Localités communes au Sénégal avec coordonnées approximatives
 const SENEGAL_LOCATIONS = [
-  "Dakar", "Pikine", "Guédiawaye", "Rufisque", "Thiès", "Kaolack",
-  "Saint-Louis", "Mbour", "Diourbel", "Ziguinchor", "Louga", "Tambacounda",
-  "Kolda", "Fatick", "Kaffrine", "Kédougou", "Matam", "Sédhiou",
-  "Grand Dakar", "Parcelles Assainies", "Almadies", "Ngor", "Yoff",
-  "Ouakam", "Point E", "Mermoz", "Sacré-Coeur", "Plateau", "Médina",
-  "Liberté", "HLM", "Colobane", "Sicap", "Fann", "Gibraltar"
+  { name: "Dakar", lat: 14.6928, lng: -17.4467 },
+  { name: "Pikine", lat: 14.7549, lng: -17.3985 },
+  { name: "Guédiawaye", lat: 14.7692, lng: -17.4056 },
+  { name: "Rufisque", lat: 14.7167, lng: -17.2667 },
+  { name: "Thiès", lat: 14.7886, lng: -16.9260 },
+  { name: "Kaolack", lat: 14.1592, lng: -16.0729 },
+  { name: "Saint-Louis", lat: 16.0179, lng: -16.4817 },
+  { name: "Mbour", lat: 14.4198, lng: -16.9639 },
+  { name: "Diourbel", lat: 14.6574, lng: -16.2335 },
+  { name: "Ziguinchor", lat: 12.5681, lng: -16.2717 },
+  { name: "Louga", lat: 15.6181, lng: -16.2264 },
+  { name: "Tambacounda", lat: 13.7671, lng: -13.6681 },
+  { name: "Kolda", lat: 12.8939, lng: -14.9417 },
+  { name: "Fatick", lat: 14.3347, lng: -16.4123 },
+  { name: "Kaffrine", lat: 14.1058, lng: -15.5500 },
+  { name: "Kédougou", lat: 12.5571, lng: -12.1750 },
+  { name: "Matam", lat: 15.6558, lng: -13.2533 },
+  { name: "Sédhiou", lat: 12.7081, lng: -15.5564 },
+  { name: "Grand Dakar", lat: 14.6937, lng: -17.4441 },
+  { name: "Parcelles Assainies", lat: 14.7642, lng: -17.4314 },
+  { name: "Almadies", lat: 14.7447, lng: -17.5264 },
+  { name: "Ngor", lat: 14.7587, lng: -17.5180 },
+  { name: "Yoff", lat: 14.7539, lng: -17.4731 },
+  { name: "Ouakam", lat: 14.7289, lng: -17.4922 },
+  { name: "Point E", lat: 14.7019, lng: -17.4644 },
+  { name: "Mermoz", lat: 14.7089, lng: -17.4558 },
+  { name: "Sacré-Coeur", lat: 14.7147, lng: -17.4711 },
+  { name: "Plateau", lat: 14.6731, lng: -17.4419 },
+  { name: "Médina", lat: 14.6789, lng: -17.4531 }
 ]
 
 export default function FilteredProducts({ products = [], userId = "demo" }) {
@@ -35,58 +58,109 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
   const [visibleCount, setVisibleCount] = useState(12)
   const [scrollY, setScrollY] = useState(0)
 
-  // États pour la géolocalisation
-  const [userLocation, setUserLocation] = useState<string>("")
+  // États pour la géolocalisation GPS
+  const [userPosition, setUserPosition] = useState<{ lat: number, lng: number } | null>(null)
+  const [userLocationName, setUserLocationName] = useState<string>("")
   const [locationLoading, setLocationLoading] = useState(true)
   const [locationError, setLocationError] = useState<string | null>(null)
-  const [detectedCity, setDetectedCity] = useState<string>("")
-  const [detectedCountry, setDetectedCountry] = useState<string>("")
+  const [locationPermissionDenied, setLocationPermissionDenied] = useState(false)
 
-  // Fonction pour détecter la localisation via IP
+  // Fonction pour calculer la distance entre deux points GPS (formule Haversine)
+  const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
+    const R = 6371 // Rayon de la Terre en km
+    const dLat = (lat2 - lat1) * Math.PI / 180
+    const dLng = (lng2 - lng1) * Math.PI / 180
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLng / 2) * Math.sin(dLng / 2)
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+    return R * c
+  }
+
+  // Fonction pour trouver la localité la plus proche
+  const findNearestLocation = (lat: number, lng: number): string => {
+    let nearestLocation = "Position inconnue"
+    let minDistance = Infinity
+
+    SENEGAL_LOCATIONS.forEach(location => {
+      const distance = calculateDistance(lat, lng, location.lat, location.lng)
+      if (distance < minDistance) {
+        minDistance = distance
+        nearestLocation = location.name
+      }
+    })
+
+    return nearestLocation
+  }
+
+  // Fonction pour obtenir la position GPS
+  const getCurrentPosition = (): Promise<GeolocationPosition> => {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error('La géolocalisation n\'est pas supportée par votre navigateur'))
+        return
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        resolve,
+        reject,
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 300000 // Cache pendant 5 minutes
+        }
+      )
+    })
+  }
+
+  // Fonction pour détecter la localisation via GPS
   const detectUserLocation = async () => {
     setLocationLoading(true)
     setLocationError(null)
+    setLocationPermissionDenied(false)
 
     try {
-      // Utilisation d'une API gratuite de géolocalisation IP
-      const response = await fetch('https://ipapi.co/json/')
+      console.log('Demande de géolocalisation GPS...')
+      const position = await getCurrentPosition()
 
-      if (!response.ok) {
-        throw new Error('Erreur lors de la récupération de la localisation')
-      }
+      const lat = position.coords.latitude
+      const lng = position.coords.longitude
+      const accuracy = position.coords.accuracy
 
-      const data = await response.json()
+      console.log(`Position GPS détectée: ${lat}, ${lng} (précision: ${Math.round(accuracy)}m)`)
 
-      console.log('Données de localisation:', data) // Pour debug
+      setUserPosition({ lat, lng })
 
-      if (data.error) {
-        throw new Error(data.reason || 'Erreur de géolocalisation')
-      }
+      // Trouver la localité la plus proche
+      const nearestLocation = findNearestLocation(lat, lng)
+      setUserLocationName(nearestLocation)
 
-      const city = data.city || ""
-      const country = data.country_name || ""
-      const region = data.region || ""
-
-      setDetectedCity(city)
-      setDetectedCountry(country)
-
-      // Pour le Sénégal, on utilise la ville, sinon on utilise le pays
-      if (country.toLowerCase().includes('senegal') || country.toLowerCase().includes('sénégal')) {
-        setUserLocation(city || region || 'Dakar')
-      } else {
-        setUserLocation(city || country || 'International')
-      }
+      console.log(`Localité la plus proche: ${nearestLocation}`)
 
     } catch (error) {
-      console.error('Erreur de géolocalisation:', error)
-      setLocationError(error.message)
-      setUserLocation('Dakar') // Localisation par défaut
+      console.error('Erreur de géolocalisation GPS:', error)
+
+      if (error.code === 1) {
+        setLocationPermissionDenied(true)
+        setLocationError('Permission de localisation refusée')
+      } else if (error.code === 2) {
+        setLocationError('Position indisponible')
+      } else if (error.code === 3) {
+        setLocationError('Timeout de localisation')
+      } else {
+        setLocationError(error.message || 'Erreur de géolocalisation')
+      }
+
+      // Valeurs par défaut (centre de Dakar)
+      setUserPosition({ lat: 14.6928, lng: -17.4467 })
+      setUserLocationName('Dakar')
     } finally {
       setLocationLoading(false)
     }
   }
 
-  // Détecter la localisation au chargement
+  // Demander la permission et détecter la localisation au chargement
   useEffect(() => {
     detectUserLocation()
   }, [])
@@ -103,29 +177,54 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
     return () => clearTimeout(t)
   }, [])
 
-  // Fonction pour calculer la priorité par localisation
-  const sortProductsByLocation = (products) => {
+  // Fonction pour trier les produits par proximité GPS
+  const sortProductsByGPSProximity = (products) => {
+    if (!userPosition) return products
+
     return products.sort((a, b) => {
-      // Si un filtre de localisation est sélectionné, on filtre d'abord
+      // Si un filtre de localisation est sélectionné
       if (selectedLocation) {
-        const aMatchesFilter = a.advertiserLocation?.toLowerCase().includes(selectedLocation.toLowerCase())
-        const bMatchesFilter = b.advertiserLocation?.toLowerCase().includes(selectedLocation.toLowerCase())
+        const selectedLocationData = SENEGAL_LOCATIONS.find(loc =>
+          loc.name.toLowerCase() === selectedLocation.toLowerCase()
+        )
 
-        if (aMatchesFilter && !bMatchesFilter) return -1
-        if (!aMatchesFilter && bMatchesFilter) return 1
-        if (!aMatchesFilter && !bMatchesFilter) return 0
+        if (selectedLocationData) {
+          const aDistance = a.advertiserLat && a.advertiserLng ?
+            calculateDistance(selectedLocationData.lat, selectedLocationData.lng, a.advertiserLat, a.advertiserLng) :
+            Infinity
+          const bDistance = b.advertiserLat && b.advertiserLng ?
+            calculateDistance(selectedLocationData.lat, selectedLocationData.lng, b.advertiserLat, b.advertiserLng) :
+            Infinity
+
+          // Produits dans un rayon de 5km de la localisation sélectionnée en priorité
+          const aIsNear = aDistance <= 5
+          const bIsNear = bDistance <= 5
+
+          if (aIsNear && !bIsNear) return -1
+          if (!aIsNear && bIsNear) return 1
+          if (aIsNear && bIsNear) return aDistance - bDistance
+        }
       }
 
-      // Priorité par localisation de l'utilisateur (détectée automatiquement)
-      if (userLocation) {
-        const aMatchesUserLocation = a.advertiserLocation?.toLowerCase().includes(userLocation.toLowerCase())
-        const bMatchesUserLocation = b.advertiserLocation?.toLowerCase().includes(userLocation.toLowerCase())
+      // Tri par proximité avec la position GPS de l'utilisateur
+      const aDistance = a.advertiserLat && a.advertiserLng ?
+        calculateDistance(userPosition.lat, userPosition.lng, a.advertiserLat, a.advertiserLng) :
+        Infinity
+      const bDistance = b.advertiserLat && b.advertiserLng ?
+        calculateDistance(userPosition.lat, userPosition.lng, b.advertiserLat, b.advertiserLng) :
+        Infinity
 
-        if (aMatchesUserLocation && !bMatchesUserLocation) return -1
-        if (!aMatchesUserLocation && bMatchesUserLocation) return 1
-      }
+      // Priorité pour les produits dans un rayon de 10km
+      const aIsVeryClose = aDistance <= 10
+      const bIsVeryClose = bDistance <= 10
 
-      // Si même priorité de localisation, trier par popularité ou date
+      if (aIsVeryClose && !bIsVeryClose) return -1
+      if (!aIsVeryClose && bIsVeryClose) return 1
+
+      // Si les deux sont proches ou éloignés, trier par distance
+      if (aDistance !== bDistance) return aDistance - bDistance
+
+      // Si même distance, trier par popularité
       return (b.popularity || 0) - (a.popularity || 0)
     })
   }
@@ -135,35 +234,77 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
     p => !priceRange || (p.price >= priceRange[0] && p.price <= priceRange[1])
   )
 
-  // Filtrage par localisation sélectionnée
-  if (selectedLocation) {
-    filteredProducts = filteredProducts.filter(p =>
-      p.advertiserLocation?.toLowerCase().includes(selectedLocation.toLowerCase())
+  // Filtrage par localisation sélectionnée (rayon de 5km)
+  if (selectedLocation && userPosition) {
+    const selectedLocationData = SENEGAL_LOCATIONS.find(loc =>
+      loc.name.toLowerCase() === selectedLocation.toLowerCase()
     )
+
+    if (selectedLocationData) {
+      filteredProducts = filteredProducts.filter(p => {
+        if (!p.advertiserLat || !p.advertiserLng) return false
+        const distance = calculateDistance(
+          selectedLocationData.lat,
+          selectedLocationData.lng,
+          p.advertiserLat,
+          p.advertiserLng
+        )
+        return distance <= 5 // 5km de rayon
+      })
+    }
   }
 
-  // Tri intelligent par localisation
-  filteredProducts = sortProductsByLocation(filteredProducts)
+  // Tri intelligent par proximité GPS
+  filteredProducts = sortProductsByGPSProximity(filteredProducts)
 
   const productsToShow = filteredProducts.slice(0, visibleCount)
 
-  // Compter les produits par localisation
-  const getLocationCount = (location) => {
-    if (!location) return 0
-    return displayProducts.filter(p =>
-      p.advertiserLocation?.toLowerCase().includes(location.toLowerCase())
-    ).length
+  // Compter les produits par localisation (rayon de 5km)
+  const getLocationCount = (locationName: string): number => {
+    if (!userPosition) return 0
+
+    const locationData = SENEGAL_LOCATIONS.find(loc =>
+      loc.name.toLowerCase() === locationName.toLowerCase()
+    )
+
+    if (!locationData) return 0
+
+    return displayProducts.filter(p => {
+      if (!p.advertiserLat || !p.advertiserLng) return false
+      const distance = calculateDistance(
+        locationData.lat,
+        locationData.lng,
+        p.advertiserLat,
+        p.advertiserLng
+      )
+      return distance <= 5
+    }).length
   }
 
-  // Compter les produits de la localisation de l'utilisateur
-  const userLocationCount = getLocationCount(userLocation)
+  // Compter les produits près de l'utilisateur (rayon de 10km)
+  const getNearbyProductsCount = (): number => {
+    if (!userPosition) return 0
+
+    return displayProducts.filter(p => {
+      if (!p.advertiserLat || !p.advertiserLng) return false
+      const distance = calculateDistance(
+        userPosition.lat,
+        userPosition.lng,
+        p.advertiserLat,
+        p.advertiserLng
+      )
+      return distance <= 10
+    }).length
+  }
+
+  const nearbyProductsCount = getNearbyProductsCount()
 
   // Composant pour le filtre de localisation
   const LocationFilter = () => (
     <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl max-h-96 overflow-y-auto">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-          Choisir une localisation
+          Choisir une zone
         </h3>
         <button
           onClick={() => setLocationFilterOpen(false)}
@@ -173,7 +314,7 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
         </button>
       </div>
 
-      {/* Option "Toutes les localisations" */}
+      {/* Option "Toutes les zones" */}
       <button
         onClick={() => {
           setSelectedLocation(null)
@@ -186,71 +327,75 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
       >
         <div className="flex items-center gap-3">
           <MapPin size={20} />
-          <span className="font-medium">Toutes les localisations</span>
+          <span className="font-medium">Toutes les zones</span>
         </div>
         <span className="text-sm opacity-70">
           {displayProducts.length} produits
         </span>
       </button>
 
-      {/* Localisation détectée (prioritaire) */}
-      {userLocation && (
+      {/* Zone actuelle de l'utilisateur */}
+      {userPosition && userLocationName && (
         <div className="mb-4">
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 px-2">
-            📍 Votre localisation détectée
+            📍 Votre zone actuelle (GPS)
           </p>
           <button
             onClick={() => {
-              setSelectedLocation(userLocation)
+              setSelectedLocation(userLocationName)
               setLocationFilterOpen(false)
             }}
-            className={`w-full flex items-center justify-between p-4 rounded-xl mb-2 transition-all ${selectedLocation === userLocation
+            className={`w-full flex items-center justify-between p-4 rounded-xl mb-2 transition-all ${selectedLocation === userLocationName
                 ? 'bg-[#F6C445]/10 border-2 border-[#F6C445] text-[#F6C445]'
                 : 'bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800'
               }`}
           >
             <div className="flex items-center gap-3">
-              <Navigation size={20} />
-              <span className="font-medium">{userLocation}</span>
-              {detectedCountry && (
-                <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 px-2 py-1 rounded-full">
-                  Auto
-                </span>
-              )}
+              <Crosshair size={20} />
+              <div className="text-left">
+                <span className="font-medium block">{userLocationName}</span>
+                <span className="text-xs opacity-70">Dans un rayon de 5km</span>
+              </div>
+              <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 px-2 py-1 rounded-full">
+                GPS
+              </span>
             </div>
             <span className="text-sm opacity-70">
-              {userLocationCount} produits
+              {getLocationCount(userLocationName)}
             </span>
           </button>
         </div>
       )}
 
-      {/* Autres localisations */}
+      {/* Autres zones */}
       <div className="space-y-1">
         <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 px-2">
-          🗺️ Autres localisations
+          🗺️ Autres zones disponibles
         </p>
         {SENEGAL_LOCATIONS
-          .filter(loc => loc !== userLocation)
+          .filter(loc => loc.name !== userLocationName)
           .map((location) => {
-            const count = getLocationCount(location)
+            const count = getLocationCount(location.name)
             if (count === 0) return null
 
             return (
               <button
-                key={location}
+                key={location.name}
                 onClick={() => {
-                  setSelectedLocation(location)
+                  setSelectedLocation(location.name)
                   setLocationFilterOpen(false)
                 }}
-                className={`w-full flex items-center justify-between p-3 rounded-xl transition-all ${selectedLocation === location
+                className={`w-full flex items-center justify-between p-3 rounded-xl transition-all ${selectedLocation === location.name
                     ? 'bg-[#F6C445]/10 border-2 border-[#F6C445] text-[#F6C445]'
                     : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
                   }`}
               >
                 <div className="flex items-center gap-3">
                   <MapPin size={16} />
-                  <span>{location}</span>
+                  <div className="text-left">
+                    <span className="block">{location.name}</span>
+                    <span className="text-xs opacity-70">Rayon 5km</span>
+                  </div>
                 </div>
                 <span className="text-sm opacity-70">
                   {count}
@@ -271,7 +416,7 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
         style={{ transform: `translateY(${scrollY * 0.1}px)` }}
       >
         <div className="px-4 py-4 max-w-7xl mx-auto">
-          {/* Stats bar avec info localisation */}
+          {/* Stats bar avec info localisation GPS */}
           <div className="flex items-center justify-center gap-4 mb-3 text-xs text-gray-600 dark:text-gray-400">
             <div className="flex items-center gap-1">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
@@ -281,13 +426,16 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
             <div className="flex items-center gap-1">
               {locationLoading ? (
                 <Loader2 className="w-3 h-3 animate-spin text-[#F6C445]" />
+              ) : locationPermissionDenied ? (
+                <AlertTriangle className="w-3 h-3 text-orange-500" />
               ) : (
-                <Navigation className="w-3 h-3 text-[#F6C445]" />
+                <Crosshair className="w-3 h-3 text-[#F6C445]" />
               )}
               <span>
-                {locationLoading ? 'Localisation...' :
-                  locationError ? 'Localisation indisponible' :
-                    `${userLocationCount} près de vous (${userLocation})`}
+                {locationLoading ? 'Localisation GPS...' :
+                  locationPermissionDenied ? 'Permission requise' :
+                    locationError ? 'GPS indisponible' :
+                      `${nearbyProductsCount} près de vous (${userLocationName})`}
               </span>
             </div>
             <div className="w-1 h-1 bg-gray-400 rounded-full" />
@@ -296,6 +444,22 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
               <span>Livraison rapide</span>
             </div>
           </div>
+
+          {/* Alerte permission */}
+          {locationPermissionDenied && (
+            <div className="mb-3 p-2 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">
+              <div className="flex items-center gap-2 text-xs text-orange-700 dark:text-orange-300">
+                <AlertTriangle size={14} />
+                <span>Activez la localisation pour voir les produits près de vous</span>
+                <button
+                  onClick={detectUserLocation}
+                  className="text-[#F6C445] hover:text-[#E2AE32] font-medium ml-auto"
+                >
+                  Réessayer
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Actions */}
           <div className="flex items-center justify-between gap-4">
@@ -348,8 +512,8 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                    {selectedLocation ? `Produits à ${selectedLocation}` :
-                      userLocation ? `Recommandés près de ${userLocation}` :
+                    {selectedLocation ? `Zone: ${selectedLocation}` :
+                      userPosition ? `Près de ${userLocationName}` :
                         "Tous les produits"}
                     {filteredProducts.length > 0 && (
                       <span className="ml-2 text-sm font-medium text-gray-500 dark:text-gray-400">
@@ -357,9 +521,14 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
                       </span>
                     )}
                   </h2>
-                  {!selectedLocation && userLocation && !locationLoading && (
+                  {!selectedLocation && userPosition && !locationLoading && (
                     <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                      🎯 Produits proches de votre localisation en premier
+                      🎯 Triés par proximité GPS (vendeurs les plus proches en premier)
+                    </p>
+                  )}
+                  {selectedLocation && (
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                      📍 Vendeurs dans un rayon de 5km de {selectedLocation}
                     </p>
                   )}
                 </div>
@@ -387,14 +556,14 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
                   {selectedLocation ?
-                    `Aucun produit trouvé à ${selectedLocation} 📍` :
-                    "Aucun produit trouvé 😔"
+                    `Aucun vendeur trouvé près de ${selectedLocation}` :
+                    "Aucun produit trouvé"
                   }
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400 text-sm mb-6 max-w-md">
                   {selectedLocation ?
-                    "Essaie une autre zone ou reviens plus tard, on ajoute de nouveaux vendeurs chaque jour ! 🌟" :
-                    "Essaie un autre budget ou reviens plus tard, on ajoute de nouveaux produits chaque jour ! ✨"
+                    "Essaie une autre zone ou élargis ta recherche. De nouveaux vendeurs rejoignent chaque jour !" :
+                    "Essaie d'autres filtres ou reviens plus tard, on ajoute de nouveaux produits chaque jour !"
                   }
                 </p>
                 <button
@@ -405,7 +574,7 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
                   }}
                   className="px-6 py-3 bg-gradient-to-r from-[#F6C445] to-[#FFD700] text-[#1C2B49] font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
                 >
-                  Voir tous les produits 🛍️
+                  Voir tous les produits
                 </button>
               </div>
             ) : (
