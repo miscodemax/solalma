@@ -21,6 +21,7 @@ const categories = [
   { value: 'maquillage', label: 'Maquillage' },
   { value: 'artisanat', label: 'Artisanat (fait mains)' },
   { value: 'electronique', label: 'Electronique' },
+  { value: 'accessoire', label: 'Accessoire' },
 ]
 
 const SENEGAL_LOCATIONS = [

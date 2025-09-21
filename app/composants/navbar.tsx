@@ -22,6 +22,7 @@ const categories = [
   { label: 'maquillage', emoji: '💄' },
   { label: 'soins_et_astuces', emoji: '🧴' },
   { label: 'electronique', emoji: '📱' },
+  { label: 'accessoire', emoji: '📱' },
 ]
 
 const navLinks = [

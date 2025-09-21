@@ -4,6 +4,7 @@ const categories = [
   { label: "maquillage", tip: "Sublime-toi grâce à notre sélection de makeup." },
   { label: "soins_et_astuces", tip: "Prends soin de toi avec nos produits naturels et conseils." },
   { label: "electronique", tip: "Encore plus de style avec notre gamme d'appareils électroniques." },
+  { label: "accessoire", tip: "devenez encore plus classe avec nos accessoires haut de gamme à acompagenrer avec votre accoutrement." },
 ]
 
 export default function CategoryFilter({

@@ -172,15 +172,15 @@ export default function ProductContact({
     }
 
     const handleCallSeller = () => {
-        if (product.phone_number) {
-            const phoneClean = product.phone_number.replace(/\D/g, "")
+        if (product.whatsapp_number) {
+            const phoneClean = product.whatsapp_number.replace(/\D/g, "")
             window.open(`tel:${phoneClean}`)
         } else {
             alert("Numéro de téléphone non disponible")
         }
     }
 
-    if (!product.whatsapp_number && !product.phone_number) {
+    if (!product.whatsapp_number && !product.whatsapp_number) {
         return (
             <div className={`bg-gray-100 dark:bg-gray-800 p-6 rounded-2xl border ${className}`}>
                 <div className="text-center text-gray-600 dark:text-gray-400">
@@ -231,7 +231,7 @@ export default function ProductContact({
             )}
 
             {/* Bouton Appel direct */}
-            {product.phone_number && (
+            {product.whatsapp_number && (
                 <button
                     onClick={handleCallSeller}
                     className="w-full bg-yellow-500 hover:bg-yellow-600 text-[#1C2B49] font-bold py-3 px-6 rounded-xl shadow-md transition-all duration-300 hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
