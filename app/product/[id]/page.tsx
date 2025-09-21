@@ -13,7 +13,7 @@ import ProductShareButton from "@/app/composants/productShare"
 import type { Metadata } from "next"
 import BackButton from "@/app/composants/back-button"
 import ProductImageCarousel from "@/app/composants/ProductImageCarousel"
-import ProductContact from "../contact"
+import ProductContact from "../contact" // Le nouveau composant
 
 type Props = {
   params: {
@@ -61,7 +61,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     },
   }
 }
-
 
 export default async function ProductDetailPage({ params }: Props) {
   const cookieStore = await cookies()
@@ -125,12 +124,6 @@ export default async function ProductDetailPage({ params }: Props) {
 
   const ratingCount = allRatings?.length || 0
   const sellerId = product.user_id
-
-  const whatsappClean = product.whatsapp_number?.replace(/\D/g, "")
-  const prefilledMessage = `Salut ! Je suis intéressé(e) par "${product.title}" à ${product.price.toLocaleString()} FCFA. Est-ce encore disponible ?\n\nLien produit: https://sangse.shop/product/${product.id}`
-  const whatsappLink = whatsappClean
-    ? `https://wa.me/${whatsappClean}?text=${encodeURIComponent(prefilledMessage)}`
-    : null
 
   return (
     <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#1C2B49]">
@@ -271,9 +264,16 @@ export default async function ProductDetailPage({ params }: Props) {
                 <RatingSeller sellerId={sellerId} initialAverage={averageRating} initialCount={ratingCount} />
               )}
             </div>
+
+            {/* Composant de contact avec géolocalisation */}
             <ProductContact
-              whatsappLink={whatsappLink}
-              phoneNumber={product.whatsapp_number}
+              product={{
+                id: product.id,
+                title: product.title,
+                price: product.price,
+                whatsapp_number: product.whatsapp_number
+              }}
+              customerName="Client SangseShop" // Vous pouvez récupérer le nom réel de l'utilisateur connecté
             />
 
             {/* Description */}
