@@ -1,9 +1,13 @@
 "use client"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback, useMemo } from "react"
 import {
   Dialog, DialogContent
 } from "@/components/ui/dialog"
-import { Filter, ShoppingBag, Zap, Star, MapPin, Navigation, Loader2, X, Crosshair, AlertTriangle } from "lucide-react"
+import {
+  Filter, ShoppingBag, Zap, Star, MapPin, Navigation, Loader2, X,
+  Crosshair, AlertTriangle, Heart, Search, SlidersHorizontal,
+  ChevronDown, CheckCircle, Clock, Truck, Sparkles
+} from "lucide-react"
 import ProductCard from "./product-card"
 import BackToTopButton from "./BackToTopButton"
 import {
@@ -42,30 +46,26 @@ const SENEGAL_LOCATIONS = [
 ]
 
 export default function FilteredProducts({ products = [], userId = "demo" }) {
-  const displayProducts = products
-
-  const [priceRange, setPriceRange] = useState<[number, number] | null>(null)
+  // États principaux
+  const [priceRange, setPriceRange] = useState(null)
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [filterOpen, setFilterOpen] = useState(false)
   const [locationFilterOpen, setLocationFilterOpen] = useState(false)
-  const [selectedLocation, setSelectedLocation] = useState<string | null>(null)
+  const [selectedLocation, setSelectedLocation] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [visibleCount, setVisibleCount] = useState(12)
+  const [visibleCount, setVisibleCount] = useState(8) // Réduit pour mobile
   const [scrollY, setScrollY] = useState(0)
+  const [searchTerm, setSearchTerm] = useState("")
 
-  // États pour la géolocalisation GPS de l'utilisateur
-  const [userPosition, setUserPosition] = useState<{ lat: number, lng: number } | null>(null)
-  const [userLocationName, setUserLocationName] = useState<string>("")
+  // États pour la géolocalisation
+  const [userPosition, setUserPosition] = useState(null)
+  const [userLocationName, setUserLocationName] = useState("")
   const [locationLoading, setLocationLoading] = useState(true)
-  const [locationError, setLocationError] = useState<string | null>(null)
+  const [locationError, setLocationError] = useState(null)
   const [locationPermissionDenied, setLocationPermissionDenied] = useState(false)
 
-  // Cache des localisations des annonceurs (récupérées via géolocalisation IP)
-  const [advertisersLocations, setAdvertisersLocations] = useState<{ [userId: string]: { lat: number, lng: number, city: string } }>({})
-  const [advertisersLoading, setAdvertisersLoading] = useState(false)
-
   // Fonction pour calculer la distance entre deux points GPS (formule Haversine)
-  const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
+  const calculateDistance = useCallback((lat1, lng1, lat2, lng2) => {
     const R = 6371 // Rayon de la Terre en km
     const dLat = (lat2 - lat1) * Math.PI / 180
     const dLng = (lng2 - lng1) * Math.PI / 180
@@ -75,10 +75,10 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
       Math.sin(dLng / 2) * Math.sin(dLng / 2)
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
     return R * c
-  }
+  }, [])
 
-  // Fonction pour trouver la localité la plus proche avec meilleure précision
-  const findNearestLocation = (lat: number, lng: number): string => {
+  // Fonction pour trouver la localité la plus proche
+  const findNearestLocation = useCallback((lat, lng) => {
     let nearestLocation = "Position inconnue"
     let minDistance = Infinity
 
@@ -90,57 +90,18 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
       }
     })
 
-    // Si la distance est trop grande (plus de 15km), on considère que c'est imprécis
     if (minDistance > 15) {
       nearestLocation = "Zone inconnue"
     }
 
     return nearestLocation
-  }
+  }, [calculateDistance])
 
-  // Fonction pour récupérer la localisation d'un utilisateur via API IP
-  const getUserLocationByIP = async (userId: string): Promise<{ lat: number, lng: number, city: string } | null> => {
-    try {
-      // Dans un cas réel, vous feriez un appel à votre API pour obtenir l'IP de l'utilisateur
-      // puis utiliser cette IP pour la géolocalisation
-      console.log(`Récupération de la localisation pour l'utilisateur ${userId}...`)
-
-      // Simulation d'un appel à votre API backend
-      const response = await fetch(`/api/users/${userId}/location-by-ip`)
-
-      if (!response.ok) {
-        throw new Error('Localisation non disponible')
-      }
-
-      const data = await response.json()
-
-      return {
-        lat: data.latitude,
-        lng: data.longitude,
-        city: data.city || findNearestLocation(data.latitude, data.longitude)
-      }
-    } catch (error) {
-      console.warn(`Impossible de récupérer la localisation pour ${userId}:`, error)
-
-      // Fallback: assigner une localisation aléatoire parmi les zones de Dakar pour la démo
-      const dakarZones = SENEGAL_LOCATIONS.filter(loc =>
-        ['Dakar', 'Plateau', 'Médina', 'Yoff', 'Sacré-Coeur', 'Almadies', 'Ngor', 'Ouakam', 'Point E', 'Mermoz', 'Fann', 'Liberté', 'HLM', 'Grand Dakar'].includes(loc.name)
-      )
-      const randomZone = dakarZones[Math.floor(Math.random() * dakarZones.length)]
-
-      return {
-        lat: randomZone.lat + (Math.random() - 0.5) * 0.01, // Légère variation pour réalisme
-        lng: randomZone.lng + (Math.random() - 0.5) * 0.01,
-        city: randomZone.name
-      }
-    }
-  }
-
-  // Fonction pour obtenir la position GPS de l'utilisateur actuel
-  const getCurrentPosition = (): Promise<GeolocationPosition> => {
+  // Fonction pour obtenir la position GPS de l'utilisateur
+  const getCurrentPosition = () => {
     return new Promise((resolve, reject) => {
       if (!navigator.geolocation) {
-        reject(new Error('La géolocalisation n\'est pas supportée par votre navigateur'))
+        reject(new Error('La géolocalisation n\'est pas supportée'))
         return
       }
 
@@ -150,259 +111,203 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
         {
           enableHighAccuracy: true,
           timeout: 15000,
-          maximumAge: 300000 // Cache pendant 5 minutes
+          maximumAge: 300000
         }
       )
     })
   }
 
-  // Fonction pour détecter la localisation GPS de l'utilisateur actuel
-  const detectUserLocation = async () => {
+  // Fonction pour détecter la localisation GPS de l'utilisateur
+  const detectUserLocation = useCallback(async () => {
     setLocationLoading(true)
     setLocationError(null)
     setLocationPermissionDenied(false)
 
     try {
-      console.log('Demande de géolocalisation GPS de l\'utilisateur...')
       const position = await getCurrentPosition()
-
       const lat = position.coords.latitude
       const lng = position.coords.longitude
-      const accuracy = position.coords.accuracy
-
-      console.log(`Position GPS utilisateur: ${lat}, ${lng} (précision: ${Math.round(accuracy)}m)`)
 
       setUserPosition({ lat, lng })
-
-      // Trouver la localité la plus proche avec meilleure précision
       const nearestLocation = findNearestLocation(lat, lng)
       setUserLocationName(nearestLocation)
 
-      console.log(`Localité utilisateur: ${nearestLocation}`)
-
     } catch (error) {
-      console.error('Erreur de géolocalisation GPS utilisateur:', error)
+      console.error('Erreur de géolocalisation:', error)
 
       if (error.code === 1) {
         setLocationPermissionDenied(true)
-        setLocationError('Permission de localisation refusée')
+        setLocationError('Permission refusée')
       } else if (error.code === 2) {
         setLocationError('Position indisponible')
       } else if (error.code === 3) {
-        setLocationError('Timeout de localisation')
+        setLocationError('Timeout')
       } else {
-        setLocationError(error.message || 'Erreur de géolocalisation')
+        setLocationError('Erreur de géolocalisation')
       }
 
-      // Valeurs par défaut (centre de Dakar)
+      // Valeur par défaut (centre de Dakar)
       setUserPosition({ lat: 14.6928, lng: -17.4467 })
       setUserLocationName('Dakar')
     } finally {
       setLocationLoading(false)
     }
-  }
+  }, [findNearestLocation])
 
-  // Fonction pour charger les localisations de tous les annonceurs
-  const loadAdvertisersLocations = async () => {
-    if (advertisersLoading || displayProducts.length === 0) return
+  // Tri intelligent des produits par proximité
+  const sortedProducts = useMemo(() => {
+    let filtered = products.filter(p => {
+      const matchesSearch = !searchTerm ||
+        p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.description?.toLowerCase().includes(searchTerm.toLowerCase())
 
-    setAdvertisersLoading(true)
+      const matchesPrice = !priceRange || (p.price >= priceRange[0] && p.price <= priceRange[1])
 
-    try {
-      // Récupérer tous les userId uniques des annonceurs
-      const uniqueAdvertiserIds = [...new Set(
-        displayProducts
-          .map(p => p.userId) // Le userId de l'annonceur dans votre table product
-          .filter(Boolean)
-      )]
-
-      console.log(`Chargement des localisations pour ${uniqueAdvertiserIds.length} annonceurs...`)
-
-      // Charger les localisations en parallèle
-      const locationPromises = uniqueAdvertiserIds.map(async (advertiserId) => {
-        const location = await getUserLocationByIP(advertiserId)
-        return { advertiserId, location }
-      })
-
-      const results = await Promise.allSettled(locationPromises)
-      const locationsMap: { [userId: string]: { lat: number, lng: number, city: string } } = {}
-
-      results.forEach((result, index) => {
-        if (result.status === 'fulfilled' && result.value.location) {
-          locationsMap[result.value.advertiserId] = result.value.location
-        }
-      })
-
-      console.log(`Localisations chargées pour ${Object.keys(locationsMap).length} annonceurs`)
-      setAdvertisersLocations(locationsMap)
-
-    } catch (error) {
-      console.error('Erreur lors du chargement des localisations des annonceurs:', error)
-    } finally {
-      setAdvertisersLoading(false)
-    }
-  }
-
-  // Charger les localisations au démarrage
-  useEffect(() => {
-    detectUserLocation()
-    loadAdvertisersLocations()
-  }, [])
-
-  useEffect(() => {
-    loadAdvertisersLocations()
-  }, [displayProducts])
-
-  // Effet de scroll pour les animations
-  useEffect(() => {
-    const handleScroll = () => setScrollY(window.scrollY)
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
-
-  useEffect(() => {
-    const t = setTimeout(() => setLoading(false), 1200)
-    return () => clearTimeout(t)
-  }, [])
-
-  // Fonction pour trier les produits par proximité GPS
-  const sortProductsByGPSProximity = (products) => {
-    if (!userPosition) return products
-
-    return products.sort((a, b) => {
-      // Récupérer les coordonnées des annonceurs depuis le cache
-      const aAdvertiserLocation = advertisersLocations[a.userId]
-      const bAdvertiserLocation = advertisersLocations[b.userId]
-
-      // Si un filtre de localisation est sélectionné
-      if (selectedLocation) {
-        const selectedLocationData = SENEGAL_LOCATIONS.find(loc =>
-          loc.name.toLowerCase() === selectedLocation.toLowerCase()
-        )
-
-        if (selectedLocationData) {
-          const aDistance = aAdvertiserLocation ?
-            calculateDistance(selectedLocationData.lat, selectedLocationData.lng, aAdvertiserLocation.lat, aAdvertiserLocation.lng) :
-            Infinity
-          const bDistance = bAdvertiserLocation ?
-            calculateDistance(selectedLocationData.lat, selectedLocationData.lng, bAdvertiserLocation.lat, bAdvertiserLocation.lng) :
-            Infinity
-
-          // Produits dans un rayon de 3km de la localisation sélectionnée en priorité
-          const aIsNear = aDistance <= 3
-          const bIsNear = bDistance <= 3
-
-          if (aIsNear && !bIsNear) return -1
-          if (!aIsNear && bIsNear) return 1
-          if (aIsNear && bIsNear) return aDistance - bDistance
-        }
-      }
-
-      // Tri par proximité avec la position GPS de l'utilisateur
-      const aDistance = aAdvertiserLocation ?
-        calculateDistance(userPosition.lat, userPosition.lng, aAdvertiserLocation.lat, aAdvertiserLocation.lng) :
-        Infinity
-      const bDistance = bAdvertiserLocation ?
-        calculateDistance(userPosition.lat, userPosition.lng, bAdvertiserLocation.lat, bAdvertiserLocation.lng) :
-        Infinity
-
-      // Priorité pour les produits dans un rayon de 5km (plus précis)
-      const aIsVeryClose = aDistance <= 5
-      const bIsVeryClose = bDistance <= 5
-
-      if (aIsVeryClose && !bIsVeryClose) return -1
-      if (!aIsVeryClose && bIsVeryClose) return 1
-
-      // Si les deux sont proches ou éloignés, trier par distance exacte
-      if (aDistance !== bDistance) return aDistance - bDistance
-
-      // Si même distance, trier par popularité
-      return (b.popularity || 0) - (a.popularity || 0)
+      return matchesSearch && matchesPrice
     })
-  }
 
-  // Application des filtres
-  let filteredProducts = displayProducts.filter(
-    p => !priceRange || (p.price >= priceRange[0] && p.price <= priceRange[1])
-  )
+    // Filtrage par localisation sélectionnée
+    if (selectedLocation) {
+      const selectedLocationData = SENEGAL_LOCATIONS.find(loc =>
+        loc.name.toLowerCase() === selectedLocation.toLowerCase()
+      )
 
-  // Filtrage par localisation sélectionnée (rayon de 3km pour plus de précision)
-  if (selectedLocation) {
-    const selectedLocationData = SENEGAL_LOCATIONS.find(loc =>
-      loc.name.toLowerCase() === selectedLocation.toLowerCase()
-    )
+      if (selectedLocationData) {
+        filtered = filtered.filter(p => {
+          if (!p.latitude || !p.longitude) return p.zone === selectedLocation
 
-    if (selectedLocationData) {
-      filteredProducts = filteredProducts.filter(p => {
-        const advertiserLocation = advertisersLocations[p.userId]
+          const distance = calculateDistance(
+            selectedLocationData.lat,
+            selectedLocationData.lng,
+            p.latitude,
+            p.longitude
+          )
+          return distance <= 5 // 5km de rayon
+        })
+      } else {
+        filtered = filtered.filter(p => p.zone === selectedLocation)
+      }
+    }
 
-        if (!advertiserLocation) return false
+    // Tri par proximité GPS si position utilisateur disponible
+    if (userPosition) {
+      filtered.sort((a, b) => {
+        // Calcul des distances
+        const aDistance = (a.latitude && a.longitude) ?
+          calculateDistance(userPosition.lat, userPosition.lng, a.latitude, a.longitude) :
+          Infinity
+        const bDistance = (b.latitude && b.longitude) ?
+          calculateDistance(userPosition.lat, userPosition.lng, b.latitude, b.longitude) :
+          Infinity
 
-        const distance = calculateDistance(
-          selectedLocationData.lat,
-          selectedLocationData.lng,
-          advertiserLocation.lat,
-          advertiserLocation.lng
-        )
-        return distance <= 3 // 3km de rayon pour plus de précision
+        // Priorité pour les produits très proches (< 2km)
+        const aVeryClose = aDistance <= 2
+        const bVeryClose = bDistance <= 2
+
+        if (aVeryClose && !bVeryClose) return -1
+        if (!aVeryClose && bVeryClose) return 1
+
+        // Priorité pour les produits proches (< 10km)
+        const aClose = aDistance <= 10
+        const bClose = bDistance <= 10
+
+        if (aClose && !bClose) return -1
+        if (!aClose && bClose) return 1
+
+        // Si même catégorie de distance, trier par distance exacte
+        if (aDistance !== bDistance) return aDistance - bDistance
+
+        // Si même distance, trier par popularité ou date
+        return (b.popularity || 0) - (a.popularity || 0)
       })
     }
-  }
 
-  // Tri intelligent par proximité GPS
-  filteredProducts = sortProductsByGPSProximity(filteredProducts)
+    return filtered
+  }, [products, searchTerm, priceRange, selectedLocation, userPosition, calculateDistance])
 
-  const productsToShow = filteredProducts.slice(0, visibleCount)
-
-  // Compter les produits par localisation (rayon de 3km)
-  const getLocationCount = (locationName: string): number => {
+  // Compter les produits par zone
+  const getLocationCount = useCallback((locationName) => {
     const locationData = SENEGAL_LOCATIONS.find(loc =>
       loc.name.toLowerCase() === locationName.toLowerCase()
     )
 
-    if (!locationData) return 0
+    if (!locationData) {
+      return products.filter(p => p.zone === locationName).length
+    }
 
-    return displayProducts.filter(p => {
-      const advertiserLocation = advertisersLocations[p.userId]
-
-      if (!advertiserLocation) return false
-
-      const distance = calculateDistance(
-        locationData.lat,
-        locationData.lng,
-        advertiserLocation.lat,
-        advertiserLocation.lng
-      )
-      return distance <= 3
+    return products.filter(p => {
+      if (p.latitude && p.longitude) {
+        const distance = calculateDistance(
+          locationData.lat,
+          locationData.lng,
+          p.latitude,
+          p.longitude
+        )
+        return distance <= 5
+      }
+      return p.zone === locationName
     }).length
-  }
+  }, [products, calculateDistance])
 
-  // Compter les produits près de l'utilisateur (rayon de 5km)
-  const getNearbyProductsCount = (): number => {
+  // Compter les produits près de l'utilisateur
+  const nearbyProductsCount = useMemo(() => {
     if (!userPosition) return 0
 
-    return displayProducts.filter(p => {
-      const advertiserLocation = advertisersLocations[p.userId]
-
-      if (!advertiserLocation) return false
+    return products.filter(p => {
+      if (!p.latitude || !p.longitude) return false
 
       const distance = calculateDistance(
         userPosition.lat,
         userPosition.lng,
-        advertiserLocation.lat,
-        advertiserLocation.lng
+        p.latitude,
+        p.longitude
       )
       return distance <= 5
     }).length
-  }
+  }, [products, userPosition, calculateDistance])
 
-  const nearbyProductsCount = getNearbyProductsCount()
+  // Zones avec des produits disponibles
+  const availableZones = useMemo(() => {
+    const zones = new Set()
+    products.forEach(p => {
+      if (p.zone) zones.add(p.zone)
 
-  // Composant pour le filtre de localisation
+      // Ajouter aussi les zones basées sur les coordonnées GPS
+      if (p.latitude && p.longitude) {
+        const nearestZone = findNearestLocation(p.latitude, p.longitude)
+        zones.add(nearestZone)
+      }
+    })
+
+    return SENEGAL_LOCATIONS.filter(loc => zones.has(loc.name))
+      .map(loc => ({ ...loc, count: getLocationCount(loc.name) }))
+      .filter(loc => loc.count > 0)
+      .sort((a, b) => b.count - a.count)
+  }, [products, findNearestLocation, getLocationCount])
+
+  // Effects
+  useEffect(() => {
+    detectUserLocation()
+  }, [detectUserLocation])
+
+  useEffect(() => {
+    const handleScroll = () => setScrollY(window.scrollY)
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 1000)
+    return () => clearTimeout(timer)
+  }, [])
+
+  const productsToShow = sortedProducts.slice(0, visibleCount)
+
+  // Composant pour le filtre de localisation amélioré
   const LocationFilter = () => (
-    <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl max-h-96 overflow-y-auto">
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+    <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-3xl max-h-[80vh] overflow-y-auto">
+      <div className="flex items-center justify-between mb-4 sm:mb-6 sticky top-0 bg-white dark:bg-gray-800 pb-2">
+        <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">
           Choisir une zone
         </h3>
         <button
@@ -419,306 +324,463 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
           setSelectedLocation(null)
           setLocationFilterOpen(false)
         }}
-        className={`w-full flex items-center justify-between p-4 rounded-xl mb-2 transition-all ${!selectedLocation
-          ? 'bg-[#F6C445]/10 border-2 border-[#F6C445] text-[#F6C445]'
+        className={`w-full flex items-center justify-between p-3 sm:p-4 rounded-xl mb-3 transition-all touch-manipulation ${!selectedLocation
+          ? 'bg-[#F6C445]/10 border-2 border-[#F6C445] text-[#F6C445] shadow-md'
           : 'bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300'
           }`}
       >
         <div className="flex items-center gap-3">
-          <MapPin size={20} />
+          <Sparkles size={18} />
           <span className="font-medium">Toutes les zones</span>
         </div>
-        <span className="text-sm opacity-70">
-          {displayProducts.length} produits
+        <span className="text-sm bg-gray-100 dark:bg-gray-600 px-2 py-1 rounded-full">
+          {products.length}
         </span>
       </button>
 
       {/* Zone actuelle de l'utilisateur */}
-      {userPosition && userLocationName && (
+      {userPosition && userLocationName && !locationLoading && (
         <div className="mb-4">
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 px-2">
-            Votre zone actuelle (GPS)
+          <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-2 px-2 font-medium">
+            🎯 Votre zone (GPS)
           </p>
           <button
             onClick={() => {
               setSelectedLocation(userLocationName)
               setLocationFilterOpen(false)
             }}
-            className={`w-full flex items-center justify-between p-4 rounded-xl mb-2 transition-all ${selectedLocation === userLocationName
-              ? 'bg-[#F6C445]/10 border-2 border-[#F6C445] text-[#F6C445]'
+            className={`w-full flex items-center justify-between p-3 sm:p-4 rounded-xl mb-3 transition-all touch-manipulation ${selectedLocation === userLocationName
+              ? 'bg-[#F6C445]/10 border-2 border-[#F6C445] text-[#F6C445] shadow-md'
               : 'bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800'
               }`}
           >
             <div className="flex items-center gap-3">
-              <Crosshair size={20} />
+              <Crosshair size={18} className="text-green-600" />
               <div className="text-left">
                 <span className="font-medium block">{userLocationName}</span>
-                <span className="text-xs opacity-70">Dans un rayon de 3km</span>
+                <span className="text-xs opacity-70">Rayon de 5km</span>
               </div>
-              <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 px-2 py-1 rounded-full">
-                GPS
-              </span>
             </div>
-            <span className="text-sm opacity-70">
-              {getLocationCount(userLocationName)}
-            </span>
+            <div className="text-right">
+              <span className="text-sm bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 px-2 py-1 rounded-full">
+                {nearbyProductsCount}
+              </span>
+              <div className="text-xs text-green-600 mt-1">GPS</div>
+            </div>
           </button>
         </div>
       )}
 
-      {/* Autres zones */}
-      <div className="space-y-1">
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 px-2">
-          Autres zones disponibles
-        </p>
-        {SENEGAL_LOCATIONS
-          .filter(loc => loc.name !== userLocationName)
-          .map((location) => {
-            const count = getLocationCount(location.name)
-            if (count === 0) return null
-
-            return (
+      {/* Autres zones populaires */}
+      {availableZones.filter(zone => zone.name !== userLocationName).length > 0 && (
+        <div className="space-y-2">
+          <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-2 px-2 font-medium">
+            🏘️ Zones populaires
+          </p>
+          {availableZones
+            .filter(zone => zone.name !== userLocationName)
+            .slice(0, 10) // Limiter l'affichage sur mobile
+            .map((zone) => (
               <button
-                key={location.name}
+                key={zone.name}
                 onClick={() => {
-                  setSelectedLocation(location.name)
+                  setSelectedLocation(zone.name)
                   setLocationFilterOpen(false)
                 }}
-                className={`w-full flex items-center justify-between p-3 rounded-xl transition-all ${selectedLocation === location.name
-                  ? 'bg-[#F6C445]/10 border-2 border-[#F6C445] text-[#F6C445]'
+                className={`w-full flex items-center justify-between p-3 rounded-xl transition-all touch-manipulation ${selectedLocation === zone.name
+                  ? 'bg-[#F6C445]/10 border-2 border-[#F6C445] text-[#F6C445] shadow-md'
                   : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
                   }`}
               >
                 <div className="flex items-center gap-3">
                   <MapPin size={16} />
                   <div className="text-left">
-                    <span className="block">{location.name}</span>
-                    <span className="text-xs opacity-70">Rayon 3km</span>
+                    <span className="block font-medium">{zone.name}</span>
+                    <span className="text-xs opacity-70">Rayon 5km</span>
                   </div>
                 </div>
-                <span className="text-sm opacity-70">
-                  {count}
+                <span className="text-sm bg-gray-100 dark:bg-gray-600 px-2 py-1 rounded-full">
+                  {zone.count}
                 </span>
               </button>
-            )
-          })}
-      </div>
+            ))}
+        </div>
+      )}
     </div>
   )
 
   return (
-    <div className="min-h-screen bg-gradient-to-b pt-5 from-[#F8F9FB] via-white to-[#F8F9FB] dark:from-[#111827] dark:via-[#1C2B49] dark:to-[#111827]">
+    <div className="min-h-screen bg-gradient-to-b from-[#F8F9FB] via-white to-[#F8F9FB] dark:from-[#111827] dark:via-[#1C2B49] dark:to-[#111827]">
 
-      {/* Header avec effet parallax */}
+      {/* Header mobile-first avec effet parallax */}
       <div
-        className="sticky top-0 z-40 bg-white/80 dark:bg-[#1C2B49]/80 backdrop-blur-lg border-b border-gray-200/50 dark:border-gray-700/50"
-        style={{ transform: `translateY(${scrollY * 0.1}px)` }}
+        className="sticky top-0 z-40 bg-white/90 dark:bg-[#1C2B49]/90 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 shadow-sm"
+        style={{ transform: `translateY(${Math.min(scrollY * 0.05, 10)}px)` }}
       >
-        <div className="px-4 py-4 max-w-7xl mx-auto">
-          {/* Stats bar avec info localisation GPS */}
-          <div className="flex items-center justify-center gap-4 mb-3 text-xs text-gray-600 dark:text-gray-400">
+        <div className="px-3 sm:px-4 py-3 sm:py-4 max-w-7xl mx-auto">
+
+          {/* Stats compactes pour mobile */}
+          <div className="flex items-center justify-center gap-2 sm:gap-4 mb-3 text-xs text-gray-600 dark:text-gray-400">
             <div className="flex items-center gap-1">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-              <span>{displayProducts.length} produits disponibles</span>
+              <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full animate-pulse" />
+              <span className="hidden sm:inline">{products.length} produits</span>
+              <span className="sm:hidden">{products.length}</span>
             </div>
-            <div className="w-1 h-1 bg-gray-400 rounded-full" />
+
+            <div className="w-1 h-1 bg-gray-400 rounded-full hidden sm:block" />
+
             <div className="flex items-center gap-1">
-              {locationLoading || advertisersLoading ? (
+              {locationLoading ? (
                 <Loader2 className="w-3 h-3 animate-spin text-[#F6C445]" />
               ) : locationPermissionDenied ? (
                 <AlertTriangle className="w-3 h-3 text-orange-500" />
               ) : (
                 <Crosshair className="w-3 h-3 text-[#F6C445]" />
               )}
-              <span>
-                {locationLoading ? 'Localisation GPS...' :
-                  advertisersLoading ? 'Chargement vendeurs...' :
-                    locationPermissionDenied ? 'Permission requise' :
-                      locationError ? 'GPS indisponible' :
-                        `${nearbyProductsCount} près de vous (${userLocationName})`}
+              <span className="hidden sm:inline">
+                {locationLoading ? 'Localisation...' :
+                  locationPermissionDenied ? 'GPS requis' :
+                    locationError ? 'GPS off' :
+                      `${nearbyProductsCount} près (${userLocationName})`}
+              </span>
+              <span className="sm:hidden">
+                {locationLoading ? 'GPS...' :
+                  locationPermissionDenied ? 'GPS?' :
+                    `${nearbyProductsCount}`}
               </span>
             </div>
-            <div className="w-1 h-1 bg-gray-400 rounded-full" />
+
+            <div className="w-1 h-1 bg-gray-400 rounded-full hidden sm:block" />
+
             <div className="flex items-center gap-1">
-              <Star className="w-3 h-3 text-[#F6C445] fill-[#F6C445]" />
-              <span>Livraison rapide</span>
+              <Truck className="w-3 h-3 text-[#F6C445]" />
+              <span className="hidden sm:inline">Livraison rapide</span>
+              <span className="sm:hidden">🚀</span>
             </div>
           </div>
 
-          {/* Alerte permission */}
+          {/* Barre de recherche mobile-friendly */}
+          <div className="mb-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Rechercher un produit..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 sm:py-3 bg-white/80 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#F6C445]/50 focus:border-[#F6C445] transition-all placeholder-gray-500 dark:placeholder-gray-400"
+              />
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+                >
+                  <X className="w-3 h-3 text-gray-400" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Alerte permission mobile-optimized */}
           {locationPermissionDenied && (
-            <div className="mb-3 p-2 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">
-              <div className="flex items-center gap-2 text-xs text-orange-700 dark:text-orange-300">
-                <AlertTriangle size={14} />
-                <span>Activez la localisation pour voir les produits près de vous</span>
+            <div className="mb-3 p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-xl">
+              <div className="flex items-center gap-2 text-xs sm:text-sm text-orange-700 dark:text-orange-300">
+                <AlertTriangle size={16} className="flex-shrink-0" />
+                <span className="flex-1">Activez le GPS pour les produits près de vous</span>
                 <button
                   onClick={detectUserLocation}
-                  className="text-[#F6C445] hover:text-[#E2AE32] font-medium ml-auto"
+                  className="text-[#F6C445] hover:text-[#E2AE32] font-medium px-2 py-1 bg-white dark:bg-gray-800 rounded-lg transition-colors touch-manipulation"
                 >
-                  Réessayer
+                  GPS
                 </button>
               </div>
             </div>
           )}
 
-          {/* Actions */}
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              {/* Filtre prix */}
-              <button
-                onClick={() => setFilterOpen(true)}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300 hover:scale-105 active:scale-95 shadow-sm"
-              >
-                <Filter size={16} />
-                <span>{selectedIndex === 0 ? "Prix" : "Filtré"}</span>
-                {priceRange && <Zap size={12} className="text-[#F6C445] animate-pulse" />}
-              </button>
+          {/* Actions horizontales optimisées mobile */}
+          <div className="flex items-center gap-2 sm:gap-3">
 
-              {/* Filtre localisation */}
-              <button
-                onClick={() => setLocationFilterOpen(true)}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300 hover:scale-105 active:scale-95 shadow-sm"
-              >
-                <MapPin size={16} />
-                <span className="max-w-24 truncate">
-                  {selectedLocation || (locationLoading ? "..." : "Zone")}
-                </span>
-                {selectedLocation && <div className="w-2 h-2 bg-[#F6C445] rounded-full animate-pulse" />}
-              </button>
-            </div>
+            {/* Filtre prix */}
+            <button
+              onClick={() => setFilterOpen(true)}
+              className={`flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl border transition-all duration-300 hover:scale-105 active:scale-95 shadow-sm touch-manipulation text-sm font-medium ${priceRange
+                ? 'border-[#F6C445] bg-[#F6C445]/10 text-[#F6C445]'
+                : 'border-gray-200 dark:border-gray-600 bg-white/90 dark:bg-gray-800/90 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                }`}
+            >
+              <SlidersHorizontal size={16} />
+              <span className="hidden sm:inline">Prix</span>
+              {priceRange && <div className="w-1.5 h-1.5 bg-[#F6C445] rounded-full animate-pulse" />}
+            </button>
 
-            <ShareAllSocialButton>
-              Partager SangseShop
+            {/* Filtre localisation */}
+            <button
+              onClick={() => setLocationFilterOpen(true)}
+              className={`flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl border transition-all duration-300 hover:scale-105 active:scale-95 shadow-sm touch-manipulation text-sm font-medium min-w-0 flex-1 ${selectedLocation
+                ? 'border-[#F6C445] bg-[#F6C445]/10 text-[#F6C445]'
+                : 'border-gray-200 dark:border-gray-600 bg-white/90 dark:bg-gray-800/90 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                }`}
+            >
+              <MapPin size={16} className="flex-shrink-0" />
+              <span className="truncate">
+                {selectedLocation || (locationLoading ? "..." : "Zone")}
+              </span>
+              <ChevronDown size={14} className="flex-shrink-0 opacity-70" />
+              {selectedLocation && <div className="w-1.5 h-1.5 bg-[#F6C445] rounded-full animate-pulse flex-shrink-0" />}
+            </button>
+
+            {/* Bouton partage compact */}
+            <ShareAllSocialButton className="p-2 sm:p-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-white/90 dark:bg-gray-800/90 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300 hover:scale-105 active:scale-95 shadow-sm">
+              <Heart size={16} />
             </ShareAllSocialButton>
           </div>
         </div>
       </div>
 
       {/* Content */}
-      <div className="px-4 max-w-7xl mx-auto pt-6">
+      <div className="px-3 sm:px-4 max-w-7xl mx-auto pt-4 sm:pt-6">
         {loading ? (
-          <div className="space-y-8">
+          <div className="space-y-6 sm:space-y-8">
             {/* Skeleton carrousel */}
-            <div className="h-32 bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 rounded-2xl animate-pulse" />
-            <ProductCardSkeletonGrid count={6} />
+            <div className="h-24 sm:h-32 bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 rounded-2xl animate-pulse" />
+            <ProductCardSkeletonGrid count={4} />
           </div>
         ) : (
           <>
             {/* Carrousel des produits populaires */}
-            <PopularProductsCarousel products={displayProducts} />
-
-            {/* Section principale */}
             <div className="mb-6">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                    {selectedLocation ? `Zone: ${selectedLocation}` :
-                      userPosition ? `Près de ${userLocationName}` :
-                        "Tous les produits"}
-                    {filteredProducts.length > 0 && (
-                      <span className="ml-2 text-sm font-medium text-gray-500 dark:text-gray-400">
-                        ({filteredProducts.length})
+              <PopularProductsCarousel products={products} />
+            </div>
+
+            {/* Section principale avec header amélioré */}
+            <div className="mb-4 sm:mb-6">
+              <div className="flex items-start justify-between mb-4 gap-4">
+                <div className="min-w-0 flex-1">
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">
+                    {selectedLocation ? (
+                      <span className="flex items-center gap-2">
+                        <MapPin size={20} className="text-[#F6C445] flex-shrink-0" />
+                        <span className="truncate">{selectedLocation}</span>
+                      </span>
+                    ) : userPosition ? (
+                      <span className="flex items-center gap-2">
+                        <Crosshair size={20} className="text-[#F6C445] flex-shrink-0" />
+                        <span className="truncate">Près de {userLocationName}</span>
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-2">
+                        <Sparkles size={20} className="text-[#F6C445] flex-shrink-0" />
+                        <span>Tous les produits</span>
                       </span>
                     )}
                   </h2>
-                  {!selectedLocation && userPosition && !locationLoading && (
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                      Triés par proximité GPS (vendeurs les plus proches en premier)
-                    </p>
-                  )}
-                  {selectedLocation && (
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                      Vendeurs dans un rayon de 3km de {selectedLocation}
-                    </p>
-                  )}
+
+                  {/* Sous-titre informatif */}
+                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                    <span>{sortedProducts.length} produit{sortedProducts.length > 1 ? 's' : ''}</span>
+                    {!selectedLocation && userPosition && !locationLoading && (
+                      <>
+                        <span>•</span>
+                        <span className="flex items-center gap-1">
+                          <Navigation size={12} />
+                          <span>Par proximité GPS</span>
+                        </span>
+                      </>
+                    )}
+                    {searchTerm && (
+                      <>
+                        <span>•</span>
+                        <span className="flex items-center gap-1">
+                          <Search size={12} />
+                          <span className="truncate max-w-20">{searchTerm}</span>
+                        </span>
+                      </>
+                    )}
+                  </div>
                 </div>
 
-                {(priceRange || selectedLocation) && (
+                {/* Bouton clear filters compact */}
+                {(priceRange || selectedLocation || searchTerm) && (
                   <button
                     onClick={() => {
                       setPriceRange(null)
                       setSelectedLocation(null)
+                      setSearchTerm("")
                       setSelectedIndex(0)
                     }}
-                    className="text-sm text-[#F6C445] hover:text-[#E2AE32] font-medium transition-colors duration-300"
+                    className="text-xs sm:text-sm text-[#F6C445] hover:text-[#E2AE32] font-medium transition-colors duration-300 px-3 py-1.5 bg-[#F6C445]/10 rounded-lg hover:bg-[#F6C445]/20 flex-shrink-0"
                   >
-                    Effacer tous les filtres
+                    Effacer
                   </button>
                 )}
               </div>
             </div>
 
-            {filteredProducts.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 text-center">
+            {/* Indicateurs de statut des produits */}
+            {sortedProducts.length > 0 && userPosition && !locationLoading && (
+              <div className="flex flex-wrap gap-2 mb-4 sm:mb-6">
+                {nearbyProductsCount > 0 && (
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 rounded-full text-xs border border-green-200 dark:border-green-800">
+                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                    <span>{nearbyProductsCount} près de vous (≤5km)</span>
+                  </div>
+                )}
+
+                {sortedProducts.some(p => !p.latitude || !p.longitude) && (
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-full text-xs border border-blue-200 dark:border-blue-800">
+                    <Clock size={12} />
+                    <span>Livraison express disponible</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {sortedProducts.length === 0 ? (
+              /* État vide amélioré */
+              <div className="flex flex-col items-center justify-center py-12 sm:py-20 text-center px-4">
                 <div className="relative mb-6">
-                  <ShoppingBag size={48} className="text-gray-400 animate-bounce" />
-                  <div className="absolute inset-0 bg-gray-400/20 rounded-full blur-xl animate-pulse" />
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 rounded-2xl flex items-center justify-center mb-4">
+                    <ShoppingBag size={24} className="text-gray-400" />
+                  </div>
+                  <div className="absolute -top-1 -right-1 w-6 h-6 bg-[#F6C445] rounded-full flex items-center justify-center">
+                    <X size={12} className="text-white" />
+                  </div>
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+
+                <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
                   {selectedLocation ?
-                    `Aucun vendeur trouvé près de ${selectedLocation}` :
-                    "Aucun produit trouvé"
+                    `Aucun produit à ${selectedLocation}` :
+                    searchTerm ?
+                      "Aucun résultat trouvé" :
+                      "Aucun produit disponible"
                   }
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400 text-sm mb-6 max-w-md">
+
+                <p className="text-gray-600 dark:text-gray-400 text-sm mb-6 max-w-sm leading-relaxed">
                   {selectedLocation ?
-                    "Essayez une autre zone ou élargissez votre recherche. De nouveaux vendeurs rejoignent chaque jour." :
-                    "Essayez d'autres filtres ou revenez plus tard, on ajoute de nouveaux produits chaque jour."
+                    "Essayez une autre zone ou élargissez votre recherche. De nouveaux vendeurs rejoignent chaque jour !" :
+                    searchTerm ?
+                      "Vérifiez l'orthographe ou essayez d'autres mots-clés." :
+                      "Revenez bientôt, nous ajoutons régulièrement de nouveaux produits."
                   }
                 </p>
-                <button
-                  onClick={() => {
-                    setPriceRange(null)
-                    setSelectedLocation(null)
-                    setSelectedIndex(0)
-                  }}
-                  className="px-6 py-3 bg-gradient-to-r from-[#F6C445] to-[#FFD700] text-[#1C2B49] font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
-                >
-                  Voir tous les produits
-                </button>
+
+                <div className="flex flex-col sm:flex-row gap-3 w-full max-w-sm">
+                  <button
+                    onClick={() => {
+                      setPriceRange(null)
+                      setSelectedLocation(null)
+                      setSearchTerm("")
+                      setSelectedIndex(0)
+                    }}
+                    className="flex-1 px-6 py-3 bg-gradient-to-r from-[#F6C445] to-[#FFD700] text-[#1C2B49] font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 touch-manipulation"
+                  >
+                    Voir tous les produits
+                  </button>
+
+                  {selectedLocation && availableZones.length > 0 && (
+                    <button
+                      onClick={() => setLocationFilterOpen(true)}
+                      className="flex-1 px-6 py-3 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium rounded-xl border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300 touch-manipulation"
+                    >
+                      Autres zones
+                    </button>
+                  )}
+                </div>
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 pb-8">
-                  {productsToShow.map((p, index) => (
-                    <div
-                      key={p.id}
-                      className="animate-fade-in-up"
-                      style={{
-                        animationDelay: `${index * 100}ms`,
-                        animationFillMode: 'both'
-                      }}
-                    >
-                      <ProductCard product={p} userId={userId} />
-                    </div>
-                  ))}
+                {/* Grille de produits optimisée mobile */}
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 pb-8">
+                  {productsToShow.map((product, index) => {
+                    // Calcul de la distance pour affichage
+                    let distance = null
+                    if (userPosition && product.latitude && product.longitude) {
+                      distance = calculateDistance(
+                        userPosition.lat,
+                        userPosition.lng,
+                        product.latitude,
+                        product.longitude
+                      )
+                    }
+
+                    return (
+                      <div
+                        key={product.id}
+                        className="animate-fade-in-up relative group"
+                        style={{
+                          animationDelay: `${index * 50}ms`,
+                          animationFillMode: 'both'
+                        }}
+                      >
+                        {/* Badge de proximité */}
+                        {distance !== null && distance <= 2 && (
+                          <div className="absolute -top-1 -right-1 z-10 bg-green-500 text-white text-xs px-2 py-0.5 rounded-full shadow-lg flex items-center gap-1">
+                            <Crosshair size={8} />
+                            <span className="hidden sm:inline">{distance.toFixed(1)}km</span>
+                            <span className="sm:hidden">Près</span>
+                          </div>
+                        )}
+
+                        {/* Badge nouveauté */}
+                        {index < 3 && !selectedLocation && !searchTerm && (
+                          <div className="absolute top-2 left-2 z-10 bg-[#F6C445] text-[#1C2B49] text-xs px-2 py-1 rounded-full shadow-lg font-bold flex items-center gap-1">
+                            <Star size={8} className="fill-current" />
+                            <span className="hidden sm:inline">Top</span>
+                            <span className="sm:hidden">⭐</span>
+                          </div>
+                        )}
+
+                        <ProductCard
+                          product={{
+                            ...product,
+                            distance: distance
+                          }}
+                          userId={userId}
+                        />
+                      </div>
+                    )
+                  })}
                 </div>
 
-                {/* Bouton Voir plus avec compteur */}
-                {visibleCount < filteredProducts.length && (
-                  <div className="flex flex-col items-center pb-12">
-                    <div className="text-center mb-4">
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                        {visibleCount} sur {filteredProducts.length} produits affichés
+                {/* Bouton "Voir plus" amélioré avec progression */}
+                {visibleCount < sortedProducts.length && (
+                  <div className="flex flex-col items-center pb-8 sm:pb-12">
+                    <div className="text-center mb-4 w-full max-w-md">
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                        <span className="font-medium">{visibleCount}</span> sur <span className="font-medium">{sortedProducts.length}</span> produits
                       </p>
-                      <div className="w-64 bg-gray-200 dark:bg-gray-700 rounded-full h-2 mx-auto">
+
+                      {/* Barre de progression */}
+                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-4">
                         <div
-                          className="h-2 bg-gradient-to-r from-[#F6C445] to-[#FFD700] rounded-full transition-all duration-500"
-                          style={{ width: `${(visibleCount / filteredProducts.length) * 100}%` }}
-                        />
+                          className="h-2 bg-gradient-to-r from-[#F6C445] to-[#FFD700] rounded-full transition-all duration-500 relative overflow-hidden"
+                          style={{ width: `${(visibleCount / sortedProducts.length) * 100}%` }}
+                        >
+                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
+                        </div>
                       </div>
                     </div>
 
                     <button
-                      onClick={() => setVisibleCount(visibleCount + 12)}
-                      className="group px-8 py-4 bg-gradient-to-r from-[#F6C445] to-[#FFD700] text-[#1C2B49] font-bold rounded-2xl shadow-lg hover:shadow-2xl hover:shadow-[#F6C445]/20 transition-all duration-300 hover:scale-105 active:scale-95 relative overflow-hidden"
+                      onClick={() => setVisibleCount(visibleCount + 8)}
+                      className="group relative px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-[#F6C445] to-[#FFD700] text-[#1C2B49] font-bold rounded-2xl shadow-lg hover:shadow-2xl hover:shadow-[#F6C445]/20 transition-all duration-300 hover:scale-105 active:scale-95 overflow-hidden touch-manipulation"
                     >
                       <span className="relative z-10 flex items-center gap-2">
-                        Découvrir plus de produits
-                        <div className="w-5 h-5 border-2 border-[#1C2B49] border-t-transparent rounded-full animate-spin group-hover:animate-none" />
+                        <span className="hidden sm:inline">Découvrir plus de produits</span>
+                        <span className="sm:hidden">Voir plus</span>
+                        <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-[#1C2B49] border-t-transparent rounded-full animate-spin group-hover:animate-none transition-all" />
                       </span>
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
                     </button>
+
+                    {/* Indicateur de fin proche */}
+                    {sortedProducts.length - visibleCount <= 8 && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 flex items-center gap-1">
+                        <Sparkles size={10} />
+                        Plus que {sortedProducts.length - visibleCount} produits !
+                      </p>
+                    )}
                   </div>
                 )}
               </>
@@ -727,13 +789,16 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
         )}
       </div>
 
-      {/* Filter dialogs */}
+      {/* Dialogs améliorés */}
 
-      {/* Prix filter dialog */}
+      {/* Filtre prix dialog */}
       <Dialog open={filterOpen} onOpenChange={setFilterOpen}>
         <DialogContent className="w-[95vw] max-w-md mx-auto rounded-3xl p-0 overflow-hidden border-0 shadow-2xl">
           <PriceFilter
-            onChange={(r) => { setPriceRange(r); setFilterOpen(false) }}
+            onChange={(r) => {
+              setPriceRange(r);
+              setFilterOpen(false);
+            }}
             selectedIndex={selectedIndex}
             onSelect={setSelectedIndex}
             onClose={() => setFilterOpen(false)}
@@ -741,9 +806,9 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
         </DialogContent>
       </Dialog>
 
-      {/* Location filter dialog */}
+      {/* Filtre localisation dialog */}
       <Dialog open={locationFilterOpen} onOpenChange={setLocationFilterOpen}>
-        <DialogContent className="w-[95vw] max-w-md mx-auto rounded-3xl p-0 overflow-hidden border-0 shadow-2xl">
+        <DialogContent className="w-[95vw] max-w-md mx-auto rounded-3xl p-0 overflow-hidden border-0 shadow-2xl max-h-[90vh]">
           <LocationFilter />
         </DialogContent>
       </Dialog>
@@ -751,12 +816,13 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
       {/* Back to top button */}
       <BackToTopButton />
 
-      {/* CSS pour les animations */}
+      {/* Styles CSS améliorés */}
       <style jsx>{`
         @keyframes shimmer {
           0% { transform: translateX(-100%); }
           100% { transform: translateX(100%); }
         }
+        
         @keyframes fade-in-up {
           0% {
             opacity: 0;
@@ -767,14 +833,123 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
             transform: translateY(0);
           }
         }
+        
+        @keyframes pulse-glow {
+          0%, 100% {
+            box-shadow: 0 0 5px rgba(246, 196, 69, 0.3);
+          }
+          50% {
+            box-shadow: 0 0 20px rgba(246, 196, 69, 0.6), 0 0 30px rgba(246, 196, 69, 0.4);
+          }
+        }
+        
         .animate-shimmer {
           animation: shimmer 2s infinite;
         }
+        
         .animate-fade-in-up {
-          animation: fade-in-up 0.6s ease-out;
+          animation: fade-in-up 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        .hover\\:scale-102:hover {
-          transform: scale(1.02);
+        
+        .animate-pulse-glow {
+          animation: pulse-glow 2s infinite;
+        }
+        
+        /* Optimisations tactiles */
+        .touch-manipulation {
+          touch-action: manipulation;
+          -webkit-tap-highlight-color: transparent;
+        }
+        
+        /* Scrollbar personnalisé */
+        .overflow-y-auto::-webkit-scrollbar {
+          width: 4px;
+        }
+        
+        .overflow-y-auto::-webkit-scrollbar-track {
+          background: rgba(0, 0, 0, 0.1);
+          border-radius: 2px;
+        }
+        
+        .overflow-y-auto::-webkit-scrollbar-thumb {
+          background: #F6C445;
+          border-radius: 2px;
+        }
+        
+        .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+          background: #E2AE32;
+        }
+        
+        /* Amélioration des interactions sur mobile */
+        @media (max-width: 640px) {
+          .hover\\:scale-105:hover {
+            transform: none;
+          }
+          
+          .hover\\:scale-105:active {
+            transform: scale(0.98);
+          }
+          
+          /* Augmenter la taille des zones tactiles */
+          button {
+            min-height: 44px;
+          }
+          
+          /* Améliorer la lisibilité sur petits écrans */
+          .text-xs {
+            font-size: 0.75rem;
+            line-height: 1.2;
+          }
+        }
+        
+        /* Animation pour les badges de proximité */
+        @keyframes bounce-in {
+          0% {
+            opacity: 0;
+            transform: scale(0.3);
+          }
+          50% {
+            opacity: 1;
+            transform: scale(1.05);
+          }
+          70% {
+            transform: scale(0.9);
+          }
+          100% {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+        
+        .animate-bounce-in {
+          animation: bounce-in 0.6s ease-out;
+        }
+        
+        /* Focus visible pour l'accessibilité */
+        button:focus-visible {
+          outline: 2px solid #F6C445;
+          outline-offset: 2px;
+        }
+        
+        input:focus-visible {
+          outline: 2px solid #F6C445;
+          outline-offset: 2px;
+        }
+        
+        /* Transition fluide pour le dark mode */
+        * {
+          transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
+          transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+          transition-duration: 150ms;
+        }
+        
+        /* Optimisation des performances */
+        .will-change-transform {
+          will-change: transform;
+        }
+        
+        .will-change-scroll {
+          will-change: scroll-position;
         }
       `}</style>
     </div>
