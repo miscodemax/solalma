@@ -1,6 +1,7 @@
-"use client"
+'use client'
+
 import { useState } from "react"
-import { MessageCircle, MapPin, Loader2, AlertTriangle, Image as ImageIcon } from "lucide-react"
+import { MessageCircle, MapPin, Loader2, AlertTriangle, Image as ImageIcon, Phone } from "lucide-react"
 
 // Tableau des zones au Sénégal
 const SENEGAL_LOCATIONS = [
@@ -50,6 +51,7 @@ interface ProductContactProps {
         title: string
         price: number
         whatsapp_number?: string
+        phone_number?: string
         image_url?: string
     }
     customerName?: string
@@ -64,7 +66,6 @@ export default function ProductContact({
     const [isLoadingLocation, setIsLoadingLocation] = useState(false)
     const [locationError, setLocationError] = useState<string | null>(null)
 
-    // Obtenir position GPS
     const getCurrentLocation = (): Promise<{ lat: number; lng: number; accuracy: number }> => {
         return new Promise((resolve, reject) => {
             if (!navigator.geolocation) {
@@ -99,7 +100,6 @@ export default function ProductContact({
         })
     }
 
-    // Créer message WhatsApp avec zone
     const createWhatsAppMessageWithLocation = async (): Promise<string | null> => {
         try {
             setIsLoadingLocation(true)
@@ -171,12 +171,21 @@ export default function ProductContact({
         }
     }
 
-    if (!product.whatsapp_number) {
+    const handleCallSeller = () => {
+        if (product.phone_number) {
+            const phoneClean = product.phone_number.replace(/\D/g, "")
+            window.open(`tel:${phoneClean}`)
+        } else {
+            alert("Numéro de téléphone non disponible")
+        }
+    }
+
+    if (!product.whatsapp_number && !product.phone_number) {
         return (
             <div className={`bg-gray-100 dark:bg-gray-800 p-6 rounded-2xl border ${className}`}>
                 <div className="text-center text-gray-600 dark:text-gray-400">
                     <MessageCircle className="mx-auto mb-3" size={24} />
-                    <p>Contact WhatsApp non disponible</p>
+                    <p>Contact WhatsApp et téléphone non disponible</p>
                 </div>
             </div>
         )
@@ -184,27 +193,53 @@ export default function ProductContact({
 
     return (
         <div className={`space-y-4 ${className}`}>
-            {/* Bouton avec géolocalisation */}
-            <button
-                onClick={handleContactClick}
-                disabled={isLoadingLocation}
-                className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-4 px-6 rounded-2xl shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 disabled:opacity-50"
-            >
-                <div className="flex items-center justify-center gap-3">
-                    {isLoadingLocation ? (
-                        <>
-                            <Loader2 className="animate-spin" size={20} />
-                            <span>Localisation en cours...</span>
-                        </>
-                    ) : (
-                        <>
-                            <MessageCircle size={20} />
-                            <MapPin size={16} />
-                            <span>Contacter avec ma localisation</span>
-                        </>
-                    )}
-                </div>
-            </button>
+            {/* Bouton WhatsApp avec géolocalisation */}
+            {product.whatsapp_number && (
+                <button
+                    onClick={handleContactClick}
+                    disabled={isLoadingLocation}
+                    className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-4 px-6 rounded-2xl shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 disabled:opacity-50"
+                >
+                    <div className="flex items-center justify-center gap-3">
+                        {isLoadingLocation ? (
+                            <>
+                                <Loader2 className="animate-spin" size={20} />
+                                <span>Localisation en cours...</span>
+                            </>
+                        ) : (
+                            <>
+                                <MessageCircle size={20} />
+                                <MapPin size={16} />
+                                <span>Contacter via WhatsApp avec localisation</span>
+                            </>
+                        )}
+                    </div>
+                </button>
+            )}
+
+            {/* Bouton WhatsApp sans géolocalisation */}
+            {product.whatsapp_number && (
+                <button
+                    onClick={handleContactWithoutLocation}
+                    className="w-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 font-medium py-3 px-6 rounded-xl border border-gray-300 dark:border-gray-600 transition-all duration-300"
+                >
+                    <div className="flex items-center justify-center gap-2">
+                        <MessageCircle size={18} />
+                        <span>Contacter via WhatsApp sans localisation</span>
+                    </div>
+                </button>
+            )}
+
+            {/* Bouton Appel direct */}
+            {product.phone_number && (
+                <button
+                    onClick={handleCallSeller}
+                    className="w-full bg-yellow-500 hover:bg-yellow-600 text-[#1C2B49] font-bold py-3 px-6 rounded-xl shadow-md transition-all duration-300 hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
+                >
+                    <Phone size={18} />
+                    <span>Appeler le vendeur</span>
+                </button>
+            )}
 
             {/* Erreur géolocalisation */}
             {locationError && (
@@ -219,18 +254,7 @@ export default function ProductContact({
                 </div>
             )}
 
-            {/* Bouton sans géolocalisation */}
-            <button
-                onClick={handleContactWithoutLocation}
-                className="w-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 font-medium py-3 px-6 rounded-xl border border-gray-300 dark:border-gray-600 transition-all duration-300"
-            >
-                <div className="flex items-center justify-center gap-2">
-                    <MessageCircle size={18} />
-                    <span>Contacter sans localisation</span>
-                </div>
-            </button>
-
-            {/* Rappel UX */}
+            {/* Rappel UX image produit */}
             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
                 <div className="flex items-start gap-3">
                     <ImageIcon className="text-blue-500 flex-shrink-0 mt-0.5" size={18} />
