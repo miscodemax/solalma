@@ -1,6 +1,48 @@
 "use client"
-import { useState } from 'react'
-import { MessageCircle, MapPin, Loader2, AlertTriangle } from 'lucide-react'
+import { useState } from "react"
+import { MessageCircle, MapPin, Loader2, AlertTriangle, Image as ImageIcon } from "lucide-react"
+
+// Tableau des zones au Sénégal
+const SENEGAL_LOCATIONS = [
+    { name: "Dakar", lat: 14.6928, lng: -17.4467 },
+    { name: "Plateau", lat: 14.6708, lng: -17.4395 },
+    { name: "Médina", lat: 14.6765, lng: -17.4515 },
+    { name: "Yoff", lat: 14.7539, lng: -17.4731 },
+    { name: "Sacré-Coeur", lat: 14.7306, lng: -17.4640 },
+    { name: "Almadies", lat: 14.7447, lng: -17.5264 },
+    { name: "Ngor", lat: 14.7587, lng: -17.5180 },
+    { name: "Ouakam", lat: 14.7289, lng: -17.4922 },
+    { name: "Point E", lat: 14.7019, lng: -17.4644 },
+    { name: "Mermoz", lat: 14.7089, lng: -17.4558 },
+    { name: "Fann", lat: 14.7056, lng: -17.4739 },
+    { name: "Liberté", lat: 14.7086, lng: -17.4656 },
+    { name: "HLM", lat: 14.7085, lng: -17.4520 },
+    { name: "Grand Dakar", lat: 14.7089, lng: -17.4495 },
+    { name: "Pikine", lat: 14.7549, lng: -17.3985 },
+    { name: "Guédiawaye", lat: 14.7692, lng: -17.4056 },
+    { name: "Parcelles Assainies", lat: 14.7642, lng: -17.4314 },
+    { name: "Rufisque", lat: 14.7167, lng: -17.2667 },
+    { name: "Thiès", lat: 14.7886, lng: -16.9260 },
+    { name: "Kaolack", lat: 14.1592, lng: -16.0729 },
+    { name: "Saint-Louis", lat: 16.0179, lng: -16.4817 },
+    { name: "Mbour", lat: 14.4198, lng: -16.9639 },
+    { name: "Diourbel", lat: 14.6574, lng: -16.2335 },
+    { name: "Ziguinchor", lat: 12.5681, lng: -16.2717 }
+]
+
+// Fonction pour trouver la zone la plus proche
+function getClosestLocation(lat: number, lng: number) {
+    let closest = SENEGAL_LOCATIONS[0]
+    let minDist = Infinity
+    SENEGAL_LOCATIONS.forEach((loc) => {
+        const dist = Math.sqrt((loc.lat - lat) ** 2 + (loc.lng - lng) ** 2)
+        if (dist < minDist) {
+            closest = loc
+            minDist = dist
+        }
+    })
+    return closest.name
+}
 
 interface ProductContactProps {
     product: {
@@ -8,6 +50,7 @@ interface ProductContactProps {
         title: string
         price: number
         whatsapp_number?: string
+        image_url?: string
     }
     customerName?: string
     className?: string
@@ -21,14 +64,13 @@ export default function ProductContact({
     const [isLoadingLocation, setIsLoadingLocation] = useState(false)
     const [locationError, setLocationError] = useState<string | null>(null)
 
-    // Fonction pour obtenir la position GPS du client
-    const getCurrentLocation = (): Promise<{ lat: number, lng: number, accuracy: number }> => {
+    // Obtenir position GPS
+    const getCurrentLocation = (): Promise<{ lat: number; lng: number; accuracy: number }> => {
         return new Promise((resolve, reject) => {
             if (!navigator.geolocation) {
-                reject(new Error('La géolocalisation n\'est pas supportée par votre navigateur'))
+                reject(new Error("La géolocalisation n'est pas supportée par votre navigateur"))
                 return
             }
-
             navigator.geolocation.getCurrentPosition(
                 (position) => {
                     resolve({
@@ -38,139 +80,94 @@ export default function ProductContact({
                     })
                 },
                 (error) => {
-                    let errorMessage = 'Erreur de géolocalisation'
+                    let errorMessage = "Erreur de géolocalisation"
                     switch (error.code) {
                         case error.PERMISSION_DENIED:
-                            errorMessage = 'Permission de localisation refusée'
+                            errorMessage = "Permission de localisation refusée"
                             break
                         case error.POSITION_UNAVAILABLE:
-                            errorMessage = 'Position indisponible'
+                            errorMessage = "Position indisponible"
                             break
                         case error.TIMEOUT:
-                            errorMessage = 'Timeout de localisation'
+                            errorMessage = "Timeout de localisation"
                             break
                     }
                     reject(new Error(errorMessage))
                 },
-                {
-                    enableHighAccuracy: true,
-                    timeout: 15000,
-                    maximumAge: 300000 // Cache pendant 5 minutes
-                }
+                { enableHighAccuracy: true, timeout: 15000, maximumAge: 300000 }
             )
         })
     }
 
-    // Fonction pour créer le message WhatsApp avec localisation
+    // Créer message WhatsApp avec zone
     const createWhatsAppMessageWithLocation = async (): Promise<string | null> => {
         try {
             setIsLoadingLocation(true)
             setLocationError(null)
 
-            // Récupérer la position GPS du client
             const location = await getCurrentLocation()
+            const closestZone = getClosestLocation(location.lat, location.lng)
 
-            // Créer le lien Google Maps
-            const googleMapsLink = `https://maps.google.com/maps?q=${location.lat},${location.lng}&hl=fr`
-
-            // Déterminer la précision
-            const accuracyText = location.accuracy < 100
-                ? `(précision: ${Math.round(location.accuracy)}m)`
-                : `(précision approximative)`
-
-            // Message structuré et professionnel
             const structuredMessage = `🛍️ NOUVELLE COMMANDE - SangseShop
 
-👤 Client: ${customerName}
 📱 Produit: "${product.title}"
 💰 Prix: ${product.price.toLocaleString()} FCFA
 
+👤 Client: ${customerName}
+
 ❓ Le produit est-il encore disponible ?
 
-📍 ADRESSE DE LIVRAISON:
-Coordonnées GPS: ${location.lat.toFixed(6)}, ${location.lng.toFixed(6)} ${accuracyText}
+📍 Adresse de livraison: ${closestZone}
 
-🗺️ Lien Google Maps pour la livraison:
-${googleMapsLink}
+🔗 Voir le produit: https://sangse.shop/product/${product.id}`
 
-🔗 Lien produit: https://sangse.shop/product/${product.id}
-
-Merci ! J'attends votre confirmation.`
-
-            // Nettoyer le numéro WhatsApp
             const whatsappClean = product.whatsapp_number?.replace(/\D/g, "")
-
-            // Créer le lien WhatsApp
-            const whatsappLink = whatsappClean
+            return whatsappClean
                 ? `https://wa.me/${whatsappClean}?text=${encodeURIComponent(structuredMessage)}`
                 : null
-
-            return whatsappLink
-
-        } catch (error) {
-            console.error('Erreur de géolocalisation:', error)
+        } catch (error: any) {
             setLocationError(error.message)
 
-            // Message de fallback sans localisation précise
-            const fallbackMessage = `🛍️ NOUVELLE COMMANDE - SangseShop
+            const fallbackMessage = `🛍️ COMMANDE - SangseShop
 
-👤 Client: ${customerName}
 📱 Produit: "${product.title}"
 💰 Prix: ${product.price.toLocaleString()} FCFA
 
-❓ Le produit est-il encore disponible ?
+👤 Client: ${customerName}
 
-📍 LIVRAISON:
-Localisation exacte à préciser par téléphone
-(Géolocalisation non autorisée par le client)
+📍 Livraison: localisation exacte à préciser par téléphone
 
-🔗 Lien produit: https://sangse.shop/product/${product.id}
-
-Merci ! Contactez-moi pour l'adresse de livraison.`
+🔗 Voir le produit: https://sangse.shop/product/${product.id}`
 
             const whatsappClean = product.whatsapp_number?.replace(/\D/g, "")
-            const whatsappLink = whatsappClean
+            return whatsappClean
                 ? `https://wa.me/${whatsappClean}?text=${encodeURIComponent(fallbackMessage)}`
                 : null
-
-            return whatsappLink
         } finally {
             setIsLoadingLocation(false)
         }
     }
 
-    // Gestion du clic sur le bouton de contact
     const handleContactClick = async () => {
         const whatsappLink = await createWhatsAppMessageWithLocation()
-
-        if (whatsappLink) {
-            window.open(whatsappLink, '_blank')
-        } else {
-            alert('Numéro WhatsApp non disponible')
-        }
+        if (whatsappLink) window.open(whatsappLink, "_blank")
     }
 
-    // Gestion du contact sans géolocalisation
     const handleContactWithoutLocation = () => {
         const basicMessage = `🛍️ COMMANDE SangseShop
 
 📱 Produit: "${product.title}"
 💰 Prix: ${product.price.toLocaleString()} FCFA
 
-Le produit est-il disponible ? 
-Contactez-moi pour l'adresse de livraison.
+👤 Client: ${customerName}
 
-🔗 https://sangse.shop/product/${product.id}`
+📍 Livraison: adresse à préciser par téléphone
+
+🔗 Voir le produit: https://sangse.shop/product/${product.id}`
 
         const whatsappClean = product.whatsapp_number?.replace(/\D/g, "")
-        const whatsappLink = whatsappClean
-            ? `https://wa.me/${whatsappClean}?text=${encodeURIComponent(basicMessage)}`
-            : null
-
-        if (whatsappLink) {
-            window.open(whatsappLink, '_blank')
-        } else {
-            alert('Numéro WhatsApp non disponible')
+        if (whatsappClean) {
+            window.open(`https://wa.me/${whatsappClean}?text=${encodeURIComponent(basicMessage)}`, "_blank")
         }
     }
 
@@ -187,11 +184,11 @@ Contactez-moi pour l'adresse de livraison.
 
     return (
         <div className={`space-y-4 ${className}`}>
-            {/* Bouton principal avec géolocalisation */}
+            {/* Bouton avec géolocalisation */}
             <button
                 onClick={handleContactClick}
                 disabled={isLoadingLocation}
-                className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-4 px-6 rounded-2xl shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-4 px-6 rounded-2xl shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 disabled:opacity-50"
             >
                 <div className="flex items-center justify-center gap-3">
                     {isLoadingLocation ? (
@@ -209,24 +206,20 @@ Contactez-moi pour l'adresse de livraison.
                 </div>
             </button>
 
-            {/* Message d'erreur de géolocalisation */}
+            {/* Erreur géolocalisation */}
             {locationError && (
                 <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-xl p-4">
                     <div className="flex items-start gap-3">
                         <AlertTriangle className="text-orange-500 flex-shrink-0 mt-0.5" size={20} />
                         <div>
-                            <p className="text-sm text-orange-700 dark:text-orange-300 font-medium">
-                                Géolocalisation échouée
-                            </p>
-                            <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">
-                                {locationError}
-                            </p>
+                            <p className="text-sm text-orange-700 dark:text-orange-300 font-medium">Erreur</p>
+                            <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">{locationError}</p>
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* Bouton alternatif sans géolocalisation */}
+            {/* Bouton sans géolocalisation */}
             <button
                 onClick={handleContactWithoutLocation}
                 className="w-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 font-medium py-3 px-6 rounded-xl border border-gray-300 dark:border-gray-600 transition-all duration-300"
@@ -237,16 +230,14 @@ Contactez-moi pour l'adresse de livraison.
                 </div>
             </button>
 
-            {/* Informations sur la géolocalisation */}
+            {/* Rappel UX */}
             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
                 <div className="flex items-start gap-3">
-                    <MapPin className="text-blue-500 flex-shrink-0 mt-0.5" size={18} />
+                    <ImageIcon className="text-blue-500 flex-shrink-0 mt-0.5" size={18} />
                     <div>
-                        <p className="text-sm text-blue-700 dark:text-blue-300 font-medium">
-                            Livraison précise
-                        </p>
+                        <p className="text-sm text-blue-700 dark:text-blue-300 font-medium">Image du produit</p>
                         <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-                            Partagez votre localisation GPS pour une livraison plus rapide et précise
+                            L’image s’affichera automatiquement dans WhatsApp grâce aux métadonnées de la page produit
                         </p>
                     </div>
                 </div>
