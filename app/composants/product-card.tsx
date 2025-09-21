@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import Link from "next/link"
 import Image from "next/image"
@@ -11,6 +11,7 @@ type Product = {
     price: number
     image_url: string | string[] | null
     user_id: string
+    zone?: string // Zone ajoutée
     likes?: number
     created_at?: string // Ajouté pour le badge "nouveau"
 }
@@ -56,10 +57,8 @@ export default function ProductCard({
     return (
         <article className="group relative w-full flex flex-col overflow-hidden rounded-2xl bg-gradient-to-br from-white to-gray-50/50 dark:from-[#1C2B49] dark:to-[#162041] border border-gray-200/60 dark:border-gray-700/50 hover:border-[#F6C445]/30 dark:hover:border-[#F6C445]/40 hover:shadow-2xl hover:shadow-[#F6C445]/10 dark:hover:shadow-[#F6C445]/20 transition-all duration-500 hover:-translate-y-1 backdrop-blur-sm">
 
-            {/* Effet de brillance au survol - optimisé mobile */}
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out pointer-events-none" />
 
-            {/* Container Image avec overlay gradient */}
             <div className="relative w-full aspect-square overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900">
                 <Link href={`/product/${product.id}`} className="block w-full h-full">
                     <Image
@@ -70,43 +69,35 @@ export default function ProductCard({
                         sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                         priority={false}
                     />
-                    {/* Overlay gradient subtil */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/15 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-400" />
                 </Link>
 
-                {/* Badge Nouveau - Design harmonieux avec l'identité visuelle */}
                 {isNew && (
                     <div className="absolute top-2 left-2 z-20">
                         <div className="relative group/badge">
-                            {/* Badge principal */}
                             <div className="relative px-2 py-1 rounded-lg text-[10px] font-semibold text-[#1C2B49] bg-gradient-to-r from-[#F6C445]/95 to-[#FFD700]/95 backdrop-blur-sm shadow-sm border border-[#F6C445]/20">
                                 <span className="relative z-10 flex items-center gap-1">
                                     <span className="w-1 h-1 bg-[#1C2B49] rounded-full opacity-70" />
                                     NEW
                                 </span>
                             </div>
-
-                            {/* Effet de pulse discret */}
                             <div className="absolute inset-0 bg-gradient-to-r from-[#F6C445]/30 to-[#FFD700]/30 rounded-lg blur-sm opacity-0 group-hover/badge:opacity-100 animate-pulse transition-opacity duration-300" />
                         </div>
                     </div>
                 )}
 
-                {/* Badge Premium - Repositionné si nouveau produit */}
-                {product.price > 50000 && (
+                {product.price > 20000 && (
                     <div className={`absolute ${isNew ? 'top-9 left-2' : 'top-2 left-2'} z-10`}>
                         <div className="relative px-2 py-1 rounded-lg text-[10px] font-semibold text-[#1C2B49] bg-gradient-to-r from-[#F6C445] to-[#FFD700] shadow-sm">
                             <span className="flex items-center gap-1">
                                 <span className="text-[8px]">✨</span>
                                 PREMIUM
                             </span>
-                            {/* Effet de lueur dorée discrète */}
                             <div className="absolute inset-0 bg-gradient-to-r from-[#F6C445]/20 to-[#FFD700]/20 rounded-lg blur-sm opacity-50" />
                         </div>
                     </div>
                 )}
 
-                {/* Bouton Like avec animation mobile-friendly */}
                 <div className="absolute top-2 right-2 z-10">
                     <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-xl shadow-sm border border-white/20 dark:border-gray-700/20 transition-all duration-300 group-hover:scale-105 group-active:scale-95">
                         <LikeButton productId={product.id} userId={userId} />
@@ -118,7 +109,6 @@ export default function ProductCard({
                     </div>
                 </div>
 
-                {/* Compteur d'images avec style moderne */}
                 {imageCount > 1 && (
                     <div className="absolute bottom-2 right-2 z-10">
                         <div className="flex items-center gap-1 px-2 py-1 bg-black/75 backdrop-blur-sm text-white rounded-lg text-[10px] font-medium border border-white/10">
@@ -131,7 +121,6 @@ export default function ProductCard({
                 )}
             </div>
 
-            {/* Section infos avec meilleur espacement mobile */}
             <div className="flex-1 p-3 sm:p-4 space-y-2.5 sm:space-y-3">
                 <Link href={`/product/${product.id}`} className="block group/title">
                     <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 leading-tight line-clamp-2 group-hover/title:text-[#F6C445] transition-colors duration-300">
@@ -139,11 +128,17 @@ export default function ProductCard({
                     </h3>
                 </Link>
 
+                {/* Zone du produit */}
+                {product.zone && (
+                    <p className="text-[10px] sm:text-xs font-medium text-[#F6C445] dark:text-[#FFD700]">
+                        {product.zone}
+                    </p>
+                )}
+
                 <p className="hidden sm:block text-xs text-gray-600 dark:text-gray-400 line-clamp-2 leading-relaxed">
                     {product.description}
                 </p>
 
-                {/* Prix et bouton avec animations optimisées mobile */}
                 <div className="flex items-center justify-between pt-1 sm:pt-2">
                     <div className="flex flex-col">
                         <span className="text-base font-black text-gray-900 dark:text-gray-100 group-hover:text-[#F6C445] transition-colors duration-300">
@@ -164,16 +159,12 @@ export default function ProductCard({
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                             </svg>
                         </span>
-                        {/* Effet de brillance sur le bouton - plus subtil sur mobile */}
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full group-hover/btn:translate-x-full group-active/btn:translate-x-full transition-transform duration-400" />
                     </Link>
                 </div>
             </div>
 
-            {/* Indicateur de statut en bas - animation plus fluide */}
             <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[#F6C445]/60 to-transparent transform scale-x-0 group-hover:scale-x-100 group-active:scale-x-100 transition-transform duration-400 origin-center" />
-
-            {/* Animation de focus pour accessibility */}
             <div className="absolute inset-0 rounded-2xl ring-2 ring-[#F6C445]/50 ring-offset-2 ring-offset-white dark:ring-offset-[#1C2B49] opacity-0 focus-within:opacity-100 transition-opacity duration-300 pointer-events-none" />
         </article>
     )
