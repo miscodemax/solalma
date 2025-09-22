@@ -3,48 +3,6 @@
 import { useState } from "react"
 import { MessageCircle, MapPin, Loader2, AlertTriangle, Image as ImageIcon, Phone } from "lucide-react"
 
-// Tableau des zones au Sénégal
-const SENEGAL_LOCATIONS = [
-    { name: "Dakar", lat: 14.6928, lng: -17.4467 },
-    { name: "Plateau", lat: 14.6708, lng: -17.4395 },
-    { name: "Médina", lat: 14.6765, lng: -17.4515 },
-    { name: "Yoff", lat: 14.7539, lng: -17.4731 },
-    { name: "Sacré-Coeur", lat: 14.7306, lng: -17.4640 },
-    { name: "Almadies", lat: 14.7447, lng: -17.5264 },
-    { name: "Ngor", lat: 14.7587, lng: -17.5180 },
-    { name: "Ouakam", lat: 14.7289, lng: -17.4922 },
-    { name: "Point E", lat: 14.7019, lng: -17.4644 },
-    { name: "Mermoz", lat: 14.7089, lng: -17.4558 },
-    { name: "Fann", lat: 14.7056, lng: -17.4739 },
-    { name: "Liberté", lat: 14.7086, lng: -17.4656 },
-    { name: "HLM", lat: 14.7085, lng: -17.4520 },
-    { name: "Grand Dakar", lat: 14.7089, lng: -17.4495 },
-    { name: "Pikine", lat: 14.7549, lng: -17.3985 },
-    { name: "Guédiawaye", lat: 14.7692, lng: -17.4056 },
-    { name: "Parcelles Assainies", lat: 14.7642, lng: -17.4314 },
-    { name: "Rufisque", lat: 14.7167, lng: -17.2667 },
-    { name: "Thiès", lat: 14.7886, lng: -16.9260 },
-    { name: "Kaolack", lat: 14.1592, lng: -16.0729 },
-    { name: "Saint-Louis", lat: 16.0179, lng: -16.4817 },
-    { name: "Mbour", lat: 14.4198, lng: -16.9639 },
-    { name: "Diourbel", lat: 14.6574, lng: -16.2335 },
-    { name: "Ziguinchor", lat: 12.5681, lng: -16.2717 }
-]
-
-// Fonction pour trouver la zone la plus proche
-function getClosestLocation(lat: number, lng: number) {
-    let closest = SENEGAL_LOCATIONS[0]
-    let minDist = Infinity
-    SENEGAL_LOCATIONS.forEach((loc) => {
-        const dist = Math.sqrt((loc.lat - lat) ** 2 + (loc.lng - lng) ** 2)
-        if (dist < minDist) {
-            closest = loc
-            minDist = dist
-        }
-    })
-    return closest.name
-}
-
 interface ProductContactProps {
     product: {
         id: number
@@ -66,7 +24,8 @@ export default function ProductContact({
     const [isLoadingLocation, setIsLoadingLocation] = useState(false)
     const [locationError, setLocationError] = useState<string | null>(null)
 
-    const getCurrentLocation = (): Promise<{ lat: number; lng: number; accuracy: number }> => {
+    // Obtenir position GPS
+    const getCurrentLocation = (): Promise<{ lat: number; lng: number }> => {
         return new Promise((resolve, reject) => {
             if (!navigator.geolocation) {
                 reject(new Error("La géolocalisation n'est pas supportée par votre navigateur"))
@@ -76,8 +35,7 @@ export default function ProductContact({
                 (position) => {
                     resolve({
                         lat: position.coords.latitude,
-                        lng: position.coords.longitude,
-                        accuracy: position.coords.accuracy
+                        lng: position.coords.longitude
                     })
                 },
                 (error) => {
@@ -100,13 +58,27 @@ export default function ProductContact({
         })
     }
 
+    // Géocodage inverse avec OpenStreetMap
+    const reverseGeocode = async (lat: number, lng: number): Promise<string> => {
+        try {
+            const res = await fetch(
+                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
+            )
+            const data = await res.json()
+            return data.display_name || "Adresse introuvable"
+        } catch (err) {
+            return "Adresse non trouvée: " + err
+        }
+    }
+
+    // Message WhatsApp avec adresse complète
     const createWhatsAppMessageWithLocation = async (): Promise<string | null> => {
         try {
             setIsLoadingLocation(true)
             setLocationError(null)
 
             const location = await getCurrentLocation()
-            const closestZone = getClosestLocation(location.lat, location.lng)
+            const adresse = await reverseGeocode(location.lat, location.lng)
 
             const structuredMessage = `🛍️ NOUVELLE COMMANDE - SangseShop
 
@@ -117,7 +89,7 @@ export default function ProductContact({
 
 ❓ Le produit est-il encore disponible ?
 
-📍 Adresse de livraison: ${closestZone}
+📍 Adresse de livraison: ${adresse}
 
 🔗 Voir le produit: https://sangse.shop/product/${product.id}`
 
@@ -172,15 +144,15 @@ export default function ProductContact({
     }
 
     const handleCallSeller = () => {
-        if (product.whatsapp_number) {
-            const phoneClean = product.whatsapp_number.replace(/\D/g, "")
+        if (product.phone_number) {
+            const phoneClean = product.phone_number.replace(/\D/g, "")
             window.open(`tel:${phoneClean}`)
         } else {
             alert("Numéro de téléphone non disponible")
         }
     }
 
-    if (!product.whatsapp_number && !product.whatsapp_number) {
+    if (!product.whatsapp_number && !product.phone_number) {
         return (
             <div className={`bg-gray-100 dark:bg-gray-800 p-6 rounded-2xl border ${className}`}>
                 <div className="text-center text-gray-600 dark:text-gray-400">
@@ -231,7 +203,7 @@ export default function ProductContact({
             )}
 
             {/* Bouton Appel direct */}
-            {product.whatsapp_number && (
+            {product.phone_number && (
                 <button
                     onClick={handleCallSeller}
                     className="w-full bg-yellow-500 hover:bg-yellow-600 text-[#1C2B49] font-bold py-3 px-6 rounded-xl shadow-md transition-all duration-300 hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
