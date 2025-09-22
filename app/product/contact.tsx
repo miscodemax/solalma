@@ -71,7 +71,7 @@ export default function ProductContact({
         }
     }
 
-    // Message WhatsApp avec adresse complète
+    // Message WhatsApp avec adresse complète + lien de navigation
     const createWhatsAppMessageWithLocation = async (): Promise<string | null> => {
         try {
             setIsLoadingLocation(true)
@@ -79,6 +79,11 @@ export default function ProductContact({
 
             const location = await getCurrentLocation()
             const adresse = await reverseGeocode(location.lat, location.lng)
+
+            // Lien Google Maps & OSM
+            const mapsLink = `https://www.google.com/maps?q=${location.lat},${location.lng}`
+            const navLink = `https://www.google.com/maps/dir/?api=1&destination=${location.lat},${location.lng}`
+            const osmLink = `https://www.openstreetmap.org/?mlat=${location.lat}&mlon=${location.lng}#map=18/${location.lat}/${location.lng}`
 
             const structuredMessage = `🛍️ NOUVELLE COMMANDE - SangseShop
 
@@ -90,6 +95,9 @@ export default function ProductContact({
 ❓ Le produit est-il encore disponible ?
 
 📍 Adresse de livraison: ${adresse}
+🌍 Localisation exacte: ${mapsLink}
+🚖 Itinéraire Google Maps: ${navLink}
+🗺️ OpenStreetMap: ${osmLink}
 
 🔗 Voir le produit: https://sangse.shop/product/${product.id}`
 
@@ -182,7 +190,7 @@ export default function ProductContact({
                             <>
                                 <MessageCircle size={20} />
                                 <MapPin size={16} />
-                                <span>Contacter via WhatsApp avec localisation</span>
+                                <span>WhatsApp avec localisation</span>
                             </>
                         )}
                     </div>
@@ -197,7 +205,7 @@ export default function ProductContact({
                 >
                     <div className="flex items-center justify-center gap-2">
                         <MessageCircle size={18} />
-                        <span>Contacter via WhatsApp sans localisation</span>
+                        <span>WhatsApp sans localisation</span>
                     </div>
                 </button>
             )}
