@@ -70,6 +70,24 @@ export default async function ProductDetailPage({ params }: Props) {
     },
   })
 
+
+  // Récupérer l'utilisateur connecté
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) return null
+
+  // Le "Display Name" de Google (ex: "Mamadou Ndiaye")
+  const displayName = user.user_metadata?.full_name || user.user_metadata?.name
+
+  if (!displayName) return null
+
+  // On prend seulement le premier mot = prénom
+  const firstName = displayName.split(" ")[0]
+
+
+
   const { data: product, error: productError } = await supabase
     .from("product")
     .select("*")
@@ -273,7 +291,7 @@ export default async function ProductDetailPage({ params }: Props) {
                 price: product.price,
                 whatsapp_number: product.whatsapp_number
               }}
-              customerName="Client SangseShop" // Vous pouvez récupérer le nom réel de l'utilisateur connecté
+              customerName={firstName || 'clientSangse'} // Vous pouvez récupérer le nom réel de l'utilisateur connecté
             />
 
             {/* Description */}

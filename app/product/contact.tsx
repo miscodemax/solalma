@@ -18,11 +18,16 @@ interface ProductContactProps {
 
 export default function ProductContact({
     product,
-    customerName = "Client SangseShop",
+    customerName,
     className = ""
 }: ProductContactProps) {
     const [isLoadingLocation, setIsLoadingLocation] = useState(false)
     const [locationError, setLocationError] = useState<string | null>(null)
+
+    // Nom fallback
+    const clientDisplayName = customerName && customerName.trim() !== ""
+        ? customerName
+        : "ClientSangse"
 
     // Obtenir position GPS
     const getCurrentLocation = (): Promise<{ lat: number; lng: number }> => {
@@ -58,7 +63,7 @@ export default function ProductContact({
         })
     }
 
-    // Géocodage inverse avec OpenStreetMap
+    // Géocodage inverse
     const reverseGeocode = async (lat: number, lng: number): Promise<string> => {
         try {
             const res = await fetch(
@@ -67,11 +72,11 @@ export default function ProductContact({
             const data = await res.json()
             return data.display_name || "Adresse introuvable"
         } catch (err) {
-            return "Adresse non trouvée: " + err
+            return "Adresse non trouvée"
         }
     }
 
-    // Message WhatsApp avec adresse complète + lien de navigation
+    // Message WhatsApp avec localisation
     const createWhatsAppMessageWithLocation = async (): Promise<string | null> => {
         try {
             setIsLoadingLocation(true)
@@ -80,26 +85,19 @@ export default function ProductContact({
             const location = await getCurrentLocation()
             const adresse = await reverseGeocode(location.lat, location.lng)
 
-            // Lien Google Maps & OSM
-            const mapsLink = `https://www.google.com/maps?q=${location.lat},${location.lng}`
-            const navLink = `https://www.google.com/maps/dir/?api=1&destination=${location.lat},${location.lng}`
             const osmLink = `https://www.openstreetmap.org/?mlat=${location.lat}&mlon=${location.lng}#map=18/${location.lat}/${location.lng}`
 
-            const structuredMessage = `🛍️ NOUVELLE COMMANDE - SangseShop
+            const structuredMessage = `🛍️ *Nouvelle commande SangseShop*
 
-📱 Produit: "${product.title}"
-💰 Prix: ${product.price.toLocaleString()} FCFA
+📦 Produit : ${product.title}
+💰 Prix : ${product.price.toLocaleString()} FCFA
+🔗 Voir produit : https://sangse.shop/product/${product.id}
 
-👤 Client: ${customerName}
+🙋 Client : ${clientDisplayName}
+👉 Dispo ou bien ?
 
-❓ Le produit est-il encore disponible ?
-
-📍 Adresse de livraison: ${adresse}
-🌍 Localisation exacte: ${mapsLink}
-🚖 Itinéraire Google Maps: ${navLink}
-🗺️ OpenStreetMap: ${osmLink}
-
-🔗 Voir le produit: https://sangse.shop/product/${product.id}`
+📍 Adresse : ${adresse}
+🗺️ Itinéraire : ${osmLink}`
 
             const whatsappClean = product.whatsapp_number?.replace(/\D/g, "")
             return whatsappClean
@@ -108,16 +106,15 @@ export default function ProductContact({
         } catch (error: any) {
             setLocationError(error.message)
 
-            const fallbackMessage = `🛍️ COMMANDE - SangseShop
+            const fallbackMessage = `🛍️ *Commande SangseShop*
 
-📱 Produit: "${product.title}"
-💰 Prix: ${product.price.toLocaleString()} FCFA
+📦 Produit : ${product.title}
+💰 Prix : ${product.price.toLocaleString()} FCFA
+🙋 Client : ${clientDisplayName}
+👉 Dispo ou bien ?
 
-👤 Client: ${customerName}
-
-📍 Livraison: localisation exacte à préciser par téléphone
-
-🔗 Voir le produit: https://sangse.shop/product/${product.id}`
+📍 Livraison : adresse à préciser par téléphone
+🔗 Voir produit : https://sangse.shop/product/${product.id}`
 
             const whatsappClean = product.whatsapp_number?.replace(/\D/g, "")
             return whatsappClean
@@ -134,16 +131,15 @@ export default function ProductContact({
     }
 
     const handleContactWithoutLocation = () => {
-        const basicMessage = `🛍️ COMMANDE SangseShop
+        const basicMessage = `🛍️ *Commande SangseShop*
 
-📱 Produit: "${product.title}"
-💰 Prix: ${product.price.toLocaleString()} FCFA
+📦 Produit : ${product.title}
+💰 Prix : ${product.price.toLocaleString()} FCFA
+🙋 Client : ${clientDisplayName}
+👉 Dispo ou bien ?
 
-👤 Client: ${customerName}
-
-📍 Livraison: adresse à préciser par téléphone
-
-🔗 Voir le produit: https://sangse.shop/product/${product.id}`
+📍 Livraison : adresse à préciser par téléphone
+🔗 Voir produit : https://sangse.shop/product/${product.id}`
 
         const whatsappClean = product.whatsapp_number?.replace(/\D/g, "")
         if (whatsappClean) {
@@ -160,7 +156,7 @@ export default function ProductContact({
         }
     }
 
-    if (!product.whatsapp_number && !product.whatsapp_number) {
+    if (!product.whatsapp_number && !product.phone_number) {
         return (
             <div className={`bg-gray-100 dark:bg-gray-800 p-6 rounded-2xl border ${className}`}>
                 <div className="text-center text-gray-600 dark:text-gray-400">
@@ -173,7 +169,7 @@ export default function ProductContact({
 
     return (
         <div className={`space-y-4 ${className}`}>
-            {/* Bouton WhatsApp avec géolocalisation */}
+            {/* Bouton WhatsApp avec localisation */}
             {product.whatsapp_number && (
                 <button
                     onClick={handleContactClick}
@@ -197,7 +193,7 @@ export default function ProductContact({
                 </button>
             )}
 
-            {/* Bouton WhatsApp sans géolocalisation */}
+            {/* Bouton WhatsApp sans localisation */}
             {product.whatsapp_number && (
                 <button
                     onClick={handleContactWithoutLocation}
