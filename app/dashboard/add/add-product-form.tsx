@@ -16,12 +16,12 @@ import {
 type Props = { userId: string }
 
 const categories = [
-  { value: 'vetement', label: 'Vêtement' },
-  { value: 'soins_et_astuces', label: 'Soins et astuces' },
-  { value: 'maquillage', label: 'Maquillage' },
-  { value: 'artisanat', label: 'Artisanat (fait mains)' },
-  { value: 'electronique', label: 'Electronique' },
-  { value: 'accessoire', label: 'Accessoire' },
+  { value: 'vetement', label: 'Vêtement', icon: '👗', color: 'from-pink-400 to-rose-500' },
+  { value: 'soins_et_astuces', label: 'Soins et astuces', icon: '💄', color: 'from-purple-400 to-pink-500' },
+  { value: 'maquillage', label: 'Maquillage', icon: '💋', color: 'from-red-400 to-pink-500' },
+  { value: 'artisanat', label: 'Artisanat', icon: '🎨', color: 'from-blue-400 to-purple-500' },
+  { value: 'electronique', label: 'Electronique', icon: '📱', color: 'from-cyan-400 to-blue-500' },
+  { value: 'accessoire', label: 'Accessoire', icon: '👜', color: 'from-amber-400 to-orange-500' },
 ]
 
 const SENEGAL_LOCATIONS = [
@@ -52,6 +52,7 @@ const SENEGAL_LOCATIONS = [
 ]
 
 export default function AddProductForm({ userId }: Props) {
+  const [currentStep, setCurrentStep] = useState(0)
   const [form, setForm] = useState({
     title: '',
     price: '',
@@ -68,6 +69,33 @@ export default function AddProductForm({ userId }: Props) {
 
   const router = useRouter()
   const supabase = createClient()
+
+  const steps = [
+    {
+      title: 'Photos',
+      subtitle: 'Ajoutez des images attrayantes',
+      icon: '📸',
+      description: 'Des photos de qualité augmentent vos chances de vente de 80%'
+    },
+    {
+      title: 'Catégorie',
+      subtitle: 'Choisissez le type de produit',
+      icon: '🏷️',
+      description: 'Aidez les acheteurs à vous trouver facilement'
+    },
+    {
+      title: 'Détails',
+      subtitle: 'Décrivez votre produit',
+      icon: '✏️',
+      description: 'Plus de détails = plus de confiance'
+    },
+    {
+      title: 'Prix & Contact',
+      subtitle: 'Fixez votre prix et contact',
+      icon: '💰',
+      description: 'Définissez le prix et comment vous contacter'
+    }
+  ]
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -93,6 +121,28 @@ export default function AddProductForm({ userId }: Props) {
       const [selected] = newImages.splice(index, 1)
       return [selected, ...newImages]
     })
+  }
+
+  const canGoNext = () => {
+    switch (currentStep) {
+      case 0: return images.length > 0
+      case 1: return form.category !== ''
+      case 2: return form.title.trim() !== '' && form.description.trim() !== ''
+      case 3: return form.price !== '' && form.whatsappNumber.length >= 8
+      default: return false
+    }
+  }
+
+  const handleNext = () => {
+    if (currentStep < steps.length - 1) {
+      setCurrentStep(currentStep + 1)
+    }
+  }
+
+  const handlePrevious = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1)
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -134,48 +184,58 @@ export default function AddProductForm({ userId }: Props) {
         if (imagesError) throw imagesError
       }
       setSuccess(true)
-      setTimeout(() => router.push('/dashboard/products'), 1000)
+      setTimeout(() => router.push('/dashboard/products'), 2000)
     } catch (err: any) {
       setError(err.message || 'Une erreur est survenue lors de la création du produit')
     } finally { setLoading(false) }
   }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-[#FAF9F6] via-white to-[#F4C430]/5 dark:bg-gradient-to-br dark:from-[#1a1a1a] dark:via-[#222] dark:to-[#2a2a2a] py-4 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-6 sm:mb-8">
-          <Button
-            variant="outline"
-            size="lg"
-            onClick={() => router.back()}
-            className="mb-4 border-[#E9961A] text-[#E9961A] font-semibold hover:bg-[#E9961A]/10 hover:dark:bg-[#E9961A]/20 transition-all duration-200 px-6 py-3"
-          >
-            ← Retour
-          </Button>
-          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-[#F4C430] via-[#E9961A] to-[#F4C430] bg-clip-text text-transparent mb-2">Ajouter un produit</h1>
-          <p className="text-[#1A1A1A] dark:text-gray-300 text-sm sm:text-base mt-3">
-            Remplissez les informations pour mettre votre produit en vente sur Sangse
-          </p>
-        </div>
+  const getStepContent = () => {
+    switch (currentStep) {
+      case 0:
+        return (
+          <div className="space-y-6 animate-in fade-in-50 slide-in-from-right-4 duration-500">
+            <div className="text-center space-y-3 mb-8">
+              <div className="text-6xl mb-4">📸</div>
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Ajoutez vos photos</h2>
+              <p className="text-gray-600 dark:text-gray-400">Des images de qualité attirent plus d'acheteurs</p>
+            </div>
 
-        <form onSubmit={handleSubmit} className="space-y-8 sm:space-y-10">
-          {error && <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 text-center text-red-700 dark:text-red-400 font-medium">{error}</div>}
-          {success && <div className="bg-gradient-to-r from-[#F4C430]/20 to-[#FFD55A]/10 border border-[#F4C430]/30 rounded-xl p-4 text-center text-[#E9961A] dark:text-[#F4C430] font-medium">✅ Produit ajouté avec succès !</div>}
-
-          {/* Photos */}
-          <div className="bg-white/80 dark:bg-[#2a2a2a]/80 backdrop-blur-xl rounded-2xl shadow-lg border border-[#F4C430]/20 dark:border-gray-600 p-6 sm:p-8">
-            <h2 className="text-lg sm:text-xl font-semibold mb-4 text-[#1A1A1A] dark:text-white">📸 Photos du produit</h2>
             <ImageUploader onUpload={handleAddImages} maxImages={5} currentImageCount={images.length} />
+
             {images.length > 0 && (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-6">
                 {images.map((img, idx) => (
-                  <div key={idx} className="relative group">
-                    <Image src={img} alt={`Produit ${idx + 1}`} fill className="rounded-lg object-cover border border-[#F4C430]/30 dark:border-gray-600" />
-                    {idx === 0 && <div className="absolute top-2 left-2 bg-gradient-to-r from-[#F4C430] to-[#E9961A] text-[#1A1A1A] text-xs px-2 py-1 rounded-full font-medium shadow-lg">Principale</div>}
-                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-200 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100">
+                  <div key={idx} className="relative group aspect-square">
+                    <Image
+                      src={img}
+                      alt={`Produit ${idx + 1}`}
+                      fill
+                      className="rounded-2xl object-cover border-2 border-gray-200 dark:border-gray-700 group-hover:border-[#F4C430] transition-all duration-300"
+                    />
+                    {idx === 0 && (
+                      <div className="absolute -top-2 -right-2 bg-gradient-to-r from-[#F4C430] to-[#E9961A] text-white text-xs px-3 py-1 rounded-full font-medium shadow-lg animate-pulse">
+                        ⭐ Principale
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-300 rounded-2xl flex items-center justify-center opacity-0 group-hover:opacity-100">
                       <div className="flex gap-2">
-                        {idx !== 0 && <button type="button" onClick={() => handleSetMainImage(idx)} className="bg-gradient-to-r from-[#E9961A] to-[#F4C430] text-[#1A1A1A] p-2 rounded-full hover:scale-110 transition-all duration-200 shadow-lg">⭐</button>}
-                        <button type="button" onClick={() => handleRemoveImage(idx)} className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 hover:scale-110 transition-all duration-200 shadow-lg">🗑️</button>
+                        {idx !== 0 && (
+                          <button
+                            type="button"
+                            onClick={() => handleSetMainImage(idx)}
+                            className="bg-white/20 backdrop-blur-sm text-white p-2 rounded-full hover:bg-white/30 transition-all duration-200"
+                          >
+                            ⭐
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveImage(idx)}
+                          className="bg-red-500/80 backdrop-blur-sm text-white p-2 rounded-full hover:bg-red-500 transition-all duration-200"
+                        >
+                          🗑️
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -183,58 +243,306 @@ export default function AddProductForm({ userId }: Props) {
               </div>
             )}
           </div>
+        )
 
-          {/* Informations générales */}
-          <div className="bg-white/80 dark:bg-[#2a2a2a]/80 backdrop-blur-xl rounded-2xl shadow-lg border border-[#F4C430]/20 dark:border-gray-600 p-6 sm:p-8 space-y-6">
-            <HoverCard>
-              <HoverCardTrigger asChild>
-                <input type="text" name="title" placeholder="Titre du produit" value={form.title} onChange={handleChange} className="w-full px-4 py-4 border border-[#F4C430]/30 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E9961A]" required />
-              </HoverCardTrigger>
-              <HoverCardContent>Ex: Robe Wax taille M</HoverCardContent>
-            </HoverCard>
+      case 1:
+        return (
+          <div className="space-y-6 animate-in fade-in-50 slide-in-from-right-4 duration-500">
+            <div className="text-center space-y-3 mb-8">
+              <div className="text-6xl mb-4">🏷️</div>
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Choisissez votre catégorie</h2>
+              <p className="text-gray-600 dark:text-gray-400">Aidez les acheteurs à vous trouver facilement</p>
+            </div>
 
-            <HoverCard>
-              <HoverCardTrigger asChild>
-                <select name="category" value={form.category} onChange={handleChange} className="w-full px-4 py-4 border border-[#F4C430]/30 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E9961A]">
-                  {categories.map((cat) => <option key={cat.value} value={cat.value}>{cat.label}</option>)}
-                </select>
-              </HoverCardTrigger>
-              <HoverCardContent>Choisissez la catégorie qui décrit le mieux votre produit</HoverCardContent>
-            </HoverCard>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {categories.map((cat) => (
+                <button
+                  key={cat.value}
+                  type="button"
+                  onClick={() => setForm((prev) => ({ ...prev, category: cat.value }))}
+                  className={`relative p-6 rounded-2xl border-2 transition-all duration-300 transform hover:scale-105 ${form.category === cat.value
+                      ? 'border-[#F4C430] bg-gradient-to-br ' + cat.color + ' text-white shadow-xl'
+                      : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-[#F4C430]/50'
+                    }`}
+                >
+                  <div className="text-3xl mb-3">{cat.icon}</div>
+                  <h3 className="font-semibold text-lg">{cat.label}</h3>
+                  {form.category === cat.value && (
+                    <div className="absolute -top-2 -right-2 bg-white text-[#F4C430] rounded-full p-1">
+                      ✓
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
 
-            <HoverCard>
-              <HoverCardTrigger asChild>
-                <select name="zone" value={form.zone} onChange={handleChange} className="w-full px-4 py-4 border border-[#F4C430]/30 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E9961A]">
-                  {SENEGAL_LOCATIONS.map((loc) => <option key={loc.name} value={loc.name}>{loc.name}</option>)}
-                </select>
-              </HoverCardTrigger>
-              <HoverCardContent>Votre localisation pour ce produit</HoverCardContent>
-            </HoverCard>
+            <div className="mt-8">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                📍 Localisation
+              </label>
+              <select
+                name="zone"
+                value={form.zone}
+                onChange={handleChange}
+                className="w-full px-4 py-4 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E9961A] focus:border-[#F4C430] bg-white dark:bg-gray-800 transition-all duration-300"
+              >
+                {SENEGAL_LOCATIONS.map((loc) => (
+                  <option key={loc.name} value={loc.name}>{loc.name}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )
 
-            <HoverCard>
-              <HoverCardTrigger asChild>
-                <textarea name="description" value={form.description} onChange={handleChange} placeholder="Description du produit" className="w-full px-4 py-4 border border-[#F4C430]/30 dark:border-gray-600 rounded-xl h-32 resize-none focus:outline-none focus:ring-2 focus:ring-[#E9961A]" required />
-              </HoverCardTrigger>
-              <HoverCardContent>Décrivez les caractéristiques du produit, état, taille, couleurs…</HoverCardContent>
-            </HoverCard>
+      case 2:
+        return (
+          <div className="space-y-6 animate-in fade-in-50 slide-in-from-right-4 duration-500">
+            <div className="text-center space-y-3 mb-8">
+              <div className="text-6xl mb-4">✏️</div>
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Détails du produit</h2>
+              <p className="text-gray-600 dark:text-gray-400">Plus de détails = plus de confiance des acheteurs</p>
+            </div>
+
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                  ✨ Titre du produit
+                </label>
+                <input
+                  type="text"
+                  name="title"
+                  placeholder="Ex: Robe Wax taille M, comme neuve"
+                  value={form.title}
+                  onChange={handleChange}
+                  className="w-full px-4 py-4 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E9961A] focus:border-[#F4C430] bg-white dark:bg-gray-800 transition-all duration-300 text-lg"
+                  required
+                />
+                <div className="text-right text-sm text-gray-500 mt-1">
+                  {form.title.length}/60 caractères
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                  📝 Description détaillée
+                </label>
+                <textarea
+                  name="description"
+                  value={form.description}
+                  onChange={handleChange}
+                  placeholder="Décrivez votre produit : état, taille, couleur, matière, occasion d'achat..."
+                  className="w-full px-4 py-4 border-2 border-gray-200 dark:border-gray-700 rounded-xl h-32 resize-none focus:outline-none focus:ring-2 focus:ring-[#E9961A] focus:border-[#F4C430] bg-white dark:bg-gray-800 transition-all duration-300"
+                  required
+                />
+                <div className="text-right text-sm text-gray-500 mt-1">
+                  {form.description.length}/500 caractères
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-4 rounded-xl">
+              <h4 className="font-medium text-blue-800 dark:text-blue-200 mb-2">💡 Conseils pour une meilleure description :</h4>
+              <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
+                <li>• Mentionnez l'état du produit (neuf, très bon état, etc.)</li>
+                <li>• Précisez la taille, couleur, marque si applicable</li>
+                <li>• Indiquez la raison de la vente</li>
+                <li>• Soyez honnête sur les défauts éventuels</li>
+              </ul>
+            </div>
+          </div>
+        )
+
+      case 3:
+        return (
+          <div className="space-y-6 animate-in fade-in-50 slide-in-from-right-4 duration-500">
+            <div className="text-center space-y-3 mb-8">
+              <div className="text-6xl mb-4">💰</div>
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Prix et contact</h2>
+              <p className="text-gray-600 dark:text-gray-400">Dernière étape avant la publication !</p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                  💵 Prix en FCFA
+                </label>
+                <input
+                  type="number"
+                  name="price"
+                  placeholder="Ex: 25000"
+                  value={form.price}
+                  onChange={handleChange}
+                  className="w-full px-4 py-4 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E9961A] focus:border-[#F4C430] bg-white dark:bg-gray-800 transition-all duration-300 text-lg"
+                  required
+                  min={0}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                  📱 Numéro WhatsApp
+                </label>
+                <div className="flex border-2 border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-[#E9961A] focus-within:border-[#F4C430] transition-all duration-300">
+                  <div className="px-4 py-4 bg-gradient-to-r from-[#F4C430]/20 to-[#E9961A]/20 text-gray-700 dark:text-gray-300 font-medium">
+                    +221
+                  </div>
+                  <input
+                    type="tel"
+                    name="whatsappNumber"
+                    placeholder="771234567"
+                    value={form.whatsappNumber}
+                    onChange={handleWhatsappChange}
+                    className="flex-1 px-4 py-4 focus:outline-none bg-white dark:bg-gray-800 text-lg"
+                    maxLength={9}
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 p-4 rounded-xl">
+              <h4 className="font-medium text-green-800 dark:text-green-200 mb-2">🎯 Conseils de prix :</h4>
+              <ul className="text-sm text-green-700 dark:text-green-300 space-y-1">
+                <li>• Vérifiez les prix similaires sur le marché</li>
+                <li>• Un prix juste attire plus d'acheteurs</li>
+                <li>• Vous pourrez toujours négocier</li>
+              </ul>
+            </div>
+          </div>
+        )
+
+      default:
+        return null
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-[#FAF9F6] via-white to-[#F4C430]/5 dark:bg-gradient-to-br dark:from-[#1a1a1a] dark:via-[#222] dark:to-[#2a2a2a] py-4 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-4xl mx-auto">
+        {/* Header avec retour */}
+        <div className="mb-8">
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={() => router.back()}
+            className="mb-6 border-[#E9961A] text-[#E9961A] font-semibold hover:bg-[#E9961A]/10 hover:dark:bg-[#E9961A]/20 transition-all duration-200 px-6 py-3"
+          >
+            ← Retour
+          </Button>
+
+          <div className="text-center mb-8">
+            <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-[#F4C430] via-[#E9961A] to-[#F4C430] bg-clip-text text-transparent mb-4">
+              ✨ Publier votre produit
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400 text-lg">
+              Quelques étapes simples pour mettre votre produit en ligne
+            </p>
           </div>
 
-          {/* Prix & WhatsApp */}
-          <div className="bg-white/80 dark:bg-[#2a2a2a]/80 backdrop-blur-xl rounded-2xl shadow-lg border border-[#F4C430]/20 dark:border-gray-600 p-6 sm:p-8 grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <input type="number" name="price" placeholder="Prix en FCFA" value={form.price} onChange={handleChange} className="w-full px-4 py-4 border border-[#F4C430]/30 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E9961A]" required min={0} />
-            <div className="flex border border-[#F4C430]/30 dark:border-gray-600 rounded-xl">
-              <div className="px-4 py-4 bg-gradient-to-r from-[#F4C430]/20 to-[#E9961A]/20 rounded-l-xl">+221</div>
-              <input type="tel" name="whatsappNumber" placeholder="771234567" value={form.whatsappNumber} onChange={handleWhatsappChange} className="flex-1 px-4 py-4 rounded-r-xl focus:outline-none" maxLength={9} required />
+          {/* Progress bar */}
+          <div className="mb-8">
+            <div className="flex justify-between items-center mb-4">
+              {steps.map((step, index) => (
+                <div key={index} className="flex flex-col items-center flex-1">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${index <= currentStep
+                      ? 'bg-gradient-to-r from-[#F4C430] to-[#E9961A] text-white shadow-lg'
+                      : 'bg-gray-200 dark:bg-gray-700 text-gray-500'
+                    }`}>
+                    {index < currentStep ? '✓' : index + 1}
+                  </div>
+                  <div className="text-xs mt-2 text-center max-w-20">
+                    <div className={`font-medium ${index <= currentStep ? 'text-[#E9961A]' : 'text-gray-500'}`}>
+                      {step.title}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+              <div
+                className="bg-gradient-to-r from-[#F4C430] to-[#E9961A] h-2 rounded-full transition-all duration-500 ease-out"
+                style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
+              ></div>
+            </div>
+          </div>
+        </div>
+
+        {/* Messages d'erreur et succès */}
+        {error && (
+          <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-4 mb-6 rounded-r-xl animate-in slide-in-from-left-4 duration-300">
+            <div className="flex items-center">
+              <div className="text-red-500 mr-3">⚠️</div>
+              <p className="text-red-700 dark:text-red-400 font-medium">{error}</p>
+            </div>
+          </div>
+        )}
+
+        {success && (
+          <div className="bg-green-50 dark:bg-green-900/20 border-l-4 border-green-500 p-4 mb-6 rounded-r-xl animate-in slide-in-from-left-4 duration-300">
+            <div className="flex items-center">
+              <div className="text-green-500 mr-3">🎉</div>
+              <p className="text-green-700 dark:text-green-400 font-medium">
+                Produit publié avec succès ! Redirection en cours...
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Step content */}
+        <div className="bg-white/80 dark:bg-[#2a2a2a]/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-[#F4C430]/20 dark:border-gray-600 p-8 sm:p-10 mb-8">
+          {getStepContent()}
+        </div>
+
+        {/* Navigation buttons */}
+        <div className="flex justify-between items-center sticky bottom-4 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl rounded-2xl p-4 shadow-xl border border-[#F4C430]/20">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handlePrevious}
+            disabled={currentStep === 0}
+            className="px-6 py-3 border-[#E9961A] text-[#E9961A] hover:bg-[#E9961A]/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+          >
+            ← Précédent
+          </Button>
+
+          <div className="text-center flex-1 mx-4">
+            <div className="text-sm text-gray-500 dark:text-gray-400">
+              Étape {currentStep + 1} sur {steps.length}
+            </div>
+            <div className="font-medium text-[#E9961A]">
+              {steps[currentStep].subtitle}
             </div>
           </div>
 
-          {/* Bouton de soumission sticky */}
-          <div className="sticky bottom-0 bg-gradient-to-t from-[#FAF9F6] via-[#FAF9F6] to-transparent dark:from-[#1a1a1a] dark:via-[#1a1a1a] dark:to-transparent pb-4 pt-6 sm:static sm:bg-transparent sm:pb-0 sm:pt-0">
-            <button type="submit" disabled={loading || images.length === 0} className="w-full bg-gradient-to-r from-[#F4C430] to-[#E9961A] hover:from-[#E9961A] hover:to-[#F4C430] text-[#1A1A1A] font-semibold py-4 px-6 text-lg rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-xl">
-              {loading ? 'Ajout en cours…' : 'Publier mon produit'}
-            </button>
-          </div>
-        </form>
+          {currentStep < steps.length - 1 ? (
+            <Button
+              type="button"
+              onClick={handleNext}
+              disabled={!canGoNext()}
+              className="px-6 py-3 bg-gradient-to-r from-[#F4C430] to-[#E9961A] hover:from-[#E9961A] hover:to-[#F4C430] text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg"
+            >
+              Suivant →
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              onClick={handleSubmit}
+              disabled={loading || !canGoNext()}
+              className="px-8 py-3 bg-gradient-to-r from-[#F4C430] to-[#E9961A] hover:from-[#E9961A] hover:to-[#F4C430] text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-xl text-lg"
+            >
+              {loading ? (
+                <div className="flex items-center">
+                  <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full mr-2"></div>
+                  Publication...
+                </div>
+              ) : (
+                <div className="flex items-center">
+                  🚀 Publier mon produit
+                </div>
+              )}
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   )
