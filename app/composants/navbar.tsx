@@ -267,30 +267,38 @@ export default function Navbar({ products }: { products: Product[] }) {
                     </div>
 
                     {/* Categories */}
-                    <div className="flex flex-col p-4 gap-2 overflow-y-auto">
-                      <span className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 px-2">Catégories</span>
-                      <button
-                        onClick={resetCategory}
-                        className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${!category
-                          ? 'text-yellow-600 bg-yellow-50 dark:text-yellow-400 dark:bg-yellow-900/30'
-                          : 'text-gray-700 dark:text-gray-300 hover:text-yellow-600 hover:bg-gray-50 dark:hover:bg-gray-800/50'
-                          }`}
-                      >
-                        🏷️ Tout
-                      </button>
-                      {categories.map((cat) => (
+                    <div className="flex flex-col p-2 gap-2">
+                      <span className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 px-2">
+                        Catégories
+                      </span>
+
+                      {/* Scroll horizontal sur mobile */}
+                      <div className="flex gap-2 overflow-x-auto pb-2">
                         <button
-                          key={cat.label}
-                          onClick={() => handleCategory(cat.label)}
-                          className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${category === cat.label
-                            ? 'text-yellow-600 bg-yellow-50 dark:text-yellow-400 dark:bg-yellow-900/30'
+                          onClick={resetCategory}
+                          className={`flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${!category
+                            ? 'text-yellow-600 bg-yellow-50 dark:text-yellow-400 dark:bg-yellow-900/30 shadow-md'
                             : 'text-gray-700 dark:text-gray-300 hover:text-yellow-600 hover:bg-gray-50 dark:hover:bg-gray-800/50'
                             }`}
                         >
-                          {cat.emoji} {cat.label.replace('_', ' ')}
+                          🏷️ Tout
                         </button>
-                      ))}
+
+                        {categories.map((cat) => (
+                          <button
+                            key={cat.label}
+                            onClick={() => handleCategory(cat.label)}
+                            className={`flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${category === cat.label
+                              ? 'text-yellow-600 bg-yellow-50 dark:text-yellow-400 dark:bg-yellow-900/30 shadow-md'
+                              : 'text-gray-700 dark:text-gray-300 hover:text-yellow-600 hover:bg-gray-50 dark:hover:bg-gray-800/50'
+                              }`}
+                          >
+                            {cat.emoji} {cat.label.replace('_', ' ')}
+                          </button>
+                        ))}
+                      </div>
                     </div>
+
                   </div>
                 </div>
               )}
