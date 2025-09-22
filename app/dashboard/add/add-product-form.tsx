@@ -275,22 +275,6 @@ export default function AddProductForm({ userId }: Props) {
                   </button>
                 ))}
               </div>
-
-              <div className="mt-8">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                  📍 Localisation
-                </label>
-                <select
-                  name="zone"
-                  value={form.zone}
-                  onChange={handleChange}
-                  className="w-full px-4 py-4 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E9961A] focus:border-[#F4C430] bg-white dark:bg-gray-800 transition-all duration-300"
-                >
-                  {SENEGAL_LOCATIONS.map((loc) => (
-                    <option key={loc.name} value={loc.name}>{loc.name}</option>
-                  ))}
-                </select>
-              </div>
             </div >
 
           </div>
@@ -339,6 +323,21 @@ export default function AddProductForm({ userId }: Props) {
                 <div className="text-right text-sm text-gray-500 mt-1">
                   {form.description.length}/500 caractères
                 </div>
+              </div>
+              <div className="mt-8">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                  📍 Localisation
+                </label>
+                <select
+                  name="zone"
+                  value={form.zone}
+                  onChange={handleChange}
+                  className="w-full px-4 py-4 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E9961A] focus:border-[#F4C430] bg-white dark:bg-gray-800 transition-all duration-300"
+                >
+                  {SENEGAL_LOCATIONS.map((loc) => (
+                    <option key={loc.name} value={loc.name}>{loc.name}</option>
+                  ))}
+                </select>
               </div>
             </div>
 
