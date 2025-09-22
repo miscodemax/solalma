@@ -247,39 +247,53 @@ export default function AddProductForm({ userId }: Props) {
 
       case 1:
         return (
-          <div className="mt-8">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 lg:flex items-center gap-2">
-              <span className="text-xl">📍</span> Localisation
-            </label>
-            <div className="relative">
-              <select
-                name="zone"
-                value={form.zone}
-                onChange={handleChange}
-                className="w-full px-5 py-4 border-2 border-gray-200 dark:border-gray-700 rounded-2xl bg-gradient-to-r from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20 text-gray-800 dark:text-gray-200 font-medium appearance-none focus:outline-none focus:ring-2 focus:ring-[#E9961A] focus:border-[#F4C430] transition-all duration-300 hover:scale-105 cursor-pointer"
-              >
-                {SENEGAL_LOCATIONS.map((loc) => (
-                  <option key={loc.name} value={loc.name} className="text-gray-800 dark:text-gray-200">
-                    {loc.name}
-                  </option>
+          <div className="space-y-6 animate-in fade-in-50 slide-in-from-right-4 duration-500">
+            < div className="text-center space-y-3 mb-8" >
+              <div className="text-6xl mb-4">🏷️</div>
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Choisissez votre catégorie</h2>
+              <p className="text-gray-600 dark:text-gray-400">Aidez les acheteurs à vous trouver facilement</p>
+
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {categories.map((cat) => (
+                  <button
+                    key={cat.value}
+                    type="button"
+                    onClick={() => setForm((prev) => ({ ...prev, category: cat.value }))}
+                    className={`relative p-6 rounded-2xl border-2 transition-all duration-300 transform hover:scale-105 ${form.category === cat.value
+                      ? 'border-[#F4C430] bg-gradient-to-br ' + cat.color + ' text-white shadow-xl'
+                      : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-[#F4C430]/50'
+                      }`}
+                  >
+                    <div className="text-3xl mb-3">{cat.icon}</div>
+                    <h3 className="font-semibold text-lg">{cat.label}</h3>
+                    {form.category === cat.value && (
+                      <div className="absolute -top-2 -right-2 bg-white text-[#F4C430] rounded-full p-1">
+                        ✓
+                      </div>
+                    )}
+                  </button>
                 ))}
-              </select>
-              {/* Chevron personnalisé */}
-              <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-gray-500 dark:text-gray-400">
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                </svg>
               </div>
-            </div>
+
+              <div className="mt-8">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                  📍 Localisation
+                </label>
+                <select
+                  name="zone"
+                  value={form.zone}
+                  onChange={handleChange}
+                  className="w-full px-4 py-4 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E9961A] focus:border-[#F4C430] bg-white dark:bg-gray-800 transition-all duration-300"
+                >
+                  {SENEGAL_LOCATIONS.map((loc) => (
+                    <option key={loc.name} value={loc.name}>{loc.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div >
+
           </div>
-
-
         )
 
       case 2:
