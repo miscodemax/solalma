@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import {
@@ -15,7 +15,6 @@ import { ThemeToggle } from './theme-toggle'
 import TextLogo from './textLogo'
 import { createClient } from '@/lib/supabase'
 import Image from 'next/image'
-import Search from './search'
 
 const categories = [
   { label: 'vetement', emoji: '👗', color: 'from-pink-400 to-rose-600' },
@@ -34,15 +33,7 @@ const navLinks = [
   { href: '/favoris', icon: Heart, label: 'Favoris', color: 'text-red-600' },
 ]
 
-type Product = {
-  id: number
-  title: string
-  description: string
-  price: number
-  image_url: string | null
-}
-
-export default function Navbar({ products }: { products: Product[] }) {
+export default function Navbar() {
   const [open, setOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [user, setUser] = useState<any>(null)
@@ -114,14 +105,24 @@ export default function Navbar({ products }: { products: Product[] }) {
     setTimeout(() => setActiveCategory(null), 300)
   }
 
-  const toggleSearch = () => {
-    setSearchOpen(!searchOpen)
-    setOpen(false)
-  }
+  // --- MODERN SIMPLE SEARCH (frontend only, no auto-complete) ---
+  const [searchValue, setSearchValue] = useState('')
+  const searchInputRef = useRef<HTMLInputElement>(null)
 
-  const closeMenus = () => {
-    setOpen(false)
-    setSearchOpen(false)
+  // Focus search on open
+  useEffect(() => {
+    if (searchOpen && searchInputRef.current) {
+      searchInputRef.current.focus()
+    }
+  }, [searchOpen])
+
+  const onSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (searchValue.trim() !== '') {
+      router.push(`/?search=${encodeURIComponent(searchValue.trim())}`)
+      setSearchOpen(false)
+      setSearchValue('')
+    }
   }
 
   return (
@@ -132,14 +133,12 @@ export default function Navbar({ products }: { products: Product[] }) {
         : 'bg-white/90 dark:bg-[#0A1A2F]/90 backdrop-blur-lg'
         }`}>
         <div className="max-w-7xl mx-auto px-2 sm:px-4">
-          {/* Header principal */}
           <div className="flex items-center justify-between h-16 lg:h-18">
-
             {/* Logo avec animation */}
             <Link
               href="/"
               className="flex items-center gap-3 group transition-all duration-200 hover:scale-105"
-              onClick={closeMenus}
+              onClick={() => setOpen(false)}
             >
               <div className="relative">
                 <ShoppingBag className="w-7 h-7 text-yellow-600 dark:text-yellow-400 transition-all duration-200 group-hover:rotate-12" />
@@ -150,18 +149,40 @@ export default function Navbar({ products }: { products: Product[] }) {
               </div>
             </Link>
 
-            {/* Barre de recherche mobile visible sur toutes les pages */}
-            <div className="flex-1 flex items-center justify-center md:hidden mx-3">
-              <button
-                onClick={toggleSearch}
-                className="w-full flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100/80 dark:bg-gray-800/80 border border-gray-200/60 dark:border-gray-700/60 shadow-inner focus:outline-none focus:ring-2 focus:ring-yellow-500 transition-all duration-200"
-                aria-label="Recherche produits"
-                style={{ minHeight: 42 }}
+            {/* Recherche minimaliste mobile/desktop */}
+            <div className="flex-1 flex items-center justify-center mx-2">
+              <form
+                className="relative w-full max-w-xs"
+                onSubmit={onSearchSubmit}
+                autoComplete="off"
               >
-                <SearchIcon className="w-5 h-5 text-yellow-500" />
-                <span className="text-gray-600 dark:text-gray-300 text-sm opacity-70 flex-1 text-left">Rechercher sur la marketplace...</span>
-                <kbd className="bg-white/80 dark:bg-gray-700/80 text-yellow-600 text-xs rounded px-2 py-0.5 shadow ml-2">Recherche</kbd>
-              </button>
+                <input
+                  ref={searchInputRef}
+                  type="search"
+                  value={searchValue}
+                  onChange={e => setSearchValue(e.target.value)}
+                  placeholder="Rechercher…"
+                  className="w-full rounded-full bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 pl-9 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 transition placeholder-gray-400 dark:placeholder-gray-500"
+                  style={{
+                    transition: 'box-shadow 0.2s, border 0.2s',
+                    fontWeight: 500
+                  }}
+                  onFocus={() => setSearchOpen(true)}
+                  onBlur={() => setSearchOpen(false)}
+                />
+                <SearchIcon className="absolute left-2 top-1/2 -translate-y-1/2 text-yellow-500 w-4 h-4 pointer-events-none" />
+                {searchValue && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchValue('')}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-400 focus:outline-none"
+                    tabIndex={0}
+                    aria-label="Effacer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </form>
             </div>
 
             {/* Navigation desktop */}
@@ -181,19 +202,8 @@ export default function Navbar({ products }: { products: Product[] }) {
               ))}
             </div>
 
-            {/* Barre de recherche desktop */}
-            <div className="flex-1 max-w-md mx-6 hidden md:block">
-              <div className="relative group">
-                <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 to-orange-400/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-                <div className="relative bg-gray-50/80 dark:bg-gray-800/80 rounded-xl border border-gray-200/60 dark:border-gray-700/60 hover:border-yellow-400/60 dark:hover:border-yellow-500/60 transition-all duration-200 backdrop-blur-sm">
-                  <Search products={products} />
-                </div>
-              </div>
-            </div>
-
             {/* Actions à droite */}
             <div className="flex items-center gap-2">
-
               {/* Bouton vendre desktop */}
               <Link
                 href="/dashboard/add"
@@ -317,35 +327,11 @@ export default function Navbar({ products }: { products: Product[] }) {
       </nav>
 
       {/* Overlay pour les menus mobiles */}
-      {(open || searchOpen) && (
+      {open && (
         <div
           className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 lg:hidden transition-opacity duration-300"
-          onClick={closeMenus}
+          onClick={() => setOpen(false)}
         />
-      )}
-
-      {/* Menu recherche mobile moderne */}
-      {searchOpen && (
-        <div className="fixed inset-0 z-50 flex flex-col bg-white/95 dark:bg-[#0A1A2F]/95 backdrop-blur-lg animate-slide-down">
-          <div className="relative flex items-center px-4 pt-7 pb-2 border-b border-gray-200 dark:border-gray-700">
-            <SearchIcon className="w-6 h-6 text-yellow-500 absolute left-6 top-1/2 transform -translate-y-1/2" />
-            <div className="flex-1 flex items-center">
-              <div className="w-full flex items-center">
-                <div className="w-full rounded-full bg-gray-100 dark:bg-gray-800 border border-yellow-400/50 px-12 py-3 shadow-lg focus-within:ring-2 focus-within:ring-yellow-500 transition-all">
-                  <Search products={products} autoFocus />
-                </div>
-              </div>
-            </div>
-            <button
-              onClick={() => setSearchOpen(false)}
-              className="absolute right-5 top-1/2 -translate-y-1/2 p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
-              aria-label="Fermer la recherche"
-            >
-              <X className="w-6 h-6" />
-            </button>
-          </div>
-          <div className="flex-1 bg-gradient-to-b from-yellow-50/40 to-orange-50/40 dark:from-yellow-900/10 dark:to-orange-900/10" />
-        </div>
       )}
 
       {/* Menu mobile amélioré */}
@@ -484,48 +470,19 @@ export default function Navbar({ products }: { products: Product[] }) {
       )}
 
       {/* Spacer */}
-      <div className="h-24 lg:h-28" />
+      <div className="h-20 lg:h-28" />
 
       {/* Styles pour les animations */}
       <style jsx global>{`
         .animate-slide-in-right {
           animation: slideInRight 0.3s cubic-bezier(.77,0,.18,1);
         }
-        
-        .animate-slide-down {
-          animation: slideDown 0.25s cubic-bezier(.77,0,.18,1);
-        }
-        
         @keyframes slideInRight {
-          from {
-            transform: translateX(100%);
-            opacity: 0;
-          }
-          to {
-            transform: translateX(0);
-            opacity: 1;
-          }
+          from { transform: translateX(100%); opacity: 0; }
+          to { transform: translateX(0); opacity: 1; }
         }
-        
-        @keyframes slideDown {
-          from {
-            transform: translateY(-100%);
-            opacity: 0;
-          }
-          to {
-            transform: translateY(0);
-            opacity: 1;
-          }
-        }
-        
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-        
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
       `}</style>
     </>
   )
