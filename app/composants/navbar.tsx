@@ -33,13 +33,29 @@ const navLinks = [
   { href: '/favoris', icon: Heart, label: 'Favoris', color: 'text-red-600' },
 ]
 
+// Fake search data (à remplacer par ton fetch côté serveur/DB si tu veux des suggestions live)
+const demoProducts = [
+  { id: 1, title: "Robe d'été fleurie", category: "vetement" },
+  { id: 2, title: "Bracelet artisanal", category: "accessoire" },
+  { id: 3, title: "Crème hydratante visage", category: "soins_et_astuces" },
+  { id: 4, title: "iPhone 14 Pro", category: "electronique" },
+  { id: 5, title: "Palette maquillage rainbow", category: "maquillage" },
+  { id: 6, title: "Sneakers blanches", category: "chaussure" },
+  { id: 7, title: "Sac à main bohème", category: "vetement" },
+  // ...etc
+]
+
 export default function Navbar() {
   const [open, setOpen] = useState(false)
-  const [searchOpen, setSearchOpen] = useState(false)
   const [user, setUser] = useState<any>(null)
   const [avatar, setAvatar] = useState('')
   const [scrolled, setScrolled] = useState(false)
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
+  const [searchValue, setSearchValue] = useState('')
+  const [suggestions, setSuggestions] = useState<any[]>([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [highlighted, setHighlighted] = useState(-1)
+  const searchInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -63,27 +79,77 @@ export default function Navbar() {
   }, [])
 
   useEffect(() => {
-    const handleScroll = () => {
-      const scrollY = window.scrollY
-      setScrolled(scrollY > 10)
-    }
+    const handleScroll = () => setScrolled(window.scrollY > 10)
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
   useEffect(() => {
-    if (open || searchOpen) {
-      document.body.style.overflow = 'hidden'
-      document.body.style.touchAction = 'none'
+    if (searchValue.trim().length > 0) {
+      // Pour l'exemple, suggestions locales. Remplace par ton fetch asynchrone si besoin.
+      const filtered = demoProducts.filter(
+        (p) =>
+          p.title.toLowerCase().includes(searchValue.trim().toLowerCase())
+      )
+      setSuggestions(filtered)
+      setShowSuggestions(true)
+      setHighlighted(-1)
     } else {
-      document.body.style.overflow = 'unset'
-      document.body.style.touchAction = 'auto'
+      setSuggestions([])
+      setShowSuggestions(false)
     }
-    return () => {
-      document.body.style.overflow = 'unset'
-      document.body.style.touchAction = 'auto'
+  }, [searchValue])
+
+  useEffect(() => {
+    if (showSuggestions && searchInputRef.current) {
+      searchInputRef.current.focus()
     }
-  }, [open, searchOpen])
+  }, [showSuggestions])
+
+  // Fermeture suggestions si clic en dehors
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (
+        searchInputRef.current &&
+        !searchInputRef.current.contains(e.target as Node)
+      ) {
+        setShowSuggestions(false)
+      }
+    }
+    if (showSuggestions) document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [showSuggestions])
+
+  const onSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (searchValue.trim() !== '') {
+      router.push(`/?search=${encodeURIComponent(searchValue.trim())}`)
+      setSearchValue('')
+      setShowSuggestions(false)
+    }
+  }
+
+  const onSuggestionClick = (title: string) => {
+    setSearchValue(title)
+    router.push(`/?search=${encodeURIComponent(title)}`)
+    setShowSuggestions(false)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!showSuggestions) return
+    if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      setHighlighted(val => Math.min(val + 1, suggestions.length - 1))
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      setHighlighted(val => Math.max(val - 1, 0))
+    } else if (e.key === 'Enter' && highlighted >= 0 && suggestions[highlighted]) {
+      e.preventDefault()
+      onSuggestionClick(suggestions[highlighted].title)
+    } else if (e.key === 'Escape') {
+      setShowSuggestions(false)
+    }
+  }
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -105,26 +171,6 @@ export default function Navbar() {
     setTimeout(() => setActiveCategory(null), 300)
   }
 
-  // --- MODERN SIMPLE SEARCH (frontend only, no auto-complete) ---
-  const [searchValue, setSearchValue] = useState('')
-  const searchInputRef = useRef<HTMLInputElement>(null)
-
-  // Focus search on open
-  useEffect(() => {
-    if (searchOpen && searchInputRef.current) {
-      searchInputRef.current.focus()
-    }
-  }, [searchOpen])
-
-  const onSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (searchValue.trim() !== '') {
-      router.push(`/?search=${encodeURIComponent(searchValue.trim())}`)
-      setSearchOpen(false)
-      setSearchValue('')
-    }
-  }
-
   return (
     <>
       {/* Navigation principale */}
@@ -134,7 +180,7 @@ export default function Navbar() {
         }`}>
         <div className="max-w-7xl mx-auto px-2 sm:px-4">
           <div className="flex items-center justify-between h-16 lg:h-18">
-            {/* Logo avec animation */}
+            {/* Logo */}
             <Link
               href="/"
               className="flex items-center gap-3 group transition-all duration-200 hover:scale-105"
@@ -149,7 +195,7 @@ export default function Navbar() {
               </div>
             </Link>
 
-            {/* Recherche minimaliste mobile/desktop */}
+            {/* Recherche intelligente UX */}
             <div className="flex-1 flex items-center justify-center mx-2">
               <form
                 className="relative w-full max-w-xs"
@@ -161,14 +207,18 @@ export default function Navbar() {
                   type="search"
                   value={searchValue}
                   onChange={e => setSearchValue(e.target.value)}
-                  placeholder="Rechercher…"
+                  placeholder="Rechercher un produit…"
                   className="w-full rounded-full bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 pl-9 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 transition placeholder-gray-400 dark:placeholder-gray-500"
                   style={{
                     transition: 'box-shadow 0.2s, border 0.2s',
                     fontWeight: 500
                   }}
-                  onFocus={() => setSearchOpen(true)}
-                  onBlur={() => setSearchOpen(false)}
+                  onFocus={() => setShowSuggestions(true)}
+                  onKeyDown={handleKeyDown}
+                  aria-autocomplete="list"
+                  aria-expanded={showSuggestions}
+                  aria-controls="navbar-suggestions"
+                  aria-activedescendant={highlighted >= 0 ? `suggestion-${highlighted}` : undefined}
                 />
                 <SearchIcon className="absolute left-2 top-1/2 -translate-y-1/2 text-yellow-500 w-4 h-4 pointer-events-none" />
                 {searchValue && (
@@ -182,10 +232,34 @@ export default function Navbar() {
                     <X className="w-4 h-4" />
                   </button>
                 )}
+                {/* Suggestions dropdown */}
+                {showSuggestions && suggestions.length > 0 && (
+                  <ul
+                    id="navbar-suggestions"
+                    className="absolute left-0 right-0 mt-1 rounded-xl bg-white dark:bg-gray-900 shadow-lg border border-gray-100 dark:border-gray-800 z-30 max-h-56 overflow-auto animate-fade-in"
+                  >
+                    {suggestions.map((s, i) => (
+                      <li
+                        key={s.id}
+                        id={`suggestion-${i}`}
+                        className={`flex items-center gap-2 px-4 py-2 cursor-pointer transition-colors ${highlighted === i
+                            ? 'bg-yellow-100 dark:bg-yellow-900/40'
+                            : 'hover:bg-gray-50 dark:hover:bg-gray-800/60'
+                          }`}
+                        onMouseDown={() => onSuggestionClick(s.title)}
+                        onMouseEnter={() => setHighlighted(i)}
+                        aria-selected={highlighted === i}
+                      >
+                        <span className="text-lg">{categories.find(c => c.label === s.category)?.emoji || '🛒'}</span>
+                        <span className="truncate">{s.title}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </form>
             </div>
 
-            {/* Navigation desktop */}
+            {/* Navigation desktop & actions */}
             <div className="hidden lg:flex items-center gap-2">
               {navLinks.map(({ href, label, icon: Icon, color }) => (
                 <Link
@@ -338,7 +412,6 @@ export default function Navbar() {
       {open && (
         <div className="fixed top-0 right-0 w-80 max-w-[85vw] h-full bg-white dark:bg-[#0A1A2F] shadow-2xl z-50 lg:hidden">
           <div className="flex flex-col h-full animate-slide-in-right">
-
             {/* Header avec profil */}
             <div className="relative p-6 bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border-b border-gray-200/60 dark:border-gray-700/60">
               <div className="absolute top-4 right-4">
@@ -349,7 +422,6 @@ export default function Navbar() {
                   <X className="w-5 h-5 text-gray-600 dark:text-gray-300" />
                 </button>
               </div>
-
               {user ? (
                 <div className="flex items-center gap-4">
                   <div className="relative">
@@ -374,7 +446,6 @@ export default function Navbar() {
                 </div>
               )}
             </div>
-
             {/* Actions rapides */}
             <div className="p-4 border-b border-gray-200/60 dark:border-gray-700/60">
               <Link
@@ -390,7 +461,6 @@ export default function Navbar() {
                 </div>
               </Link>
             </div>
-
             {/* Navigation */}
             <div className="flex-1 overflow-y-auto p-4">
               <div className="space-y-2 mb-6">
@@ -417,7 +487,6 @@ export default function Navbar() {
                   </Link>
                 ))}
               </div>
-
               {/* Catégories mobiles */}
               <div className="space-y-3">
                 <span className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 px-2">
@@ -440,7 +509,6 @@ export default function Navbar() {
                 </div>
               </div>
             </div>
-
             {/* Footer du menu */}
             {user && (
               <div className="p-4 border-t border-gray-200/60 dark:border-gray-700/60 bg-gray-50/50 dark:bg-gray-800/30">
@@ -472,14 +540,21 @@ export default function Navbar() {
       {/* Spacer */}
       <div className="h-20 lg:h-28" />
 
-      {/* Styles pour les animations */}
+      {/* Animations */}
       <style jsx global>{`
         .animate-slide-in-right {
           animation: slideInRight 0.3s cubic-bezier(.77,0,.18,1);
         }
+        .animate-fade-in {
+          animation: fadein 0.16s cubic-bezier(.77,0,.18,1);
+        }
         @keyframes slideInRight {
           from { transform: translateX(100%); opacity: 0; }
           to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes fadein {
+          from { opacity: 0; transform: translateY(6px);}
+          to   { opacity: 1; transform: translateY(0);}
         }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
