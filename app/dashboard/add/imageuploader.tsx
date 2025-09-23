@@ -110,8 +110,8 @@ export default function ImageUploader({
             <label
                 htmlFor="upload-image"
                 className={`group cursor-pointer flex items-center justify-center w-full h-40 rounded-xl border-2 border-dashed transition-all duration-300 ${isDisabled
-                        ? 'border-gray-300 bg-gray-100 cursor-not-allowed'
-                        : 'border-[#DAD5CD] bg-[#F9F6F1] hover:bg-[#f0ece6] hover:border-[#D29587]'
+                    ? 'border-gray-300 bg-gray-100 cursor-not-allowed'
+                    : 'border-[#DAD5CD] bg-[#F9F6F1] hover:bg-[#f0ece6] hover:border-[#D29587]'
                     }`}
             >
                 {uploading ? (
