@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import React, { useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase'
 import { ImagePlus, Loader2, X, Star } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -13,8 +13,10 @@ interface ImageUploaderProps {
 
 interface ImageItem {
     id: string
-    url: string
+    previewUrl: string
+    url?: string
     name: string
+    size: number
     uploading?: boolean
 }
 
@@ -24,121 +26,187 @@ export default function ImageUploader({
     currentImageCount = 0,
 }: ImageUploaderProps) {
     const [images, setImages] = useState<ImageItem[]>([])
-    const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
-    const fileInputRef = useRef<HTMLInputElement>(null)
+    const fileInputRef = useRef<HTMLInputElement | null>(null)
     const supabase = createClient()
 
-    const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (!e.target.files) return
-        const files = Array.from(e.target.files)
-        const remaining = maxImages - (currentImageCount + images.length)
+    const formatSize = (bytes: number) => {
+        if (bytes === 0) return '0 B'
+        const k = 1024
+        const sizes = ['B', 'KB', 'MB']
+        const i = Math.floor(Math.log(bytes) / Math.log(k))
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i]
+    }
 
-        if (files.length > remaining) {
-            setError(`Vous pouvez encore ajouter ${remaining} image${remaining > 1 ? 's' : ''}`)
+    const handleFiles = async (files: FileList | null) => {
+        if (!files || files.length === 0) return
+        const remaining = maxImages - (currentImageCount + images.length)
+        const toUpload = Array.from(files).slice(0, remaining)
+
+        if (toUpload.length === 0) {
+            setError(`Limite atteinte (${maxImages} images max)`)
             setTimeout(() => setError(''), 3000)
             return
         }
 
-        setLoading(true)
-        const uploaded: string[] = []
+        // Create previews immediately
+        const newItems: ImageItem[] = toUpload.map((file) => ({
+            id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+            previewUrl: URL.createObjectURL(file),
+            name: file.name,
+            size: file.size,
+            uploading: true,
+        }))
 
-        for (const file of files) {
-            if (!file.type.startsWith('image/')) continue
+        setImages(prev => [...prev, ...newItems])
 
-            const id = `${Date.now()}-${file.name}`
-            const { error: uploadError } = await supabase.storage.from('product').upload(id, file)
+        const uploadedUrls: string[] = []
 
-            if (!uploadError) {
-                const { data } = supabase.storage.from('product').getPublicUrl(id)
-                uploaded.push(data.publicUrl)
-                setImages(prev => [...prev, { id, url: data.publicUrl, name: file.name }])
+        // Upload serially to simplify error handling and avoid race conditions
+        for (let i = 0; i < toUpload.length; i++) {
+            const file = toUpload[i]
+            const itemId = newItems[i].id
+
+            // Basic validation
+            if (!file.type.startsWith('image/')) {
+                setError(`${file.name} n'est pas une image`)
+                setTimeout(() => setError(''), 2500)
+                setImages(prev => prev.map(it => it.id === itemId ? { ...it, uploading: false } : it))
+                continue
+            }
+            if (file.size > 10 * 1024 * 1024) {
+                setError(`${file.name} dépasse 10MB`)
+                setTimeout(() => setError(''), 2500)
+                setImages(prev => prev.map(it => it.id === itemId ? { ...it, uploading: false } : it))
+                continue
+            }
+
+            try {
+                const ext = file.name.split('.').pop() || 'jpg'
+                const filename = `${itemId}.${ext}`
+
+                // upload
+                const { error: uploadError } = await supabase.storage
+                    .from('product')
+                    .upload(filename, file, { cacheControl: '3600', upsert: false })
+
+                if (uploadError) throw uploadError
+
+                const { data } = supabase.storage.from('product').getPublicUrl(filename)
+                const publicUrl = data.publicUrl
+
+                // replace preview with final url
+                setImages(prev => prev.map(it => it.id === itemId ? { ...it, url: publicUrl, uploading: false } : it))
+                uploadedUrls.push(publicUrl)
+            } catch (err) {
+                console.error('upload error', err)
+                setError(`Échec upload: ${file.name}`)
+                setTimeout(() => setError(''), 3000)
+                setImages(prev => prev.filter(it => it.id !== itemId))
             }
         }
 
-        if (uploaded.length > 0) onUpload([...images.map(i => i.url), ...uploaded])
-        setLoading(false)
-        e.target.value = '' // reset input
+        // notify parent with all uploaded urls (including previous ones already uploaded)
+        const existingUploaded = images.filter(i => i.url).map(i => i.url!)
+        const allUrls = [...existingUploaded, ...uploadedUrls]
+        if (allUrls.length > 0) onUpload(allUrls)
+
+        // revoke previews for items that now have public url to free memory
+        setTimeout(() => {
+            newItems.forEach(it => {
+                try { URL.revokeObjectURL(it.previewUrl) } catch { }
+            })
+        }, 1000)
+
+        // reset input
+        if (fileInputRef.current) fileInputRef.current.value = ''
     }
 
     const handleRemove = (id: string) => {
-        const updated = images.filter(img => img.id !== id)
+        const removed = images.find(i => i.id === id)
+        if (removed?.previewUrl) try { URL.revokeObjectURL(removed.previewUrl) } catch { }
+        const updated = images.filter(i => i.id !== id)
         setImages(updated)
-        onUpload(updated.map(i => i.url))
+        const urls = updated.filter(i => i.url).map(i => i.url!)
+        onUpload(urls)
     }
 
     return (
         <div className="space-y-4">
-            {/* Bouton principal */}
-            <button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={loading || images.length >= maxImages}
-                className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl border border-gray-300 bg-gray-50 hover:bg-gray-100 text-gray-700 font-medium transition disabled:opacity-50"
-            >
-                {loading ? (
-                    <>
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        Téléversement...
-                    </>
-                ) : (
-                    <>
-                        <ImagePlus className="w-5 h-5" />
-                        Ajouter une image ({images.length}/{maxImages})
-                    </>
-                )}
-            </button>
+            <div>
+                <label className="w-full cursor-pointer">
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={(e) => handleFiles(e.target.files)}
+                        className="hidden"
+                    />
 
-            <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={handleFileSelect}
-                className="hidden"
-            />
+                    <div className="w-full flex items-center justify-center gap-3 px-5 py-3 rounded-xl border border-gray-200 bg-white hover:shadow-md transition-colors">
+                        <ImagePlus className="w-5 h-5 text-yellow-600" />
+                        <div className="text-sm text-gray-700">Ajouter des photos</div>
+                        <div className="ml-2 text-xs text-gray-400">(PNG, JPG, WEBP — max 10MB)</div>
+                    </div>
+                </label>
+            </div>
 
-            {/* Galerie */}
-            <div className="flex gap-4 flex-wrap">
-                {images.map((img, i) => (
+            {/* gallery */}
+            <div className="flex gap-3 flex-wrap">
+                {images.map((img, idx) => (
                     <motion.div
                         key={img.id}
-                        initial={{ opacity: 0, scale: 0.8 }}
+                        initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.8 }}
-                        className="relative w-28 h-28 rounded-lg overflow-hidden shadow-md"
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        className="relative w-28 h-28 rounded-lg overflow-hidden shadow-sm bg-gray-50"
                     >
-                        <img src={img.url} alt={img.name} className="w-full h-full object-cover" />
+                        <img
+                            src={img.url || img.previewUrl}
+                            alt={img.name}
+                            className="w-full h-full object-cover"
+                        />
 
-                        {i === 0 && (
+                        {idx === 0 && !img.uploading && (
                             <span className="absolute top-2 left-2 bg-yellow-500 text-white text-xs px-2 py-1 rounded-md flex items-center gap-1 shadow">
                                 <Star className="w-3 h-3" />
                                 Principal
                             </span>
                         )}
 
+                        {img.uploading && (
+                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                                <Loader2 className="w-5 h-5 text-white animate-spin" />
+                            </div>
+                        )}
+
                         <button
                             onClick={() => handleRemove(img.id)}
                             className="absolute top-2 right-2 bg-black/60 text-white rounded-full p-1 hover:bg-black/80"
+                            aria-label="Supprimer l'image"
                         >
                             <X className="w-4 h-4" />
                         </button>
+
+                        <div className="absolute bottom-1 left-1 right-1 px-2 text-xs text-white/90">
+                            <div className="flex justify-between items-center">
+                                <div className="truncate">{img.name}</div>
+                                <div className="ml-2 text-[10px] text-white/80">{formatSize(img.size)}</div>
+                            </div>
+                        </div>
                     </motion.div>
                 ))}
             </div>
 
-            {/* Message d’erreur */}
             <AnimatePresence>
                 {error && (
-                    <motion.p
-                        initial={{ opacity: 0, y: -5 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -5 }}
-                        className="text-sm text-red-600"
-                    >
+                    <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} className="text-sm text-red-600">
                         {error}
-                    </motion.p>
+                    </motion.div>
                 )}
             </AnimatePresence>
+
         </div>
     )
 }
