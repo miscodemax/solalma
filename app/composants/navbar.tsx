@@ -22,13 +22,13 @@ const categories = [
   { label: 'maquillage', emoji: '💄' },
   { label: 'soins_et_astuces', emoji: '🧴' },
   { label: 'electronique', emoji: '📱' },
-  { label: 'accessoire', emoji: '📱' },
-  { label: 'chaussure', emoji: '📱' },
+  { label: 'accessoire', emoji: '💎' },
+  { label: 'chaussure', emoji: '👟' },
 ]
 
 const navLinks = [
   { href: '/', icon: HomeIcon, label: 'Accueil' },
-  { href: '/about', icon: ShoppingCart, label: 'à-propos' },
+  { href: '/about', icon: ShoppingCart, label: 'À propos' },
   { href: '/dashboard/products', icon: ShoppingBag, label: 'Mes produits' },
   { href: '/favoris', icon: Heart, label: 'Favoris' },
 ]
@@ -106,7 +106,7 @@ export default function Navbar({ products }: { products: Product[] }) {
         : 'bg-white/90 dark:bg-[#0A1A2F]/90 backdrop-blur-md'
         }`}>
 
-        <div className="max-w-7xl mx-auto px-4">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4">
 
           {/* Main row */}
           <div className="flex items-center justify-between h-14">
@@ -137,8 +137,8 @@ export default function Navbar({ products }: { products: Product[] }) {
             </div>
 
             {/* Search */}
-            <div className="flex-1 max-w-sm mx-4 lg:mx-8">
-              <div className="bg-gray-50 dark:bg-gray-800/70 rounded-xl border border-gray-200/50 dark:border-gray-700/50 hover:border-yellow-400 dark:hover:border-yellow-500 transition-colors">
+            <div className="flex-1 max-w-sm mx-2">
+              <div className="bg-gray-50 dark:bg-gray-800/70 rounded-full border border-gray-200/50 dark:border-gray-700/50 hover:border-yellow-400 dark:hover:border-yellow-500 transition-colors px-2 py-1">
                 <Search products={products} />
               </div>
             </div>
@@ -192,12 +192,11 @@ export default function Navbar({ products }: { products: Product[] }) {
               )}
 
               {/* Mobile menu button */}
-              {/* Mobile menu button */}
               <div className="lg:hidden flex items-center gap-1">
                 <ThemeToggle />
                 <button
                   onClick={() => setOpen(!open)}
-                  className={`p-2 rounded-lg transition-all ${open
+                  className={`p-2 rounded-lg shadow transition-all focus:outline-none focus:ring-2 focus:ring-yellow-400 ${open
                     ? 'bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400'
                     : 'bg-gray-50 text-gray-600 dark:bg-gray-800/70 dark:text-gray-300 hover:bg-yellow-50 hover:text-yellow-600'
                     }`}
@@ -215,103 +214,98 @@ export default function Navbar({ products }: { products: Product[] }) {
                   </div>
                 </button>
               </div>
-
-              {/* Mobile menu drawer */}
-              {open && (
-                <div ref={mobileMenuRef} className="fixed inset-0 z-50 lg:hidden">
-                  {/* overlay */}
-                  <div
-                    className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-opacity"
-                    onClick={() => setOpen(false)}
-                  />
-
-                  {/* drawer */}
-                  <div className="absolute top-0 right-0 w-80 h-full bg-white dark:bg-[#0A1A2F] shadow-2xl flex flex-col animate-slide-in-right">
-                    {/* Header */}
-                    <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-700">
-                      <TextLogo />
-                      <button
-                        onClick={() => setOpen(false)}
-                        className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                      >
-                        <X className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-                      </button>
-                    </div>
-
-                    {/* Navigation links */}
-                    <div className="flex flex-col p-4 gap-3 border-b border-gray-200 dark:border-gray-700">
-                      {navLinks.map(({ href, label, icon: Icon }) => (
-                        <Link
-                          key={href}
-                          href={href}
-                          onClick={() => setOpen(false)}
-                          className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 transform ${pathname === href
-                            ? 'text-yellow-600 bg-yellow-50 dark:text-yellow-400 dark:bg-yellow-900/30 shadow-md'
-                            : 'text-gray-700 dark:text-gray-300 hover:text-yellow-600 hover:bg-gray-50 dark:hover:bg-gray-800/50'
-                            }`}
-                        >
-                          <Icon className="w-5 h-5" />
-                          {label}
-                        </Link>
-                      ))}
-                      <Link
-                        href="/dashboard/products"
-                        onClick={() => setOpen(false)}
-                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium bg-yellow-500 hover:bg-yellow-600 text-white shadow-lg transition-all duration-300"
-                      >
-                        <ShoppingCart className="w-5 h-5" />
-                        Vendre
-                      </Link>
-                    </div>
-
-                    {/* Categories */}
-                    <div className="flex flex-col p-4 gap-3">
-                      <span className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 px-2">
-                        Catégories
-                      </span>
-
-                      <div className="flex gap-3 overflow-x-auto pb-2">
-                        <button
-                          onClick={resetCategory}
-                          className={`flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-medium transition-all duration-200 ${!category
-                            ? 'text-yellow-600 bg-yellow-50 dark:text-yellow-400 dark:bg-yellow-900/30 shadow-md'
-                            : 'text-gray-700 dark:text-gray-300 hover:text-yellow-600 hover:bg-gray-50 dark:hover:bg-gray-800/50'
-                            }`}
-                        >
-                          🏷️ Tout
-                        </button>
-
-                        {categories.map((cat) => (
-                          <button
-                            key={cat.label}
-                            onClick={() => handleCategory(cat.label)}
-                            className={`flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-medium transition-all duration-200 ${category === cat.label
-                              ? 'text-yellow-600 bg-yellow-50 dark:text-yellow-400 dark:bg-yellow-900/30 shadow-md'
-                              : 'text-gray-700 dark:text-gray-300 hover:text-yellow-600 hover:bg-gray-50 dark:hover:bg-gray-800/50'
-                              }`}
-                          >
-                            {cat.emoji} {cat.label.replace('_', ' ')}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-
             </div>
           </div>
 
-          {/* Desktop categories */}
-          {/* Categories bar */}
+          {/* Drawer mobile menu */}
+          {open && (
+            <div ref={mobileMenuRef} className="fixed inset-0 z-[999] lg:hidden">
+              {/* Overlay */}
+              <div
+                className="absolute inset-0 bg-black/40 backdrop-blur-md transition-opacity"
+                onClick={() => setOpen(false)}
+              />
+
+              {/* Drawer */}
+              <div className="absolute top-0 right-0 w-80 max-w-[95vw] h-full bg-white dark:bg-[#0A1A2F] shadow-2xl flex flex-col rounded-l-2xl animate-slide-in-right">
+                {/* Header */}
+                <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-700 rounded-t-2xl">
+                  <TextLogo />
+                  <button
+                    onClick={() => setOpen(false)}
+                    className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  >
+                    <X className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                  </button>
+                </div>
+
+                {/* Navigation links */}
+                <div className="flex flex-col gap-2 px-4 pt-3 pb-2 border-b border-gray-200 dark:border-gray-700">
+                  {navLinks.map(({ href, label, icon: Icon }) => (
+                    <Link
+                      key={href}
+                      href={href}
+                      onClick={() => setOpen(false)}
+                      className={`flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium transition-all duration-200 shadow-sm ${pathname === href
+                        ? 'text-yellow-600 bg-yellow-50 dark:text-yellow-400 dark:bg-yellow-900/30'
+                        : 'text-gray-700 dark:text-gray-300 hover:text-yellow-600 hover:bg-gray-50 dark:hover:bg-gray-800/50'
+                        }`}
+                    >
+                      <Icon className="w-5 h-5" />
+                      {label}
+                    </Link>
+                  ))}
+                  <Link
+                    href="/dashboard/add"
+                    onClick={() => setOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-base font-semibold bg-yellow-500 hover:bg-yellow-600 text-white shadow-lg transition-all duration-200"
+                  >
+                    <ShoppingCart className="w-5 h-5" />
+                    Vendre
+                  </Link>
+                </div>
+
+                {/* Categories */}
+                <div className="flex flex-col gap-2 px-4 pt-4 pb-2">
+                  <span className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 px-2 mb-1">
+                    Catégories
+                  </span>
+                  <div className="flex gap-2 overflow-x-auto pb-2 hide-scrollbar">
+                    <button
+                      onClick={resetCategory}
+                      className={`flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${!category
+                        ? 'text-yellow-600 bg-yellow-50 dark:text-yellow-400 dark:bg-yellow-900/30 shadow-md'
+                        : 'text-gray-700 dark:text-gray-300 hover:text-yellow-600 hover:bg-gray-50 dark:hover:bg-gray-800/50'
+                        }`}
+                    >
+                      🏷️ Tout
+                    </button>
+                    {categories.map((cat) => (
+                      <button
+                        key={cat.label}
+                        onClick={() => handleCategory(cat.label)}
+                        className={`flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${category === cat.label
+                          ? 'text-yellow-600 bg-yellow-50 dark:text-yellow-400 dark:bg-yellow-900/30 shadow-md'
+                          : 'text-gray-700 dark:text-gray-300 hover:text-yellow-600 hover:bg-gray-50 dark:hover:bg-gray-800/50'
+                          }`}
+                      >
+                        {cat.emoji} {cat.label.replace('_', ' ')}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Categories bar desktop/mobile */}
           <div
             className="flex items-center gap-1 py-2 border-t border-gray-100 dark:border-gray-800/50 
              overflow-x-auto scrollbar-hide lg:overflow-visible"
           >
             <button
               onClick={resetCategory}
-              className={`flex flex-shrink-0 items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${!category
+              className={`flex flex-shrink-0 items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-medium transition-colors ${!category
                 ? 'text-yellow-600 bg-yellow-50 dark:text-yellow-400 dark:bg-yellow-900/30'
                 : 'text-gray-600 dark:text-gray-300 hover:text-yellow-600 hover:bg-gray-50 dark:hover:bg-gray-800/50'
                 }`}
@@ -322,7 +316,7 @@ export default function Navbar({ products }: { products: Product[] }) {
               <button
                 key={cat.label}
                 onClick={() => handleCategory(cat.label)}
-                className={`flex flex-shrink-0 items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${category === cat.label
+                className={`flex flex-shrink-0 items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-medium transition-colors ${category === cat.label
                   ? 'text-yellow-600 bg-yellow-50 dark:text-yellow-400 dark:bg-yellow-900/30'
                   : 'text-gray-600 dark:text-gray-300 hover:text-yellow-600 hover:bg-gray-50 dark:hover:bg-gray-800/50'
                   }`}
@@ -331,12 +325,29 @@ export default function Navbar({ products }: { products: Product[] }) {
               </button>
             ))}
           </div>
-
         </div>
       </nav>
 
       {/* Spacer */}
       <div className="h-14 lg:h-20" />
+
+      {/* Mobile drawer animation & scrollbar */}
+      <style jsx global>{`
+        .animate-slide-in-right {
+          animation: slideInRight 0.26s cubic-bezier(.77,0,.18,1);
+        }
+        @keyframes slideInRight {
+          from { transform: translateX(100%); opacity: 0; }
+          to { transform: translateX(0); opacity: 1; }
+        }
+        .hide-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
     </>
   )
 }
