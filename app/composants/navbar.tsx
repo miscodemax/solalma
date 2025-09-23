@@ -32,7 +32,6 @@ const navLinks = [
   { href: '/about', icon: ShoppingCart, label: 'À propos', badge: null },
   { href: '/dashboard/products', icon: ShoppingBag, label: 'Mes produits', badge: null },
   { href: '/favoris', icon: Heart, label: 'Favoris', badge: null },
-  { href: '/messages', icon: MessageCircle, label: 'Messages', badge: '3' },
 ]
 
 type Product = {
