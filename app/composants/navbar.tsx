@@ -9,12 +9,13 @@ import {
 } from '@/components/ui/dropdown-menu'
 import {
   HomeIcon, ShoppingCart, User, Menu, X, LogOut, Heart, ShoppingBag,
-  Search as SearchIcon, Settings
+  Search as SearchIcon, Bell, Settings
 } from 'lucide-react'
 import { ThemeToggle } from './theme-toggle'
 import TextLogo from './textLogo'
 import { createClient } from '@/lib/supabase'
 import Image from 'next/image'
+import Search from './search'
 
 const categories = [
   { label: 'vetement', emoji: '👗', color: 'from-pink-400 to-rose-600' },
@@ -33,34 +34,28 @@ const navLinks = [
   { href: '/favoris', icon: Heart, label: 'Favoris', color: 'text-red-600' },
 ]
 
-// Fake search data (à remplacer par ton fetch côté serveur/DB si tu veux des suggestions live)
-const demoProducts = [
-  { id: 1, title: "Robe d'été fleurie", category: "vetement" },
-  { id: 2, title: "Bracelet artisanal", category: "accessoire" },
-  { id: 3, title: "Crème hydratante visage", category: "soins_et_astuces" },
-  { id: 4, title: "iPhone 14 Pro", category: "electronique" },
-  { id: 5, title: "Palette maquillage rainbow", category: "maquillage" },
-  { id: 6, title: "Sneakers blanches", category: "chaussure" },
-  { id: 7, title: "Sac à main bohème", category: "vetement" },
-  // ...etc
-]
+type Product = {
+  id: number
+  title: string
+  description: string
+  price: number
+  image_url: string | null
+}
 
-export default function Navbar() {
+export default function Navbar({ products }: { products: Product[] }) {
   const [open, setOpen] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
   const [user, setUser] = useState<any>(null)
   const [avatar, setAvatar] = useState('')
   const [scrolled, setScrolled] = useState(false)
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
-  const [searchValue, setSearchValue] = useState('')
-  const [suggestions, setSuggestions] = useState<any[]>([])
-  const [showSuggestions, setShowSuggestions] = useState(false)
-  const [highlighted, setHighlighted] = useState(-1)
-  const searchInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const category = searchParams.get('category')
   const supabase = createClient()
+  const mobileMenuRef = useRef<HTMLDivElement>(null)
+  const searchRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -79,77 +74,27 @@ export default function Navbar() {
   }, [])
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 10)
+    const handleScroll = () => {
+      const scrollY = window.scrollY
+      setScrolled(scrollY > 10)
+    }
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
   useEffect(() => {
-    if (searchValue.trim().length > 0) {
-      // Pour l'exemple, suggestions locales. Remplace par ton fetch asynchrone si besoin.
-      const filtered = demoProducts.filter(
-        (p) =>
-          p.title.toLowerCase().includes(searchValue.trim().toLowerCase())
-      )
-      setSuggestions(filtered)
-      setShowSuggestions(true)
-      setHighlighted(-1)
+    if (open || searchOpen) {
+      document.body.style.overflow = 'hidden'
+      document.body.style.touchAction = 'none'
     } else {
-      setSuggestions([])
-      setShowSuggestions(false)
+      document.body.style.overflow = 'unset'
+      document.body.style.touchAction = 'auto'
     }
-  }, [searchValue])
-
-  useEffect(() => {
-    if (showSuggestions && searchInputRef.current) {
-      searchInputRef.current.focus()
+    return () => {
+      document.body.style.overflow = 'unset'
+      document.body.style.touchAction = 'auto'
     }
-  }, [showSuggestions])
-
-  // Fermeture suggestions si clic en dehors
-  useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      if (
-        searchInputRef.current &&
-        !searchInputRef.current.contains(e.target as Node)
-      ) {
-        setShowSuggestions(false)
-      }
-    }
-    if (showSuggestions) document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
-  }, [showSuggestions])
-
-  const onSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (searchValue.trim() !== '') {
-      router.push(`/?search=${encodeURIComponent(searchValue.trim())}`)
-      setSearchValue('')
-      setShowSuggestions(false)
-    }
-  }
-
-  const onSuggestionClick = (title: string) => {
-    setSearchValue(title)
-    router.push(`/?search=${encodeURIComponent(title)}`)
-    setShowSuggestions(false)
-  }
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (!showSuggestions) return
-    if (e.key === 'ArrowDown') {
-      e.preventDefault()
-      setHighlighted(val => Math.min(val + 1, suggestions.length - 1))
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault()
-      setHighlighted(val => Math.max(val - 1, 0))
-    } else if (e.key === 'Enter' && highlighted >= 0 && suggestions[highlighted]) {
-      e.preventDefault()
-      onSuggestionClick(suggestions[highlighted].title)
-    } else if (e.key === 'Escape') {
-      setShowSuggestions(false)
-    }
-  }
+  }, [open, searchOpen])
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -161,6 +106,7 @@ export default function Navbar() {
     setActiveCategory(cat)
     router.push(`/?category=${encodeURIComponent(cat)}`)
     setOpen(false)
+    // Animation de feedback
     setTimeout(() => setActiveCategory(null), 300)
   }
 
@@ -171,20 +117,32 @@ export default function Navbar() {
     setTimeout(() => setActiveCategory(null), 300)
   }
 
+  const toggleSearch = () => {
+    setSearchOpen(!searchOpen)
+    setOpen(false)
+  }
+
+  const closeMenus = () => {
+    setOpen(false)
+    setSearchOpen(false)
+  }
+
   return (
     <>
       {/* Navigation principale */}
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled
-        ? 'bg-white/95 dark:bg-[#0A1A2F]/95 backdrop-blur-xl shadow-lg border-b border-gray-200/30 dark:border-gray-700/30'
-        : 'bg-white/90 dark:bg-[#0A1A2F]/90 backdrop-blur-lg'
+          ? 'bg-white/95 dark:bg-[#0A1A2F]/95 backdrop-blur-xl shadow-lg border-b border-gray-200/30 dark:border-gray-700/30'
+          : 'bg-white/90 dark:bg-[#0A1A2F]/90 backdrop-blur-lg'
         }`}>
-        <div className="max-w-7xl mx-auto px-2 sm:px-4">
+        <div className="max-w-7xl mx-auto px-4">
+          {/* Header principal */}
           <div className="flex items-center justify-between h-16 lg:h-18">
-            {/* Logo */}
+
+            {/* Logo avec animation */}
             <Link
               href="/"
               className="flex items-center gap-3 group transition-all duration-200 hover:scale-105"
-              onClick={() => setOpen(false)}
+              onClick={closeMenus}
             >
               <div className="relative">
                 <ShoppingBag className="w-7 h-7 text-yellow-600 dark:text-yellow-400 transition-all duration-200 group-hover:rotate-12" />
@@ -195,79 +153,15 @@ export default function Navbar() {
               </div>
             </Link>
 
-            {/* Recherche intelligente UX */}
-            <div className="flex-1 flex items-center justify-center mx-2">
-              <form
-                className="relative w-full max-w-xs"
-                onSubmit={onSearchSubmit}
-                autoComplete="off"
-              >
-                <input
-                  ref={searchInputRef}
-                  type="search"
-                  value={searchValue}
-                  onChange={e => setSearchValue(e.target.value)}
-                  placeholder="Rechercher un produit…"
-                  className="w-full rounded-full bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 pl-9 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 transition placeholder-gray-400 dark:placeholder-gray-500"
-                  style={{
-                    transition: 'box-shadow 0.2s, border 0.2s',
-                    fontWeight: 500
-                  }}
-                  onFocus={() => setShowSuggestions(true)}
-                  onKeyDown={handleKeyDown}
-                  aria-autocomplete="list"
-                  aria-expanded={showSuggestions}
-                  aria-controls="navbar-suggestions"
-                  aria-activedescendant={highlighted >= 0 ? `suggestion-${highlighted}` : undefined}
-                />
-                <SearchIcon className="absolute left-2 top-1/2 -translate-y-1/2 text-yellow-500 w-4 h-4 pointer-events-none" />
-                {searchValue && (
-                  <button
-                    type="button"
-                    onClick={() => setSearchValue('')}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-400 focus:outline-none"
-                    tabIndex={0}
-                    aria-label="Effacer"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
-                {/* Suggestions dropdown */}
-                {showSuggestions && suggestions.length > 0 && (
-                  <ul
-                    id="navbar-suggestions"
-                    className="absolute left-0 right-0 mt-1 rounded-xl bg-white dark:bg-gray-900 shadow-lg border border-gray-100 dark:border-gray-800 z-30 max-h-56 overflow-auto animate-fade-in"
-                  >
-                    {suggestions.map((s, i) => (
-                      <li
-                        key={s.id}
-                        id={`suggestion-${i}`}
-                        className={`flex items-center gap-2 px-4 py-2 cursor-pointer transition-colors ${highlighted === i
-                            ? 'bg-yellow-100 dark:bg-yellow-900/40'
-                            : 'hover:bg-gray-50 dark:hover:bg-gray-800/60'
-                          }`}
-                        onMouseDown={() => onSuggestionClick(s.title)}
-                        onMouseEnter={() => setHighlighted(i)}
-                        aria-selected={highlighted === i}
-                      >
-                        <span className="text-lg">{categories.find(c => c.label === s.category)?.emoji || '🛒'}</span>
-                        <span className="truncate">{s.title}</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </form>
-            </div>
-
-            {/* Navigation desktop & actions */}
+            {/* Navigation desktop */}
             <div className="hidden lg:flex items-center gap-2">
               {navLinks.map(({ href, label, icon: Icon, color }) => (
                 <Link
                   key={href}
                   href={href}
                   className={`group flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 hover:scale-105 ${pathname === href
-                    ? 'text-yellow-600 bg-gradient-to-r from-yellow-50 to-orange-50 dark:text-yellow-400 dark:bg-gradient-to-r dark:from-yellow-900/30 dark:to-orange-900/30 shadow-md'
-                    : 'text-gray-600 dark:text-gray-300 hover:text-yellow-600 hover:bg-gray-50 dark:hover:bg-gray-800/60'
+                      ? 'text-yellow-600 bg-gradient-to-r from-yellow-50 to-orange-50 dark:text-yellow-400 dark:bg-gradient-to-r dark:from-yellow-900/30 dark:to-orange-900/30 shadow-md'
+                      : 'text-gray-600 dark:text-gray-300 hover:text-yellow-600 hover:bg-gray-50 dark:hover:bg-gray-800/60'
                     }`}
                 >
                   <Icon className={`w-4 h-4 transition-colors ${pathname === href ? color : ''}`} />
@@ -276,8 +170,28 @@ export default function Navbar() {
               ))}
             </div>
 
+            {/* Barre de recherche desktop */}
+            <div className="flex-1 max-w-md mx-6 hidden md:block">
+              <div className="relative group">
+                <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 to-orange-400/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                <div className="relative bg-gray-50/80 dark:bg-gray-800/80 rounded-xl border border-gray-200/60 dark:border-gray-700/60 hover:border-yellow-400/60 dark:hover:border-yellow-500/60 transition-all duration-200 backdrop-blur-sm">
+                  <Search products={products} />
+                </div>
+              </div>
+            </div>
+
             {/* Actions à droite */}
             <div className="flex items-center gap-2">
+
+              {/* Bouton recherche mobile */}
+              <button
+                onClick={toggleSearch}
+                className="md:hidden p-2.5 rounded-xl bg-gray-50/80 dark:bg-gray-800/80 hover:bg-yellow-50 dark:hover:bg-yellow-900/30 transition-all duration-200 hover:scale-105"
+                aria-label="Rechercher"
+              >
+                <SearchIcon className="w-5 h-5 text-gray-600 dark:text-gray-300 hover:text-yellow-600" />
+              </button>
+
               {/* Bouton vendre desktop */}
               <Link
                 href="/dashboard/add"
@@ -342,8 +256,8 @@ export default function Navbar() {
                 <button
                   onClick={() => setOpen(!open)}
                   className={`relative p-2.5 rounded-xl transition-all duration-300 overflow-hidden group ${open
-                    ? 'bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400 shadow-lg scale-95'
-                    : 'bg-gray-50/80 text-gray-600 dark:bg-gray-800/80 dark:text-gray-300 hover:bg-yellow-50 hover:text-yellow-600 hover:scale-105'
+                      ? 'bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400 shadow-lg scale-95'
+                      : 'bg-gray-50/80 text-gray-600 dark:bg-gray-800/80 dark:text-gray-300 hover:bg-yellow-50 hover:text-yellow-600 hover:scale-105'
                     }`}
                   aria-label={open ? "Fermer le menu" : "Ouvrir le menu"}
                 >
@@ -370,8 +284,8 @@ export default function Navbar() {
             <button
               onClick={resetCategory}
               className={`group flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 relative overflow-hidden ${!category && activeCategory !== 'all'
-                ? 'text-yellow-600 bg-gradient-to-r from-yellow-50 to-orange-50 dark:text-yellow-400 dark:from-yellow-900/30 dark:to-orange-900/30 shadow-md'
-                : 'text-gray-600 dark:text-gray-300 hover:text-yellow-600 hover:bg-gray-50 dark:hover:bg-gray-800/60'
+                  ? 'text-yellow-600 bg-gradient-to-r from-yellow-50 to-orange-50 dark:text-yellow-400 dark:from-yellow-900/30 dark:to-orange-900/30 shadow-md'
+                  : 'text-gray-600 dark:text-gray-300 hover:text-yellow-600 hover:bg-gray-50 dark:hover:bg-gray-800/60'
                 } ${activeCategory === 'all' ? 'scale-95 bg-yellow-100 dark:bg-yellow-900/50' : 'hover:scale-105'}`}
             >
               🏷️ Tout
@@ -385,8 +299,8 @@ export default function Navbar() {
                 key={cat.label}
                 onClick={() => handleCategory(cat.label)}
                 className={`group flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 relative overflow-hidden ${category === cat.label && activeCategory !== cat.label
-                  ? `text-white bg-gradient-to-r ${cat.color} shadow-lg`
-                  : 'text-gray-600 dark:text-gray-300 hover:text-yellow-600 hover:bg-gray-50 dark:hover:bg-gray-800/60'
+                    ? `text-white bg-gradient-to-r ${cat.color} shadow-lg`
+                    : 'text-gray-600 dark:text-gray-300 hover:text-yellow-600 hover:bg-gray-50 dark:hover:bg-gray-800/60'
                   } ${activeCategory === cat.label ? 'scale-95' : 'hover:scale-105'}`}
               >
                 <span className="text-base">{cat.emoji}</span>
@@ -401,17 +315,38 @@ export default function Navbar() {
       </nav>
 
       {/* Overlay pour les menus mobiles */}
-      {open && (
+      {(open || searchOpen) && (
         <div
           className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 lg:hidden transition-opacity duration-300"
-          onClick={() => setOpen(false)}
+          onClick={closeMenus}
         />
+      )}
+
+      {/* Menu recherche mobile */}
+      {searchOpen && (
+        <div className="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-[#0A1A2F] shadow-2xl border-b border-gray-200 dark:border-gray-700 md:hidden animate-slide-down">
+          <div className="p-4 pt-20">
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/10 to-orange-400/10 rounded-xl blur" />
+              <div className="relative bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+                <Search products={products} />
+              </div>
+            </div>
+            <button
+              onClick={() => setSearchOpen(false)}
+              className="absolute top-4 right-4 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
       )}
 
       {/* Menu mobile amélioré */}
       {open && (
         <div className="fixed top-0 right-0 w-80 max-w-[85vw] h-full bg-white dark:bg-[#0A1A2F] shadow-2xl z-50 lg:hidden">
           <div className="flex flex-col h-full animate-slide-in-right">
+
             {/* Header avec profil */}
             <div className="relative p-6 bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border-b border-gray-200/60 dark:border-gray-700/60">
               <div className="absolute top-4 right-4">
@@ -422,6 +357,7 @@ export default function Navbar() {
                   <X className="w-5 h-5 text-gray-600 dark:text-gray-300" />
                 </button>
               </div>
+
               {user ? (
                 <div className="flex items-center gap-4">
                   <div className="relative">
@@ -446,6 +382,7 @@ export default function Navbar() {
                 </div>
               )}
             </div>
+
             {/* Actions rapides */}
             <div className="p-4 border-b border-gray-200/60 dark:border-gray-700/60">
               <Link
@@ -461,6 +398,7 @@ export default function Navbar() {
                 </div>
               </Link>
             </div>
+
             {/* Navigation */}
             <div className="flex-1 overflow-y-auto p-4">
               <div className="space-y-2 mb-6">
@@ -473,8 +411,8 @@ export default function Navbar() {
                     href={href}
                     onClick={() => setOpen(false)}
                     className={`group flex items-center gap-4 px-4 py-3.5 rounded-2xl text-sm font-medium transition-all duration-200 hover:scale-105 ${pathname === href
-                      ? 'text-white bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg'
-                      : 'text-gray-700 dark:text-gray-300 hover:text-yellow-600 hover:bg-gray-50 dark:hover:bg-gray-800/60'
+                        ? 'text-white bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg'
+                        : 'text-gray-700 dark:text-gray-300 hover:text-yellow-600 hover:bg-gray-50 dark:hover:bg-gray-800/60'
                       }`}
                   >
                     <div className={`p-2 rounded-xl ${pathname === href ? 'bg-white/20' : 'bg-gray-100 dark:bg-gray-800'} group-hover:scale-110 transition-transform`}>
@@ -487,6 +425,7 @@ export default function Navbar() {
                   </Link>
                 ))}
               </div>
+
               {/* Catégories mobiles */}
               <div className="space-y-3">
                 <span className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 px-2">
@@ -498,8 +437,8 @@ export default function Navbar() {
                       key={cat.label}
                       onClick={() => handleCategory(cat.label)}
                       className={`group flex flex-col items-center gap-2 p-3 rounded-2xl text-sm font-medium transition-all duration-200 hover:scale-105 ${category === cat.label
-                        ? `text-white bg-gradient-to-br ${cat.color} shadow-lg`
-                        : 'text-gray-700 dark:text-gray-300 hover:text-yellow-600 hover:bg-gray-50 dark:hover:bg-gray-800/60'
+                          ? `text-white bg-gradient-to-br ${cat.color} shadow-lg`
+                          : 'text-gray-700 dark:text-gray-300 hover:text-yellow-600 hover:bg-gray-50 dark:hover:bg-gray-800/60'
                         }`}
                     >
                       <span className="text-2xl group-hover:scale-110 transition-transform">{cat.emoji}</span>
@@ -509,6 +448,7 @@ export default function Navbar() {
                 </div>
               </div>
             </div>
+
             {/* Footer du menu */}
             {user && (
               <div className="p-4 border-t border-gray-200/60 dark:border-gray-700/60 bg-gray-50/50 dark:bg-gray-800/30">
@@ -538,26 +478,48 @@ export default function Navbar() {
       )}
 
       {/* Spacer */}
-      <div className="h-20 lg:h-28" />
+      <div className="h-24 lg:h-28" />
 
-      {/* Animations */}
+      {/* Styles pour les animations */}
       <style jsx global>{`
         .animate-slide-in-right {
-          animation: slideInRight 0.3s cubic-bezier(.77,0,.18,1);
+          animation: slideInRight 0.3s ease-out;
         }
-        .animate-fade-in {
-          animation: fadein 0.16s cubic-bezier(.77,0,.18,1);
+        
+        .animate-slide-down {
+          animation: slideDown 0.3s ease-out;
         }
+        
         @keyframes slideInRight {
-          from { transform: translateX(100%); opacity: 0; }
-          to { transform: translateX(0); opacity: 1; }
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
         }
-        @keyframes fadein {
-          from { opacity: 0; transform: translateY(6px);}
-          to   { opacity: 1; transform: translateY(0);}
+        
+        @keyframes slideDown {
+          from {
+            transform: translateY(-100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateY(0);
+            opacity: 1;
+          }
         }
-        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
       `}</style>
     </>
   )
