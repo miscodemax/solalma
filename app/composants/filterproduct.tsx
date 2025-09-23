@@ -53,7 +53,7 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
   const [locationFilterOpen, setLocationFilterOpen] = useState(false)
   const [selectedLocation, setSelectedLocation] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [visibleCount, setVisibleCount] = useState(8) // Réduit pour mobile
+  const [visibleCount, setVisibleCount] = useState(10) // Réduit pour mobile
   const [scrollY, setScrollY] = useState(0)
   const [searchTerm, setSearchTerm] = useState("")
 
