@@ -62,25 +62,40 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <script
           dangerouslySetInnerHTML={{
             __html: `
-              function initOneSignal() {
-                if (window.OneSignalInitialized) return;
-                window.OneSignalInitialized = true;
+      function initOneSignal() {
+        if (window.OneSignalInitialized) return;
+        window.OneSignalInitialized = true;
 
-                window.OneSignalDeferred = window.OneSignalDeferred || [];
-                OneSignalDeferred.push(async function(OneSignal) {
-                  await OneSignal.init({
-                    appId: "a0727a81-7f96-4ba9-9c0d-423e9f7f22da",
-                    notifyButton: { enable: true },
-                  });
-                });
+        window.OneSignalDeferred = window.OneSignalDeferred || [];
+        OneSignalDeferred.push(async function(OneSignal) {
+          await OneSignal.init({
+            appId: "a0727a81-7f96-4ba9-9c0d-423e9f7f22da",
+            notifyButton: { enable: true },
+            promptOptions: {
+              slidedown: {
+                enabled: true,
+                autoPrompt: true,       // le prompt s'affiche automatiquement
+                timeDelay: 5,           // secondes après chargement
+                pageViews: 1            // après combien de pages vues
               }
+            },
+            welcomeNotification: {
+              title: "SangseShop",
+              message: "Merci de vous être abonné(e) ! 🎉",
+              url: "https://sangse.shop" // lien quand l'utilisateur clique
+            }
+          });
+        });
+      }
 
-              // Init après scroll ou clic
-              window.addEventListener('scroll', initOneSignal, { once: true });
-              window.addEventListener('click', initOneSignal, { once: true });
-            `,
+      // Init après interaction pour être sûr que OneSignal est chargé
+      window.addEventListener('scroll', initOneSignal, { once: true });
+      window.addEventListener('click', initOneSignal, { once: true });
+    `,
           }}
         />
+
+
       </body>
     </html>
   );
