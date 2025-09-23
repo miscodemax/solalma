@@ -71,29 +71,37 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           await OneSignal.init({
             appId: "a0727a81-7f96-4ba9-9c0d-423e9f7f22da",
             notifyButton: { enable: true },
-            promptOptions: {
-              slidedown: {
-                enabled: true,
-                autoPrompt: true,       // le prompt s'affiche automatiquement
-                timeDelay: 5,           // secondes après chargement
-                pageViews: 1            // après combien de pages vues
-              }
-            },
-            welcomeNotification: {
-              title: "SangseShop",
-              message: "Merci de vous être abonné(e) ! 🎉",
-              url: "https://sangse.shop" // lien quand l'utilisateur clique
+          });
+
+          // Vérifie si l'utilisateur est déjà abonné
+          const isPushEnabled = await OneSignal.isPushNotificationsEnabled();
+          if (!isPushEnabled) {
+            // demande d'autorisation
+            await OneSignal.showSlidedownPrompt();
+          }
+
+          // Envoi immédiat d'une notification de bienvenue une fois abonné
+          OneSignal.on('subscriptionChange', function (isSubscribed) {
+            if (isSubscribed) {
+              OneSignal.sendSelfNotification(
+                "Bienvenue sur SangseShop 🎉",
+                "Merci d'avoir accepté les notifications ! Vous serez alerté des nouveautés et promos.",
+                window.location.href,
+                undefined,
+                { actionButtons: [{ id: "shop", text: "Découvrir" }] }
+              );
             }
           });
         });
       }
 
-      // Init après interaction pour être sûr que OneSignal est chargé
+      // Init après scroll ou clic
       window.addEventListener('scroll', initOneSignal, { once: true });
       window.addEventListener('click', initOneSignal, { once: true });
     `,
           }}
         />
+
 
 
       </body>
