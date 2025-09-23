@@ -7,11 +7,7 @@ import { createClient } from '@/lib/supabase'
 import Image from 'next/image'
 import ImageUploader from './imageuploader'
 import { Button } from '@/components/ui/button'
-import {
-  HoverCard,
-  HoverCardTrigger,
-  HoverCardContent,
-} from '@/components/ui/hover-card'
+
 
 type Props = { userId: string }
 
