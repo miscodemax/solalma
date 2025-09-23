@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import {
   HomeIcon, ShoppingCart, User, Menu, X, LogOut, Heart, ShoppingBag,
-  Search as SearchIcon, Bell, Settings
+  Search as SearchIcon, Settings
 } from 'lucide-react'
 import { ThemeToggle } from './theme-toggle'
 import TextLogo from './textLogo'
@@ -54,8 +54,6 @@ export default function Navbar({ products }: { products: Product[] }) {
   const searchParams = useSearchParams()
   const category = searchParams.get('category')
   const supabase = createClient()
-  const mobileMenuRef = useRef<HTMLDivElement>(null)
-  const searchRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -106,7 +104,6 @@ export default function Navbar({ products }: { products: Product[] }) {
     setActiveCategory(cat)
     router.push(`/?category=${encodeURIComponent(cat)}`)
     setOpen(false)
-    // Animation de feedback
     setTimeout(() => setActiveCategory(null), 300)
   }
 
@@ -131,10 +128,10 @@ export default function Navbar({ products }: { products: Product[] }) {
     <>
       {/* Navigation principale */}
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled
-          ? 'bg-white/95 dark:bg-[#0A1A2F]/95 backdrop-blur-xl shadow-lg border-b border-gray-200/30 dark:border-gray-700/30'
-          : 'bg-white/90 dark:bg-[#0A1A2F]/90 backdrop-blur-lg'
+        ? 'bg-white/95 dark:bg-[#0A1A2F]/95 backdrop-blur-xl shadow-lg border-b border-gray-200/30 dark:border-gray-700/30'
+        : 'bg-white/90 dark:bg-[#0A1A2F]/90 backdrop-blur-lg'
         }`}>
-        <div className="max-w-7xl mx-auto px-4">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4">
           {/* Header principal */}
           <div className="flex items-center justify-between h-16 lg:h-18">
 
@@ -153,6 +150,20 @@ export default function Navbar({ products }: { products: Product[] }) {
               </div>
             </Link>
 
+            {/* Barre de recherche mobile visible sur toutes les pages */}
+            <div className="flex-1 flex items-center justify-center md:hidden mx-3">
+              <button
+                onClick={toggleSearch}
+                className="w-full flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100/80 dark:bg-gray-800/80 border border-gray-200/60 dark:border-gray-700/60 shadow-inner focus:outline-none focus:ring-2 focus:ring-yellow-500 transition-all duration-200"
+                aria-label="Recherche produits"
+                style={{ minHeight: 42 }}
+              >
+                <SearchIcon className="w-5 h-5 text-yellow-500" />
+                <span className="text-gray-600 dark:text-gray-300 text-sm opacity-70 flex-1 text-left">Rechercher sur la marketplace...</span>
+                <kbd className="bg-white/80 dark:bg-gray-700/80 text-yellow-600 text-xs rounded px-2 py-0.5 shadow ml-2">Recherche</kbd>
+              </button>
+            </div>
+
             {/* Navigation desktop */}
             <div className="hidden lg:flex items-center gap-2">
               {navLinks.map(({ href, label, icon: Icon, color }) => (
@@ -160,8 +171,8 @@ export default function Navbar({ products }: { products: Product[] }) {
                   key={href}
                   href={href}
                   className={`group flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 hover:scale-105 ${pathname === href
-                      ? 'text-yellow-600 bg-gradient-to-r from-yellow-50 to-orange-50 dark:text-yellow-400 dark:bg-gradient-to-r dark:from-yellow-900/30 dark:to-orange-900/30 shadow-md'
-                      : 'text-gray-600 dark:text-gray-300 hover:text-yellow-600 hover:bg-gray-50 dark:hover:bg-gray-800/60'
+                    ? 'text-yellow-600 bg-gradient-to-r from-yellow-50 to-orange-50 dark:text-yellow-400 dark:bg-gradient-to-r dark:from-yellow-900/30 dark:to-orange-900/30 shadow-md'
+                    : 'text-gray-600 dark:text-gray-300 hover:text-yellow-600 hover:bg-gray-50 dark:hover:bg-gray-800/60'
                     }`}
                 >
                   <Icon className={`w-4 h-4 transition-colors ${pathname === href ? color : ''}`} />
@@ -182,15 +193,6 @@ export default function Navbar({ products }: { products: Product[] }) {
 
             {/* Actions à droite */}
             <div className="flex items-center gap-2">
-
-              {/* Bouton recherche mobile */}
-              <button
-                onClick={toggleSearch}
-                className="md:hidden p-2.5 rounded-xl bg-gray-50/80 dark:bg-gray-800/80 hover:bg-yellow-50 dark:hover:bg-yellow-900/30 transition-all duration-200 hover:scale-105"
-                aria-label="Rechercher"
-              >
-                <SearchIcon className="w-5 h-5 text-gray-600 dark:text-gray-300 hover:text-yellow-600" />
-              </button>
 
               {/* Bouton vendre desktop */}
               <Link
@@ -256,8 +258,8 @@ export default function Navbar({ products }: { products: Product[] }) {
                 <button
                   onClick={() => setOpen(!open)}
                   className={`relative p-2.5 rounded-xl transition-all duration-300 overflow-hidden group ${open
-                      ? 'bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400 shadow-lg scale-95'
-                      : 'bg-gray-50/80 text-gray-600 dark:bg-gray-800/80 dark:text-gray-300 hover:bg-yellow-50 hover:text-yellow-600 hover:scale-105'
+                    ? 'bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400 shadow-lg scale-95'
+                    : 'bg-gray-50/80 text-gray-600 dark:bg-gray-800/80 dark:text-gray-300 hover:bg-yellow-50 hover:text-yellow-600 hover:scale-105'
                     }`}
                   aria-label={open ? "Fermer le menu" : "Ouvrir le menu"}
                 >
@@ -284,8 +286,8 @@ export default function Navbar({ products }: { products: Product[] }) {
             <button
               onClick={resetCategory}
               className={`group flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 relative overflow-hidden ${!category && activeCategory !== 'all'
-                  ? 'text-yellow-600 bg-gradient-to-r from-yellow-50 to-orange-50 dark:text-yellow-400 dark:from-yellow-900/30 dark:to-orange-900/30 shadow-md'
-                  : 'text-gray-600 dark:text-gray-300 hover:text-yellow-600 hover:bg-gray-50 dark:hover:bg-gray-800/60'
+                ? 'text-yellow-600 bg-gradient-to-r from-yellow-50 to-orange-50 dark:text-yellow-400 dark:from-yellow-900/30 dark:to-orange-900/30 shadow-md'
+                : 'text-gray-600 dark:text-gray-300 hover:text-yellow-600 hover:bg-gray-50 dark:hover:bg-gray-800/60'
                 } ${activeCategory === 'all' ? 'scale-95 bg-yellow-100 dark:bg-yellow-900/50' : 'hover:scale-105'}`}
             >
               🏷️ Tout
@@ -299,8 +301,8 @@ export default function Navbar({ products }: { products: Product[] }) {
                 key={cat.label}
                 onClick={() => handleCategory(cat.label)}
                 className={`group flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 relative overflow-hidden ${category === cat.label && activeCategory !== cat.label
-                    ? `text-white bg-gradient-to-r ${cat.color} shadow-lg`
-                    : 'text-gray-600 dark:text-gray-300 hover:text-yellow-600 hover:bg-gray-50 dark:hover:bg-gray-800/60'
+                  ? `text-white bg-gradient-to-r ${cat.color} shadow-lg`
+                  : 'text-gray-600 dark:text-gray-300 hover:text-yellow-600 hover:bg-gray-50 dark:hover:bg-gray-800/60'
                   } ${activeCategory === cat.label ? 'scale-95' : 'hover:scale-105'}`}
               >
                 <span className="text-base">{cat.emoji}</span>
@@ -322,23 +324,27 @@ export default function Navbar({ products }: { products: Product[] }) {
         />
       )}
 
-      {/* Menu recherche mobile */}
+      {/* Menu recherche mobile moderne */}
       {searchOpen && (
-        <div className="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-[#0A1A2F] shadow-2xl border-b border-gray-200 dark:border-gray-700 md:hidden animate-slide-down">
-          <div className="p-4 pt-20">
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/10 to-orange-400/10 rounded-xl blur" />
-              <div className="relative bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
-                <Search products={products} />
+        <div className="fixed inset-0 z-50 flex flex-col bg-white/95 dark:bg-[#0A1A2F]/95 backdrop-blur-lg animate-slide-down">
+          <div className="relative flex items-center px-4 pt-7 pb-2 border-b border-gray-200 dark:border-gray-700">
+            <SearchIcon className="w-6 h-6 text-yellow-500 absolute left-6 top-1/2 transform -translate-y-1/2" />
+            <div className="flex-1 flex items-center">
+              <div className="w-full flex items-center">
+                <div className="w-full rounded-full bg-gray-100 dark:bg-gray-800 border border-yellow-400/50 px-12 py-3 shadow-lg focus-within:ring-2 focus-within:ring-yellow-500 transition-all">
+                  <Search products={products} autoFocus />
+                </div>
               </div>
             </div>
             <button
               onClick={() => setSearchOpen(false)}
-              className="absolute top-4 right-4 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              className="absolute right-5 top-1/2 -translate-y-1/2 p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
+              aria-label="Fermer la recherche"
             >
-              <X className="w-5 h-5" />
+              <X className="w-6 h-6" />
             </button>
           </div>
+          <div className="flex-1 bg-gradient-to-b from-yellow-50/40 to-orange-50/40 dark:from-yellow-900/10 dark:to-orange-900/10" />
         </div>
       )}
 
@@ -411,8 +417,8 @@ export default function Navbar({ products }: { products: Product[] }) {
                     href={href}
                     onClick={() => setOpen(false)}
                     className={`group flex items-center gap-4 px-4 py-3.5 rounded-2xl text-sm font-medium transition-all duration-200 hover:scale-105 ${pathname === href
-                        ? 'text-white bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg'
-                        : 'text-gray-700 dark:text-gray-300 hover:text-yellow-600 hover:bg-gray-50 dark:hover:bg-gray-800/60'
+                      ? 'text-white bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg'
+                      : 'text-gray-700 dark:text-gray-300 hover:text-yellow-600 hover:bg-gray-50 dark:hover:bg-gray-800/60'
                       }`}
                   >
                     <div className={`p-2 rounded-xl ${pathname === href ? 'bg-white/20' : 'bg-gray-100 dark:bg-gray-800'} group-hover:scale-110 transition-transform`}>
@@ -437,8 +443,8 @@ export default function Navbar({ products }: { products: Product[] }) {
                       key={cat.label}
                       onClick={() => handleCategory(cat.label)}
                       className={`group flex flex-col items-center gap-2 p-3 rounded-2xl text-sm font-medium transition-all duration-200 hover:scale-105 ${category === cat.label
-                          ? `text-white bg-gradient-to-br ${cat.color} shadow-lg`
-                          : 'text-gray-700 dark:text-gray-300 hover:text-yellow-600 hover:bg-gray-50 dark:hover:bg-gray-800/60'
+                        ? `text-white bg-gradient-to-br ${cat.color} shadow-lg`
+                        : 'text-gray-700 dark:text-gray-300 hover:text-yellow-600 hover:bg-gray-50 dark:hover:bg-gray-800/60'
                         }`}
                     >
                       <span className="text-2xl group-hover:scale-110 transition-transform">{cat.emoji}</span>
@@ -483,11 +489,11 @@ export default function Navbar({ products }: { products: Product[] }) {
       {/* Styles pour les animations */}
       <style jsx global>{`
         .animate-slide-in-right {
-          animation: slideInRight 0.3s ease-out;
+          animation: slideInRight 0.3s cubic-bezier(.77,0,.18,1);
         }
         
         .animate-slide-down {
-          animation: slideDown 0.3s ease-out;
+          animation: slideDown 0.25s cubic-bezier(.77,0,.18,1);
         }
         
         @keyframes slideInRight {
