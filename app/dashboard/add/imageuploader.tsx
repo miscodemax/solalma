@@ -217,10 +217,10 @@ export default function ImageUploader({
             {/* Zone d'upload principale */}
             <motion.div
                 className={`relative group cursor-pointer overflow-hidden rounded-2xl transition-all duration-300 ${dragActive
-                        ? 'border-3 border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20 scale-105 shadow-2xl'
-                        : canUpload
-                            ? 'border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-50/50 dark:bg-gray-800/30 hover:bg-gradient-to-br hover:from-yellow-50 hover:to-orange-50 dark:hover:from-yellow-900/20 dark:hover:to-orange-900/20 hover:border-yellow-400 hover:scale-[1.02] hover:shadow-xl'
-                            : 'border-2 border-dashed border-gray-200 bg-gray-100 dark:bg-gray-800 cursor-not-allowed opacity-60'
+                    ? 'border-3 border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20 scale-105 shadow-2xl'
+                    : canUpload
+                        ? 'border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-50/50 dark:bg-gray-800/30 hover:bg-gradient-to-br hover:from-yellow-50 hover:to-orange-50 dark:hover:from-yellow-900/20 dark:hover:to-orange-900/20 hover:border-yellow-400 hover:scale-[1.02] hover:shadow-xl'
+                        : 'border-2 border-dashed border-gray-200 bg-gray-100 dark:bg-gray-800 cursor-not-allowed opacity-60'
                     }`}
                 onDragEnter={handleDrag}
                 onDragLeave={handleDrag}
@@ -259,10 +259,10 @@ export default function ImageUploader({
                 <div className="relative z-10 flex flex-col items-center justify-center p-12 min-h-[200px]">
                     <motion.div
                         className={`mb-4 p-4 rounded-full transition-all duration-300 ${dragActive
-                                ? 'bg-yellow-400 text-white scale-125'
-                                : canUpload
-                                    ? 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 group-hover:bg-yellow-100 group-hover:text-yellow-600'
-                                    : 'bg-gray-300 text-gray-400'
+                            ? 'bg-yellow-400 text-white scale-125'
+                            : canUpload
+                                ? 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 group-hover:bg-yellow-100 group-hover:text-yellow-600'
+                                : 'bg-gray-300 text-gray-400'
                             }`}
                         animate={dragActive ? { rotate: [0, -10, 10, 0] } : {}}
                         transition={{ duration: 0.5, repeat: dragActive ? Infinity : 0 }}
@@ -519,7 +519,7 @@ export default function ImageUploader({
                             <span>Évitez les arrière-plans encombrés</span>
                         </li>
                     </ul>
-                </div>
+                </motion.div>
             )}
 
             {/* Styles CSS additionnels */}
