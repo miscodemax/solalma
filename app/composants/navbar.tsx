@@ -19,7 +19,7 @@ import Search from './search'
 const categories = [
   { label: 'vetement', emoji: '👗' },
   { label: 'artisanat', emoji: '🎨' },
-  { label: 'maquillage', emoji: '💄' }
+  { label: 'maquillage', emoji: '💄' },
   { label: 'soins_et_astuces', emoji: '🧴' },
   { label: 'electronique', emoji: '📱' },
   { label: 'accessoire', emoji: '📱' },
