@@ -252,13 +252,7 @@ export default function Navbar({ products }: { products: Product[] }) {
                 <span className="relative z-10">Vendre</span>
               </Link>
 
-              {/* Notifications */}
-              <button className="relative p-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors">
-                <Bell className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                  2
-                </span>
-              </button>
+
 
               <ThemeToggle />
 
