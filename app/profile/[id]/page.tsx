@@ -81,7 +81,7 @@ export default async function UserProfilePage({ params }: { params: { id: string
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("username, avatar_url, bio, id")
+    .select("username, avatar_url, bio")
     .eq("id", id)
     .single()
 
@@ -93,12 +93,7 @@ export default async function UserProfilePage({ params }: { params: { id: string
     .from("product_like")
     .select("product_id")
 
-  // Vérifie que tu as bien des likes + des produits avant de filtrer
-  const profileLikes = (likes || []).filter((like) =>
-    (allProducts || []).some((product) => product.id === like.product_id)
-  )
 
-  const NumberOfLike = profileLikes.length
 
 
 
@@ -115,6 +110,13 @@ export default async function UserProfilePage({ params }: { params: { id: string
     .select("*")
     .eq("user_id", id)
     .order("created_at", { ascending: false })
+
+  // Vérifie que tu as bien des likes + des produits avant de filtrer
+  const profileLikes = (likes || []).filter((like) =>
+    (allProducts || []).some((product) => product.id === like.product_id)
+  )
+
+  const NumberOfLike = profileLikes.length
 
   const { data: ratingsData } = await supabase
     .from("ratings_sellers")
