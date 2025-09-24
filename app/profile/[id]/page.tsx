@@ -85,14 +85,26 @@ export default async function UserProfilePage({ params }: { params: { id: string
     .eq("id", id)
     .single()
 
-  const profileId = profile.id
+
+
+
 
   const { data: likes } = await supabase
     .from("product_like")
-    .select("*")
-    .eq("user_id", profileId)
+    .select("product_id")
 
-  const NumberOfLike = likes.length
+  // Vérifie que tu as bien des likes + des produits avant de filtrer
+  const profileLikes = (likes || []).filter((like) =>
+    (allProducts || []).some((product) => product.id === like.product_id)
+  )
+
+  const NumberOfLike = profileLikes.length
+
+
+
+
+
+
 
   const {
     data: { user },
