@@ -4,7 +4,7 @@ import { supabaseUrl, supabaseKey } from "@/lib/supabase"
 import Image from "next/image"
 import Link from "next/link"
 import CopyButton from "@/app/composants/sharebutton"
-import { FaWhatsapp, FaStar, FaBox } from "react-icons/fa"
+import { FaWhatsapp, FaStar, FaBox, FaHeart } from "react-icons/fa"
 import { HiBadgeCheck, HiTrendingUp } from "react-icons/hi"
 //import { Metadata } from "next"
 import BackButton from "@/app/composants/back-button"
@@ -25,9 +25,11 @@ export async function generateMetadata({ params }: { params: { id: string } }) {
   })
   const { data: profile } = await supabase
     .from("profiles")
-    .select("username, avatar_url, bio")
+    .select("username, avatar_url, bio, id")
     .eq("id", id)
     .single();
+
+
 
   const title = profile?.username
     ? `Découvre la boutique de ${profile.username} sur Sangse.shop`
@@ -79,9 +81,18 @@ export default async function UserProfilePage({ params }: { params: { id: string
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("username, avatar_url, bio")
+    .select("username, avatar_url, bio, id")
     .eq("id", id)
     .single()
+
+  const profileId = profile.id
+
+  const { data: likes } = await supabase
+    .from("product_like")
+    .select("*")
+    .eq("user_id", profileId)
+
+  const NumberOfLike = likes.length
 
   const {
     data: { user },
@@ -210,9 +221,17 @@ export default async function UserProfilePage({ params }: { params: { id: string
                     <span className="text-[#1C1C1C] dark:text-gray-400">Nouveau vendeur</span>
                   </div>
                 )}
+                <div className="flex items-center gap-2 bg-white/70 dark:bg-[#1C1C1C]/50 px-3 py-2 rounded-xl border border-[#F4B400]/20">
+                  <FaHeart className="text-[#F4B400]" />
+                  <span className="text-[#1C1C1C] dark:text-gray-400">{NumberOfLike}</span>
+                </div>
               </div>
             </div>
           </div>
+
+
+
+
 
           <div className="mt-6 pt-6 border-t border-[#F4B400]/30 dark:border-gray-600">
             <div className="flex flex-wrap justify-center sm:justify-start gap-3">
