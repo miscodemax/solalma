@@ -17,7 +17,7 @@ const categories = [
   { value: 'artisanat', label: 'Artisanat', icon: '🎨', color: 'from-blue-400 to-purple-500' },
   { value: 'electronique', label: 'Electronique', icon: '📱', color: 'from-cyan-400 to-blue-500' },
   { value: 'accessoire', label: 'Accessoire', icon: '👜', color: 'from-amber-400 to-orange-500' },
-  { value: 'chaussure', label: 'Chaussure', icon: '👜', color: 'from-amber-400 to-orange-500' },
+  { value: 'chaussure', label: 'Chaussure', icon: '👠', color: 'from-yellow-400 to-orange-500' },
 ]
 
 const SENEGAL_LOCATIONS = [
@@ -57,9 +57,8 @@ export default function AddProductForm({ userId }: Props) {
     category: categories[0].value,
     zone: SENEGAL_LOCATIONS[0].name,
   })
-  const [latLng, setLatLng] = useState({ lat: SENEGAL_LOCATIONS[0].lat, lng: SENEGAL_LOCATIONS[0].lng })
-  const [userLocation, setUserLocation] = useState(null) // Position exacte de l'utilisateur
-  const [locationPermission, setLocationPermission] = useState('pending') // 'pending', 'granted', 'denied'
+  const [userLocation, setUserLocation] = useState<{ lat: number, lng: number } | null>(null)
+  const [locationStatus, setLocationStatus] = useState<'loading' | 'success' | 'error'>('loading')
   const [images, setImages] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -68,34 +67,38 @@ export default function AddProductForm({ userId }: Props) {
   const router = useRouter()
   const supabase = createClient()
 
-  // Fonction pour obtenir la géolocalisation de l'utilisateur
-  const requestUserLocation = () => {
-    if (!navigator.geolocation) {
-      setLocationPermission('denied')
-      return
+  // Obtenir automatiquement la géolocalisation au chargement du composant
+  useEffect(() => {
+    const getUserLocation = () => {
+      if (!navigator.geolocation) {
+        setLocationStatus('error')
+        return
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const coords = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          }
+          setUserLocation(coords)
+          setLocationStatus('success')
+          console.log('Position utilisateur obtenue:', coords)
+        },
+        (error) => {
+          console.error('Erreur géolocalisation:', error)
+          setLocationStatus('error')
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 15000,
+          maximumAge: 300000 // 5 minutes
+        }
+      )
     }
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const userPos = {
-          lat: position.coords.latitude,
-          lng: position.coords.longitude
-        }
-        setUserLocation(userPos)
-        setLocationPermission('granted')
-        console.log('Position utilisateur obtenue:', userPos)
-      },
-      (error) => {
-        console.error('Erreur géolocalisation:', error)
-        setLocationPermission('denied')
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 300000 // 5 minutes
-      }
-    )
-  }
+    getUserLocation()
+  }, [])
 
   const steps = [
     {
@@ -111,10 +114,10 @@ export default function AddProductForm({ userId }: Props) {
       description: 'Aidez les acheteurs à vous trouver facilement'
     },
     {
-      title: 'Localisation',
-      subtitle: 'Partagez votre position',
+      title: 'Zone',
+      subtitle: 'Choisissez votre quartier',
       icon: '📍',
-      description: 'Position précise = plus d\'acheteurs près de vous'
+      description: 'Les acheteurs pourront vous localiser facilement'
     },
     {
       title: 'Détails',
@@ -130,26 +133,19 @@ export default function AddProductForm({ userId }: Props) {
     }
   ]
 
-  const handleChange = (
-    e
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setForm((prev) => ({ ...prev, [name]: value }))
-    // Si l'utilisateur change de zone et qu'il n'a pas partagé sa position exacte
-    if (name === 'zone' && !userLocation) {
-      const loc = SENEGAL_LOCATIONS.find((l) => l.name === value)
-      if (loc) setLatLng({ lat: loc.lat, lng: loc.lng })
-    }
   }
 
-  const handleWhatsappChange = (e) => {
+  const handleWhatsappChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value.replace(/\D/g, '')
     setForm((prev) => ({ ...prev, whatsappNumber: val }))
   }
 
-  const handleAddImages = (urls) => setImages((prev) => [...prev, ...urls].slice(0, 5))
-  const handleRemoveImage = (index) => setImages((prev) => prev.filter((_, i) => i !== index))
-  const handleSetMainImage = (index) => {
+  const handleAddImages = (urls: string[]) => setImages((prev) => [...prev, ...urls].slice(0, 5))
+  const handleRemoveImage = (index: number) => setImages((prev) => prev.filter((_, i) => i !== index))
+  const handleSetMainImage = (index: number) => {
     setImages((prev) => {
       const newImages = [...prev]
       const [selected] = newImages.splice(index, 1)
@@ -161,7 +157,7 @@ export default function AddProductForm({ userId }: Props) {
     switch (currentStep) {
       case 0: return images.length > 0
       case 1: return form.category !== ''
-      case 2: return true // L'étape localisation est optionnelle
+      case 2: return form.zone !== ''
       case 3: return form.title.trim() !== '' && form.description.trim() !== ''
       case 4: return form.price !== '' && form.whatsappNumber.length >= 8
       default: return false
@@ -180,10 +176,11 @@ export default function AddProductForm({ userId }: Props) {
     }
   }
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     setSuccess(false)
+
     const fullNumber = '+221' + form.whatsappNumber.trim()
     if (!/^\+221\d{8,9}$/.test(fullNumber)) {
       setError('Veuillez entrer un numéro WhatsApp valide (ex: +221771234567)')
@@ -196,8 +193,9 @@ export default function AddProductForm({ userId }: Props) {
 
     setLoading(true)
     try {
-      // Utiliser la position exacte de l'utilisateur si disponible, sinon celle de la zone
-      const finalCoords = userLocation || latLng
+      // Utiliser la position exacte de l'utilisateur si disponible, sinon les coordonnées de la zone
+      const selectedZone = SENEGAL_LOCATIONS.find(loc => loc.name === form.zone)
+      const finalCoords = userLocation || (selectedZone ? { lat: selectedZone.lat, lng: selectedZone.lng } : SENEGAL_LOCATIONS[0])
 
       const { data: productData, error: productError } = await supabase
         .from('product')
@@ -209,9 +207,9 @@ export default function AddProductForm({ userId }: Props) {
           user_id: userId,
           whatsapp_number: fullNumber,
           category: form.category,
-          zone: form.zone, // Zone choisie par l'utilisateur
-          latitude: finalCoords.lat, // Position exacte ou zone
-          longitude: finalCoords.lng, // Position exacte ou zone
+          zone: form.zone, // Zone choisie par l'utilisateur (pour affichage public)
+          latitude: finalCoords.lat, // Position exacte (pour recommandations précises)
+          longitude: finalCoords.lng, // Position exacte (pour recommandations précises)
         })
         .select()
         .single()
@@ -226,7 +224,7 @@ export default function AddProductForm({ userId }: Props) {
 
       setSuccess(true)
       setTimeout(() => router.push('/dashboard/products'), 2000)
-    } catch (err) {
+    } catch (err: any) {
       setError(err.message || 'Une erreur est survenue lors de la création du produit')
     } finally {
       setLoading(false)
@@ -326,80 +324,75 @@ export default function AddProductForm({ userId }: Props) {
           <div className="space-y-6 animate-in fade-in-50 slide-in-from-right-4 duration-500">
             <div className="text-center space-y-3 mb-8">
               <div className="text-6xl mb-4">📍</div>
-              <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Localisation</h2>
-              <p className="text-gray-600 dark:text-gray-400">Plus vous êtes précis, plus vous vendez facilement</p>
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Choisissez votre quartier</h2>
+              <p className="text-gray-600 dark:text-gray-400">Cette information sera visible par les acheteurs</p>
             </div>
 
-            {/* Option 1: Position exacte */}
-            <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 p-6 rounded-2xl border-2 border-green-200 dark:border-green-800">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h3 className="text-lg font-semibold text-green-800 dark:text-green-200">🎯 Position exacte (Recommandé)</h3>
-                  <p className="text-sm text-green-600 dark:text-green-400">Les acheteurs vous trouvent plus facilement</p>
-                </div>
-                {locationPermission === 'granted' && (
-                  <div className="bg-green-500 text-white px-3 py-1 rounded-full text-sm font-medium">
-                    ✓ Activé
-                  </div>
+            {/* Status de la géolocalisation en arrière-plan */}
+            <div className={`p-4 rounded-xl border-2 ${locationStatus === 'success'
+                ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+                : locationStatus === 'error'
+                  ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800'
+                  : 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
+              }`}>
+              <div className="flex items-center gap-3">
+                {locationStatus === 'loading' && (
+                  <>
+                    <div className="animate-spin w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+                    <div>
+                      <p className="text-blue-700 dark:text-blue-300 font-medium">🗺️ Localisation en cours...</p>
+                      <p className="text-sm text-blue-600 dark:text-blue-400">Pour des recommandations plus précises</p>
+                    </div>
+                  </>
+                )}
+                {locationStatus === 'success' && (
+                  <>
+                    <div className="text-green-500 text-xl">✅</div>
+                    <div>
+                      <p className="text-green-700 dark:text-green-300 font-medium">Position exacte détectée !</p>
+                      <p className="text-sm text-green-600 dark:text-green-400">Vos recommandations seront ultra-précises</p>
+                    </div>
+                  </>
+                )}
+                {locationStatus === 'error' && (
+                  <>
+                    <div className="text-yellow-500 text-xl">⚠️</div>
+                    <div>
+                      <p className="text-yellow-700 dark:text-yellow-300 font-medium">Géolocalisation indisponible</p>
+                      <p className="text-sm text-yellow-600 dark:text-yellow-400">Pas de souci, nous utiliserons votre quartier</p>
+                    </div>
+                  </>
                 )}
               </div>
-
-              {locationPermission === 'pending' && (
-                <button
-                  type="button"
-                  onClick={requestUserLocation}
-                  className="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white py-3 px-6 rounded-xl font-semibold hover:from-green-600 hover:to-emerald-600 transition-all duration-300"
-                >
-                  📍 Partager ma position exacte
-                </button>
-              )}
-
-              {locationPermission === 'granted' && userLocation && (
-                <div className="bg-white/50 dark:bg-gray-800/50 p-4 rounded-xl">
-                  <p className="text-green-700 dark:text-green-300 font-medium">✅ Position partagée avec succès !</p>
-                  <p className="text-sm text-green-600 dark:text-green-400 mt-1">
-                    Coordonnées : {userLocation.lat.toFixed(4)}, {userLocation.lng.toFixed(4)}
-                  </p>
-                </div>
-              )}
-
-              {locationPermission === 'denied' && (
-                <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-xl">
-                  <p className="text-yellow-700 dark:text-yellow-300 font-medium">⚠️ Géolocalisation refusée</p>
-                  <p className="text-sm text-yellow-600 dark:text-yellow-400 mt-1">
-                    Pas de problème, choisissez votre zone ci-dessous.
-                  </p>
-                </div>
-              )}
             </div>
 
-            {/* Option 2: Sélection de zone */}
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-6 rounded-2xl border-2 border-blue-200 dark:border-blue-800">
-              <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-200 mb-4">🗺️ Ou choisissez votre zone</h3>
+            {/* Sélection de zone */}
+            <div className="bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 p-6 rounded-2xl border-2 border-yellow-200 dark:border-yellow-800">
+              <h3 className="text-lg font-semibold text-yellow-800 dark:text-yellow-200 mb-4">🏘️ Sélectionnez votre quartier</h3>
 
               <select
                 name="zone"
                 value={form.zone}
                 onChange={handleChange}
-                className="w-full px-4 py-4 border-2 border-blue-200 dark:border-blue-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 transition-all duration-300"
+                className="w-full px-4 py-4 border-2 border-yellow-200 dark:border-yellow-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 bg-white dark:bg-gray-800 transition-all duration-300 text-lg font-medium"
               >
                 {SENEGAL_LOCATIONS.map((loc) => (
                   <option key={loc.name} value={loc.name}>{loc.name}</option>
                 ))}
               </select>
 
-              <p className="text-sm text-blue-600 dark:text-blue-400 mt-2">
-                Zone sélectionnée : <span className="font-semibold">{form.zone}</span>
+              <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-3 flex items-center gap-2">
+                📍 Zone affichée : <span className="font-bold">{form.zone}</span>
               </p>
             </div>
 
-            <div className="bg-gradient-to-r from-orange-50 to-yellow-50 dark:from-orange-900/20 dark:to-yellow-900/20 p-4 rounded-xl">
-              <h4 className="font-medium text-orange-800 dark:text-orange-200 mb-2">💡 Pourquoi partager votre position ?</h4>
-              <ul className="text-sm text-orange-700 dark:text-orange-300 space-y-1">
-                <li>• Les acheteurs près de chez vous vous trouvent en priorité</li>
-                <li>• Calcul automatique de la distance dans l'app</li>
-                <li>• Possibilité de rencontre rapide pour finaliser la vente</li>
-                <li>• Votre position exacte n'est jamais visible publiquement</li>
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-4 rounded-xl">
+              <h4 className="font-medium text-blue-800 dark:text-blue-200 mb-2">💡 Comment ça marche ?</h4>
+              <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
+                <li>• Votre quartier sera visible par tous les acheteurs</li>
+                <li>• Votre position exacte reste privée et sert aux recommandations</li>
+                <li>• Les acheteurs proches verront votre annonce en priorité</li>
+                <li>• Calcul automatique des distances dans l'application</li>
               </ul>
             </div>
           </div>
@@ -514,18 +507,19 @@ export default function AddProductForm({ userId }: Props) {
             {/* Résumé de la localisation */}
             <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 p-4 rounded-xl">
               <h4 className="font-medium text-green-800 dark:text-green-200 mb-2">📍 Votre localisation :</h4>
-              <div className="text-sm text-green-700 dark:text-green-300">
-                {userLocation ? (
-                  <p>✅ Position exacte partagée + Zone : {form.zone}</p>
+              <div className="text-sm text-green-700 dark:text-green-300 space-y-1">
+                <p>🏘️ Zone publique : <strong>{form.zone}</strong></p>
+                {locationStatus === 'success' ? (
+                  <p>🎯 Position exacte : <strong>Détectée automatiquement</strong></p>
                 ) : (
-                  <p>📍 Zone sélectionnée : {form.zone}</p>
+                  <p>📍 Position exacte : <strong>Basée sur votre quartier</strong></p>
                 )}
               </div>
             </div>
 
-            <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 p-4 rounded-xl">
-              <h4 className="font-medium text-green-800 dark:text-green-200 mb-2">🎯 Conseils de prix :</h4>
-              <ul className="text-sm text-green-700 dark:text-green-300 space-y-1">
+            <div className="bg-gradient-to-r from-orange-50 to-yellow-50 dark:from-orange-900/20 dark:to-yellow-900/20 p-4 rounded-xl">
+              <h4 className="font-medium text-orange-800 dark:text-orange-200 mb-2">🎯 Conseils de prix :</h4>
+              <ul className="text-sm text-orange-700 dark:text-orange-300 space-y-1">
                 <li>• Vérifiez les prix similaires sur le marché</li>
                 <li>• Un prix juste attire plus d'acheteurs</li>
                 <li>• Vous pourrez toujours négocier</li>
