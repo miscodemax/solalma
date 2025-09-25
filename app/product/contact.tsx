@@ -178,7 +178,7 @@ ${extraData?.taillePointure ? `🎯 ${isClothing ? 'Taille' : 'Pointure'} : ${ex
 
     // Définir les étapes du formulaire
     const formSteps = []
-
+    
     // Étape taille/pointure si nécessaire
     if (isClothing || isShoes) {
         formSteps.push({
@@ -199,8 +199,8 @@ ${extraData?.taillePointure ? `🎯 ${isClothing ? 'Taille' : 'Pointure'} : ${ex
                                 onClick={() => setCustomData({ ...customData, taillePointure: size })}
                                 className={`
                                     px-4 py-3 rounded-xl font-medium transition-all duration-300
-                                    ${customData.taillePointure === size
-                                        ? "bg-gradient-to-r from-yellow-400 to-yellow-500 text-white shadow-lg shadow-yellow-200 border-2 border-yellow-300"
+                                    ${customData.taillePointure === size 
+                                        ? "bg-gradient-to-r from-yellow-400 to-yellow-500 text-white shadow-lg shadow-yellow-200 border-2 border-yellow-300" 
                                         : "bg-white hover:bg-yellow-50 text-gray-700 border-2 border-gray-200 hover:border-yellow-300"
                                     }
                                 `}
@@ -303,8 +303,8 @@ ${extraData?.taillePointure ? `🎯 ${isClothing ? 'Taille' : 'Pointure'} : ${ex
                     disabled={isLoadingLocation}
                     className={`
                         w-full relative overflow-hidden rounded-2xl shadow-xl transition-all duration-300
-                        ${isLoadingLocation
-                            ? "bg-gradient-to-r from-gray-400 to-gray-500"
+                        ${isLoadingLocation 
+                            ? "bg-gradient-to-r from-gray-400 to-gray-500" 
                             : "bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700"
                         }
                         text-white font-bold py-5 px-6 disabled:cursor-not-allowed
@@ -334,7 +334,7 @@ ${extraData?.taillePointure ? `🎯 ${isClothing ? 'Taille' : 'Pointure'} : ${ex
                             </>
                         )}
                     </motion.div>
-
+                    
                     {/* Effet de brillance */}
                     <div className="absolute inset-0 -skew-x-12 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 </motion.button>
@@ -403,7 +403,7 @@ ${extraData?.taillePointure ? `🎯 ${isClothing ? 'Taille' : 'Pointure'} : ${ex
                                 </p>
                             </div>
                         </div>
-
+                        
                         {/* Barre de progression */}
                         <div className="mt-4 bg-yellow-300/30 rounded-full h-2">
                             <motion.div
@@ -435,26 +435,26 @@ ${extraData?.taillePointure ? `🎯 ${isClothing ? 'Taille' : 'Pointure'} : ${ex
                     <DialogFooter className="p-6 pt-0 flex justify-between">
                         <div className="flex gap-2">
                             {step > 0 && (
-                                <Button
-                                    variant="outline"
+                                <Button 
+                                    variant="outline" 
                                     onClick={handlePrevStep}
                                     className="rounded-xl border-gray-300 hover:bg-gray-50"
                                 >
                                     Précédent
                                 </Button>
                             )}
-                            <Button
-                                variant="outline"
+                            <Button 
+                                variant="outline" 
                                 onClick={handlePopupCancel}
                                 className="rounded-xl border-gray-300 hover:bg-gray-50"
                             >
                                 Passer
                             </Button>
                         </div>
-
+                        
                         <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                             {isLastStep ? (
-                                <Button
+                                <Button 
                                     onClick={handlePopupConfirm}
                                     className="bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-white rounded-xl px-8 shadow-lg"
                                 >
@@ -462,7 +462,7 @@ ${extraData?.taillePointure ? `🎯 ${isClothing ? 'Taille' : 'Pointure'} : ${ex
                                     Commander
                                 </Button>
                             ) : (
-                                <Button
+                                <Button 
                                     onClick={handleNextStep}
                                     className="bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-white rounded-xl px-6"
                                 >
