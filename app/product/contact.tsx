@@ -6,11 +6,13 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { MessageCircle, MapPin, Loader2, AlertTriangle, Phone } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
 
 interface ProductContactProps {
     product: {
         id: number
         title: string
+        category: "vetement" | "chaussure" | "autre"
         price: number
         whatsapp_number?: string
         phone_number?: string
@@ -34,6 +36,9 @@ export default function ProductContact({ product, customerName, className = "" }
 
     const clientDisplayName = customerName && customerName.trim() !== "" ? customerName : "ClientSangse"
 
+    const isClothing = product.category === "vetement"
+    const isShoes = product.category === "chaussure"
+
     // Obtenir position GPS
     const getCurrentLocation = (): Promise<{ lat: number; lng: number }> => {
         return new Promise((resolve, reject) => {
@@ -54,13 +59,15 @@ export default function ProductContact({ product, customerName, className = "" }
         })
     }
 
-    // Géocodage inverse avec adresse courte
+    // Géocodage inverse avec adresse courte et précise
     const reverseGeocode = async (lat: number, lng: number): Promise<string> => {
         try {
             const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`)
             const data = await res.json()
             const addr = data.address || {}
-            const shortAddress = `${addr.road || ''} ${addr.house_number || ''}, ${addr.city || addr.town || addr.village || ''}`.trim()
+            const shortAddress = [addr.road, addr.house_number, addr.suburb, addr.city, addr.town, addr.village]
+                .filter(Boolean)
+                .join(", ")
             return shortAddress || "Adresse introuvable"
         } catch {
             return "Adresse non trouvée"
@@ -146,19 +153,18 @@ ${extraData?.taillePointure ? `🎯 ${extraData.taillePointure}` : ""}
         else alert("Numéro de téléphone non disponible")
     }
 
-    // Steps à afficher
     const steps = [
-        (product.title.toLowerCase().includes("vêtement") || product.title.toLowerCase().includes("chaussure")) && (
-            <div key="taille">
-                <Label>{product.title.toLowerCase().includes("vêtement") ? "Taille" : "Pointure"}</Label>
+        (isClothing || isShoes) && (
+            <motion.div key="taille" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+                <Label>{isClothing ? "Taille" : "Pointure"}</Label>
                 <Input
-                    placeholder={product.title.toLowerCase().includes("vêtement") ? "Ex: M, L, XL" : "Ex: 42"}
+                    placeholder={isClothing ? "Ex: S, M, L, XL" : "Ex: 40, 41, 42"}
                     value={customData.taillePointure}
                     onChange={(e) => setCustomData({ ...customData, taillePointure: e.target.value })}
                 />
-            </div>
+            </motion.div>
         ),
-        <div key="quantite">
+        <motion.div key="quantite" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
             <Label>Quantité</Label>
             <Input
                 type="number"
@@ -166,8 +172,18 @@ ${extraData?.taillePointure ? `🎯 ${extraData.taillePointure}` : ""}
                 value={customData.quantite}
                 onChange={(e) => setCustomData({ ...customData, quantite: Number(e.target.value) })}
             />
-        </div>,
-        <div key="phone">
+        </motion.div>,
+        !customerName && (
+            <motion.div key="name" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+                <Label>Nom</Label>
+                <Input
+                    placeholder="Votre nom"
+                    value={customData.name}
+                    onChange={(e) => setCustomData({ ...customData, name: e.target.value })}
+                />
+            </motion.div>
+        ),
+        <motion.div key="phone" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
             <Label>Téléphone</Label>
             <Input
                 type="tel"
@@ -175,17 +191,7 @@ ${extraData?.taillePointure ? `🎯 ${extraData.taillePointure}` : ""}
                 value={customData.phone}
                 onChange={(e) => setCustomData({ ...customData, phone: e.target.value })}
             />
-        </div>,
-        !customerName && (
-            <div key="name">
-                <Label>Nom</Label>
-                <Input
-                    placeholder="Votre nom"
-                    value={customData.name}
-                    onChange={(e) => setCustomData({ ...customData, name: e.target.value })}
-                />
-            </div>
-        )
+        </motion.div>
     ].filter(Boolean) as JSX.Element[]
 
     return (
@@ -194,7 +200,7 @@ ${extraData?.taillePointure ? `🎯 ${extraData.taillePointure}` : ""}
                 <button
                     onClick={handleContactClick}
                     disabled={isLoadingLocation}
-                    className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-4 px-6 rounded-2xl shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 disabled:opacity-50"
+                    className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-4 px-6 rounded-2xl shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 disabled:opacity-50"
                 >
                     <div className="flex items-center justify-center gap-3">
                         {isLoadingLocation ? (
@@ -216,7 +222,7 @@ ${extraData?.taillePointure ? `🎯 ${extraData.taillePointure}` : ""}
             {product.whatsapp_number && (
                 <button
                     onClick={handleContactWithoutLocation}
-                    className="w-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 font-medium py-3 px-6 rounded-xl border border-gray-300 dark:border-gray-600 transition-all duration-300"
+                    className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-3 px-6 rounded-xl border border-gray-300 transition-all duration-300"
                 >
                     WhatsApp sans localisation
                 </button>
@@ -233,25 +239,26 @@ ${extraData?.taillePointure ? `🎯 ${extraData.taillePointure}` : ""}
             )}
 
             {locationError && (
-                <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-xl p-4">
+                <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
                     <div className="flex items-start gap-3">
                         <AlertTriangle className="text-orange-500 flex-shrink-0 mt-0.5" size={20} />
                         <div>
-                            <p className="text-sm text-orange-700 dark:text-orange-300 font-medium">Erreur</p>
-                            <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">{locationError}</p>
+                            <p className="text-sm text-orange-700 font-medium">Erreur</p>
+                            <p className="text-xs text-orange-600 mt-1">{locationError}</p>
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* Popup stepper */}
             <Dialog open={isPopupOpen} onOpenChange={setIsPopupOpen}>
                 <DialogContent className="sm:max-w-[400px]">
                     <DialogHeader>
                         <DialogTitle>Informations de commande</DialogTitle>
                     </DialogHeader>
 
-                    {steps[step]}
+                    <AnimatePresence mode="wait">
+                        {steps[step]}
+                    </AnimatePresence>
 
                     <DialogFooter className="flex justify-between mt-4">
                         <div className="flex gap-2">
