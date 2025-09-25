@@ -170,8 +170,8 @@ export default function Navbar({ products }: { products: Product[] }) {
               <Link href="/dashboard/add" className="block w-full sm:w-auto">
                 <Button
                   className="
-          w-7 sm:w-auto lg:hidden
-          py-6 px-6 
+          sm:w-auto lg:hidden
+          p-4
           text-lg font-semibold 
           bg-yellow-500 
           hover:bg-yellow-600 
