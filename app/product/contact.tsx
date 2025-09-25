@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
-import { MessageCircle, MapPin, Loader2, AlertTriangle, Image as ImageIcon, Phone } from "lucide-react"
+import { MessageCircle, MapPin, Loader2, AlertTriangle, Phone } from "lucide-react"
 
 interface ProductContactProps {
     product: {
@@ -24,6 +24,7 @@ export default function ProductContact({ product, customerName, className = "" }
     const [isLoadingLocation, setIsLoadingLocation] = useState(false)
     const [locationError, setLocationError] = useState<string | null>(null)
     const [isPopupOpen, setIsPopupOpen] = useState(false)
+    const [step, setStep] = useState(0)
     const [customData, setCustomData] = useState({
         taillePointure: "",
         quantite: 1,
@@ -66,7 +67,6 @@ export default function ProductContact({ product, customerName, className = "" }
         }
     }
 
-    // Crée message WhatsApp
     const createWhatsAppMessageWithLocation = async (extraData?: typeof customData): Promise<string | null> => {
         try {
             setIsLoadingLocation(true)
@@ -115,13 +115,20 @@ ${extraData?.taillePointure ? `🎯 ${extraData.taillePointure}` : ""}
         }
     }
 
-    // Popup
-    const handleContactClick = () => setIsPopupOpen(true)
+    const handleContactClick = () => {
+        setStep(0)
+        setIsPopupOpen(true)
+    }
+
+    const handleNextStep = () => setStep(step + 1)
+    const handlePrevStep = () => setStep(step - 1)
+
     const handlePopupConfirm = async () => {
         setIsPopupOpen(false)
         const whatsappLink = await createWhatsAppMessageWithLocation(customData)
         if (whatsappLink) window.open(whatsappLink, "_blank")
     }
+
     const handlePopupCancel = async () => {
         setIsPopupOpen(false)
         const whatsappLink = await createWhatsAppMessageWithLocation()
@@ -138,6 +145,48 @@ ${extraData?.taillePointure ? `🎯 ${extraData.taillePointure}` : ""}
         if (phoneClean) window.open(`tel:${phoneClean}`)
         else alert("Numéro de téléphone non disponible")
     }
+
+    // Steps à afficher
+    const steps = [
+        (product.title.toLowerCase().includes("vêtement") || product.title.toLowerCase().includes("chaussure")) && (
+            <div key="taille">
+                <Label>{product.title.toLowerCase().includes("vêtement") ? "Taille" : "Pointure"}</Label>
+                <Input
+                    placeholder={product.title.toLowerCase().includes("vêtement") ? "Ex: M, L, XL" : "Ex: 42"}
+                    value={customData.taillePointure}
+                    onChange={(e) => setCustomData({ ...customData, taillePointure: e.target.value })}
+                />
+            </div>
+        ),
+        <div key="quantite">
+            <Label>Quantité</Label>
+            <Input
+                type="number"
+                min={1}
+                value={customData.quantite}
+                onChange={(e) => setCustomData({ ...customData, quantite: Number(e.target.value) })}
+            />
+        </div>,
+        <div key="phone">
+            <Label>Téléphone</Label>
+            <Input
+                type="tel"
+                placeholder="Ex: 77XXXXXXX"
+                value={customData.phone}
+                onChange={(e) => setCustomData({ ...customData, phone: e.target.value })}
+            />
+        </div>,
+        !customerName && (
+            <div key="name">
+                <Label>Nom</Label>
+                <Input
+                    placeholder="Votre nom"
+                    value={customData.name}
+                    onChange={(e) => setCustomData({ ...customData, name: e.target.value })}
+                />
+            </div>
+        )
+    ].filter(Boolean) as JSX.Element[]
 
     return (
         <div className={`space-y-4 ${className}`}>
@@ -195,54 +244,25 @@ ${extraData?.taillePointure ? `🎯 ${extraData.taillePointure}` : ""}
                 </div>
             )}
 
-            {/* Popup shadcn/ui */}
+            {/* Popup stepper */}
             <Dialog open={isPopupOpen} onOpenChange={setIsPopupOpen}>
                 <DialogContent className="sm:max-w-[400px]">
                     <DialogHeader>
                         <DialogTitle>Informations de commande</DialogTitle>
                     </DialogHeader>
 
-                    {(product.title.toLowerCase().includes("vêtement") || product.title.toLowerCase().includes("chaussure")) && (
-                        <>
-                            <Label className="mt-2">{product.title.toLowerCase().includes("vêtement") ? "Taille" : "Pointure"}</Label>
-                            <Input
-                                placeholder={product.title.toLowerCase().includes("vêtement") ? "Ex: M, L, XL" : "Ex: 42"}
-                                value={customData.taillePointure}
-                                onChange={(e) => setCustomData({ ...customData, taillePointure: e.target.value })}
-                            />
-                        </>
-                    )}
-
-                    <Label className="mt-2">Quantité</Label>
-                    <Input
-                        type="number"
-                        min={1}
-                        value={customData.quantite}
-                        onChange={(e) => setCustomData({ ...customData, quantite: Number(e.target.value) })}
-                    />
-
-                    <Label className="mt-2">Téléphone</Label>
-                    <Input
-                        type="tel"
-                        placeholder="Ex: 77XXXXXXX"
-                        value={customData.phone}
-                        onChange={(e) => setCustomData({ ...customData, phone: e.target.value })}
-                    />
-
-                    {!customerName && (
-                        <>
-                            <Label className="mt-2">Nom</Label>
-                            <Input
-                                placeholder="Votre nom"
-                                value={customData.name}
-                                onChange={(e) => setCustomData({ ...customData, name: e.target.value })}
-                            />
-                        </>
-                    )}
+                    {steps[step]}
 
                     <DialogFooter className="flex justify-between mt-4">
-                        <Button variant="outline" onClick={handlePopupCancel}>Ignorer</Button>
-                        <Button onClick={handlePopupConfirm}>Envoyer</Button>
+                        <div className="flex gap-2">
+                            {step > 0 && <Button variant="outline" onClick={handlePrevStep}>Précédent</Button>}
+                            <Button variant="outline" onClick={handlePopupCancel}>Ignorer</Button>
+                        </div>
+                        {step < steps.length - 1 ? (
+                            <Button onClick={handleNextStep}>Suivant</Button>
+                        ) : (
+                            <Button onClick={handlePopupConfirm}>Envoyer</Button>
+                        )}
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
