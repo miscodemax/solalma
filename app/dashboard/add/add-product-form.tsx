@@ -17,7 +17,7 @@ const categories = [
   { value: 'artisanat', label: 'Artisanat', icon: '🎨', color: 'from-blue-400 to-purple-500' },
   { value: 'electronique', label: 'Electronique', icon: '📱', color: 'from-cyan-400 to-blue-500' },
   { value: 'accessoire', label: 'Accessoire', icon: '👜', color: 'from-amber-400 to-orange-500' },
-  { value: 'Chaussure', label: 'Chaussure', icon: '👜', color: 'from-amber-400 to-orange-500' },
+  { value: 'chaussure', label: 'Chaussure', icon: '👜', color: 'from-amber-400 to-orange-500' },
 ]
 
 const SENEGAL_LOCATIONS = [
