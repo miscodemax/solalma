@@ -7,6 +7,7 @@ import {
   DropdownMenu, DropdownMenuContent,
   DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { Button } from '@/components/ui/button'
 import {
   HomeIcon, ShoppingCart, User, X, LogOut, Heart, ShoppingBag,
   Search as SearchIcon, Plus, Settings
@@ -165,6 +166,28 @@ export default function Navbar({ products }: { products: Product[] }) {
 
             {/* Right actions mobile */}
             <div className="flex items-center gap-2">
+
+              <Link href="/dashboard/add" className="block w-full sm:w-auto">
+                <Button
+                  className="
+          w-7 sm:w-auto lg:hidden
+          py-6 px-6 
+          text-lg font-semibold 
+          bg-yellow-500 
+          hover:bg-yellow-600 
+          active:scale-95 
+          text-white 
+          rounded-2xl 
+          shadow-md 
+          transition 
+          duration-200 
+          ease-out
+        "
+                >
+                  🚀 Vendre
+                </Button>
+              </Link>
+
 
 
               {/* Menu button */}
