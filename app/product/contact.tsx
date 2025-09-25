@@ -2,8 +2,6 @@
 
 import { useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { MessageCircle, MapPin, Loader2, AlertTriangle, Phone } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
@@ -38,6 +36,9 @@ export default function ProductContact({ product, customerName, className = "" }
 
     const isClothing = product.category === "vetement"
     const isShoes = product.category === "chaussure"
+
+    const taillesVetements = ["XS", "S", "M", "L", "XL", "XXL"]
+    const pointuresChaussures = ["36", "37", "38", "39", "40", "41", "42", "43", "44"]
 
     // Obtenir position GPS
     const getCurrentLocation = (): Promise<{ lat: number; lng: number }> => {
@@ -156,40 +157,49 @@ ${extraData?.taillePointure ? `🎯 ${extraData.taillePointure}` : ""}
     const steps = [
         (isClothing || isShoes) && (
             <motion.div key="taille" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-                <Label>{isClothing ? "Taille" : "Pointure"}</Label>
-                <Input
-                    placeholder={isClothing ? "Ex: S, M, L, XL" : "Ex: 40, 41, 42"}
-                    value={customData.taillePointure}
-                    onChange={(e) => setCustomData({ ...customData, taillePointure: e.target.value })}
-                />
+                <p className="mb-2 font-medium">{isClothing ? "Taille" : "Pointure"}</p>
+                <div className="flex flex-wrap gap-2">
+                    {(isClothing ? taillesVetements : pointuresChaussures).map(t => (
+                        <button
+                            key={t}
+                            onClick={() => setCustomData({ ...customData, taillePointure: t })}
+                            className={`px-4 py-2 rounded-xl border ${customData.taillePointure === t ? "bg-yellow-500 text-white border-yellow-600" : "bg-gray-100 text-gray-800 border-gray-300"} transition-all duration-200`}
+                        >
+                            {t}
+                        </button>
+                    ))}
+                </div>
             </motion.div>
         ),
         <motion.div key="quantite" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-            <Label>Quantité</Label>
-            <Input
+            <p className="mb-2 font-medium">Quantité</p>
+            <input
                 type="number"
                 min={1}
                 value={customData.quantite}
                 onChange={(e) => setCustomData({ ...customData, quantite: Number(e.target.value) })}
+                className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-yellow-400"
             />
         </motion.div>,
         !customerName && (
             <motion.div key="name" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-                <Label>Nom</Label>
-                <Input
+                <p className="mb-2 font-medium">Nom</p>
+                <input
                     placeholder="Votre nom"
                     value={customData.name}
                     onChange={(e) => setCustomData({ ...customData, name: e.target.value })}
+                    className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-yellow-400"
                 />
             </motion.div>
         ),
         <motion.div key="phone" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-            <Label>Téléphone</Label>
-            <Input
+            <p className="mb-2 font-medium">Téléphone</p>
+            <input
                 type="tel"
                 placeholder="Ex: 77XXXXXXX"
                 value={customData.phone}
                 onChange={(e) => setCustomData({ ...customData, phone: e.target.value })}
+                className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-yellow-400"
             />
         </motion.div>
     ].filter(Boolean) as JSX.Element[]
