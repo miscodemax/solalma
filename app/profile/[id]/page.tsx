@@ -236,7 +236,7 @@ export default async function UserProfilePage({ params }: { params: { id: string
                   </div>
                 )}
                 <div className="flex items-center gap-2 bg-white/70 dark:bg-[#1C1C1C]/50 px-3 py-2 rounded-xl border border-[#F4B400]/20">
-                  <FaHeart className="text-[#F4B400]" />
+                  <FaHeart className="text-[#c70b0b]" />
                   <span className="text-[#1C1C1C] dark:text-gray-400">{NumberOfLike}</span>
                 </div>
               </div>
