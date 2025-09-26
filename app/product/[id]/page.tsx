@@ -1,4 +1,8 @@
 // app/product/[id]/page.tsx
+import dynamic from "next/dynamic"
+
+// Import dynamique pour éviter les erreurs SSR avec Leaflet
+const ProductLocationMap = dynamic(() => import("@/app/composants/ProductLocationMap"), { ssr: false })
 
 import { cookies } from "next/headers"
 import { createServerClient } from "@supabase/ssr"
@@ -303,6 +307,20 @@ export default async function ProductDetailPage({ params }: Props) {
             )}
           </div>
         </div>
+
+
+        {/* Localisation */}
+        {product.latitude && product.longitude && (
+          <div className="mt-8">
+            <h3 className="font-black text-xl text-[#1C2B49] dark:text-[#F6C445] mb-4">📍 Localisation</h3>
+            <ProductLocationMap
+              productTitle={product.title}
+              latitude={product.latitude}
+              longitude={product.longitude}
+              address={product.zone}
+            />
+          </div>
+        )}
 
         {/* Produits similaires */}
         {similarProducts && similarProducts.length > 0 && (
