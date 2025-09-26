@@ -1,8 +1,6 @@
 // app/product/[id]/page.tsx
-import dynamic from "next/dynamic"
 
-// Import dynamique pour éviter les erreurs SSR avec Leaflet
-const ProductLocationMap = dynamic(() => import("@/app/composants/ProductLocationMap"), { ssr: false })
+import ProductLocationMap from "../productLocationMap"
 
 import { cookies } from "next/headers"
 import { createServerClient } from "@supabase/ssr"
