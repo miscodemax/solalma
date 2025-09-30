@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import SangseChatBot from "./SangseChatBot"; // ton composant chatbot
+import SangseChatBot from "./sangseChatbot";// ton composant chatbot
 
 export default function FloatingChat() {
     const [open, setOpen] = useState(false);

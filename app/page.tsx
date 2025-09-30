@@ -4,7 +4,7 @@ import { supabaseUrl, supabaseKey } from "@/lib/supabase"
 import ProductList from "./composants/productlist"
 import { Suspense } from "react";
 import ProductSkeletonDemo from "./composants/skeletonproduct";
-import SangseChatBot from "./composants/sangseChatbot";
+
 
 type Props = {
   searchParams: {
