@@ -62,8 +62,8 @@ export default function SangseChatBot() {
                     <div
                         key={idx}
                         className={`max-w-[85%] p-3 rounded-lg shadow-sm break-words ${msg.sender === "user"
-                                ? "ml-auto bg-yellow-500 text-white rounded-br-none animate-slideInFromRight"
-                                : "mr-auto bg-white text-gray-800 border border-gray-200 rounded-bl-none animate-slideInFromLeft"
+                            ? "ml-auto bg-yellow-500 text-white rounded-br-none animate-slideInFromRight"
+                            : "mr-auto bg-white text-gray-800 border border-gray-200 rounded-bl-none animate-slideInFromLeft"
                             }`}
                     >
                         {msg.text}
