@@ -1,84 +1,62 @@
 "use client";
+
 import { useState, useRef, useEffect } from "react";
 
-type Message = {
-    sender: "user" | "bot";
-    text: string;
-    loading?: boolean;
-};
+type Message = { sender: "user" | "bot"; text: string };
 
 export default function SangseChatBot() {
     const [messages, setMessages] = useState<Message[]>([
         {
             sender: "bot",
-            text: "👋 **Bonjour et bienvenue sur Sangse Shop !**\nJe suis votre assistant personnel. Dites-moi ce que vous cherchez (ex: *une robe à 5 000 FCFA*), et je vous aiderai à trouver le produit parfait ! 😊",
+            text: "👋 Bonjour et bienvenue sur Sangse Shop ! Je suis votre assistant personnel. Dites-moi ce que vous cherchez, et je vous aiderai à trouver le produit parfait ! 😊",
         },
     ]);
     const [input, setInput] = useState<string>("");
     const [loading, setLoading] = useState<boolean>(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
-    // Scroll automatique vers le bas
+    // Scroll automatique
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
 
-    // Appel à l'API Stack AI
-    const queryStackAI = async (prompt: string) => {
-        try {
-            const response = await fetch(
-                "https://api.stack-ai.com/inference/v0/run/0a7c38cb-efcb-4763-a1ce-52f09f9f8dab/68dbdee98451de57f2126d98",
-                {
-                    method: "POST",
-                    headers: {
-                        Authorization: "Bearer 0b999669-1767-46da-9e9a-193be5d1a4b9",
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                        "in-0": `
-              Tu es un assistant d'achat intelligent pour Sangse Shop, le marketplace sénégalais.
-              **Règles :**
-              - Réponds en français, avec un ton amical et professionnel.
-              - Si le client demande un produit, propose-lui des options avec des liens directs (ex: https://sangse.shop/product/123).
-              - Si le budget ou les détails sont flous, demande des précisions.
-              - Utilise des emojis pour rendre la conversation vivante.
-              - Limite tes réponses à 3 phrases max pour rester clair.
-
-              **Question du client :** "${prompt}"
-            `,
-                        user_id: "sangse_user_" + Math.random().toString(36).substring(2, 9),
-                    }),
-                }
-            );
-            const data = await response.json();
-            return data["out-0"] || "Désolé, je n’ai pas trouvé de réponse adaptée. Pouvez-vous préciser ?";
-        } catch (error) {
-            console.error("Erreur API:", error);
-            return "⚠️ Une erreur est survenue. Veuillez réessayer plus tard.";
-        }
-    };
-
-    // Envoi du message
     const sendMessage = async () => {
         if (!input.trim()) return;
+
+        const user_id = "session_123"; // fixe pour conserver le contexte
         setMessages((prev) => [...prev, { sender: "user", text: input }]);
         setInput("");
         setLoading(true);
 
-        const botResponse = await queryStackAI(input);
-        setMessages((prev) => [...prev, { sender: "bot", text: botResponse }]);
-        setLoading(false);
+        try {
+            const res = await fetch("/api/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ prompt: input, user_id }),
+            });
+
+            const data = await res.json();
+            setMessages((prev) => [...prev, { sender: "bot", text: data.answer }]);
+        } catch (err) {
+            console.error(err);
+            setMessages((prev) => [
+                ...prev,
+                { sender: "bot", text: "⚠️ Impossible de contacter le serveur. Réessayez plus tard." },
+            ]);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
         <div className="flex flex-col h-[500px] w-full max-w-md bg-white rounded-xl shadow-xl overflow-hidden border-2 border-yellow-500">
-            {/* En-tête personnalisé */}
+            {/* Header */}
             <div className="bg-yellow-500 text-white p-4 text-center font-bold shadow-md">
-                <h2 className="text-xl">🛍️ **Sangse Shop Assistant**</h2>
+                <h2 className="text-xl">🛍️ Sangse Shop Assistant</h2>
                 <p className="text-xs mt-1">Votre guide d’achat intelligent 24/7</p>
             </div>
 
-            {/* Zone de messages */}
+            {/* Messages */}
             <div className="flex-1 p-4 overflow-y-auto bg-gray-50 space-y-3">
                 {messages.map((msg, idx) => (
                     <div
@@ -88,32 +66,19 @@ export default function SangseChatBot() {
                                 : "mr-auto bg-white text-gray-800 border border-gray-200 rounded-bl-none animate-slideInFromLeft"
                             }`}
                     >
-                        {msg.sender === "bot" && (
-                            <div className="flex items-start gap-2">
-                                <span className="text-yellow-500">🤖</span>
-                                <span className="whitespace-pre-wrap">{msg.text}</span>
-                            </div>
-                        )}
-                        {msg.sender === "user" && (
-                            <div className="flex items-start gap-2 justify-end">
-                                <span className="whitespace-pre-wrap">{msg.text}</span>
-                                <span className="text-yellow-500">👤</span>
-                            </div>
-                        )}
+                        {msg.text}
                     </div>
                 ))}
                 {loading && (
-                    <div className="flex justify-center py-2">
-                        <div className="flex items-center gap-2 text-gray-500">
-                            <div className="animate-spin h-5 w-5 border-2 border-yellow-500 border-t-transparent rounded-full"></div>
-                            <span>Le bot réfléchit...</span>
-                        </div>
+                    <div className="flex justify-center py-2 text-gray-500">
+                        <div className="animate-spin h-5 w-5 border-2 border-yellow-500 border-t-transparent rounded-full mr-2"></div>
+                        Le bot réfléchit...
                     </div>
                 )}
                 <div ref={messagesEndRef} />
             </div>
 
-            {/* Zone d'input */}
+            {/* Input */}
             <div className="flex p-3 border-t bg-white gap-2">
                 <input
                     type="text"
@@ -129,7 +94,7 @@ export default function SangseChatBot() {
                     className={`px-4 py-2 rounded-full text-white font-medium transition-colors ${loading ? "bg-yellow-300" : "bg-yellow-500 hover:bg-yellow-600"
                         }`}
                 >
-                    {loading ? <span className="animate-pulse">...</span> : "Envoyer"}
+                    {loading ? "..." : "Envoyer"}
                 </button>
             </div>
         </div>
