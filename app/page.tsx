@@ -56,7 +56,6 @@ export default async function HomePage({ searchParams }: Props) {
   return (
     <Suspense fallback={<ProductSkeletonDemo />}>
       <ProductList products={sorted} />
-      <SangseChatBot />
     </Suspense>
   );
 
