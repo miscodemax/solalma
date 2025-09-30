@@ -4,6 +4,7 @@ import { supabaseUrl, supabaseKey } from "@/lib/supabase"
 import ProductList from "./composants/productlist"
 import { Suspense } from "react";
 import ProductSkeletonDemo from "./composants/skeletonproduct";
+import SangseChatBot from "./composants/sangseChatbot";
 
 type Props = {
   searchParams: {
@@ -55,6 +56,7 @@ export default async function HomePage({ searchParams }: Props) {
   return (
     <Suspense fallback={<ProductSkeletonDemo />}>
       <ProductList products={sorted} />
+      <SangseChatBot />
     </Suspense>
   );
 
