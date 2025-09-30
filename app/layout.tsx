@@ -9,7 +9,6 @@ import { Suspense } from "react";
 import { ThemeProvider } from "./composants/theme-provider";
 import { createClient } from "@/lib/supabase";
 import SimplePWAInstall from "./composants/pwaInstallPrompt";
-import FloatingChat from "./composants/floatingchat";// ← Import du chat flottant
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -107,8 +106,7 @@ export default async function RootLayout({
             <SimplePWAInstall />
 
             {/* Chat flottant visible sur toutes les pages */}
-            <FloatingChat />
-            
+
             <BottomNavbar />
 
             <Footer />
