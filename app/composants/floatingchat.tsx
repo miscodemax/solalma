@@ -4,7 +4,7 @@
 import Stack from "react-stackai";
 
 export default function FloatingChat() {
-    const [open, setOpen] = useState(false);
+
 
     return (
         <>
