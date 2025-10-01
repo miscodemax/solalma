@@ -9,7 +9,6 @@ import { Suspense } from "react";
 import { ThemeProvider } from "./composants/theme-provider";
 import { createClient } from "@/lib/supabase";
 import SimplePWAInstall from "./composants/pwaInstallPrompt";
-import FloatingChat from "./composants/floatingchat";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

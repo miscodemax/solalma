@@ -33,8 +33,8 @@ export default function ProductContact({ product, customerName, className = "" }
     })
 
     const clientDisplayName = customerName && customerName.trim() !== "" ? customerName : "ClientSangse"
-    const isClothing = true
-    const isShoes = true
+    const isClothing = false
+    const isShoes = false
 
     const taillesVetements = ["XS", "S", "M", "L", "XL", "XXL"]
     const pointuresChaussures = ["36", "37", "38", "39", "40", "41", "42", "43", "44"]
