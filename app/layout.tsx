@@ -86,7 +86,9 @@ export default async function RootLayout({
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#000000" />
 
-
+        <Script
+          src="https://unpkg.com/react-stackai@latest/dist/vanilla/vanilla-stackai.js"
+          data-project-url="https://www.stack-ai.com/embed/0a7c38cb-efcb-4763-a1ce-52f09f9f8dab/0b999669-1767-46da-9e9a-193be5d1a4b9/68dbdee98451de57f2126d98" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen overflow-x-hidden`}
@@ -117,9 +119,6 @@ export default async function RootLayout({
           </ThemeProvider>
         </Suspense>
 
-        <Script
-          src="https://unpkg.com/react-stackai@latest/dist/vanilla/vanilla-stackai.js"
-          data-project-url="https://www.stack-ai.com/embed/0a7c38cb-efcb-4763-a1ce-52f09f9f8dab/0b999669-1767-46da-9e9a-193be5d1a4b9/68dbdee98451de57f2126d98" />
 
       </body>
     </html>
