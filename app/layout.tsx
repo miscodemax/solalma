@@ -106,9 +106,7 @@ export default async function RootLayout({
 
             <SimplePWAInstall />
 
-            {/* Chat flottant visible sur toutes les pages */}
-            <FloatingChat />
-            
+
             <BottomNavbar />
 
             <Footer />
