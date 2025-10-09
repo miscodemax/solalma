@@ -78,7 +78,7 @@ export default async function ProductDetailPage({ params }: Props) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) return null
+
 
   // Le "Display Name" de Google (ex: "Mamadou Ndiaye")
   const displayName = user.user_metadata?.full_name || user.user_metadata?.name
