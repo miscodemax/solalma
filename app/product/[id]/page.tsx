@@ -72,23 +72,23 @@ export default async function ProductDetailPage({ params }: Props) {
     },
   })
 
-
   // Récupérer l'utilisateur connecté
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
+  // Initialiser firstName avec une valeur par défaut
+  let firstName = 'clientSangse'
 
-
-  // Le "Display Name" de Google (ex: "Mamadou Ndiaye")
-  const displayName = user.user_metadata?.full_name || user.user_metadata?.name
-
-  if (!displayName) return null
-
-  // On prend seulement le premier mot = prénom
-  const firstName = displayName.split(" ")[0]
-
-
+  if (user) {
+    // Le "Display Name" de Google (ex: "Mamadou Ndiaye")
+    const displayName = user.user_metadata?.full_name || user.user_metadata?.name
+    
+    if (displayName) {
+      // On prend seulement le premier mot = prénom
+      firstName = displayName.split(" ")[0]
+    }
+  }
 
   const { data: product, error: productError } = await supabase
     .from("product")
@@ -108,7 +108,7 @@ export default async function ProductDetailPage({ params }: Props) {
     .select("*")
     .eq("user_id", product?.user_id)
 
-  console.log(allProducts.length);
+  console.log(allProducts?.length || 0)
 
   const allImages = [
     product.image_url,
@@ -293,7 +293,7 @@ export default async function ProductDetailPage({ params }: Props) {
                 price: product.price,
                 whatsapp_number: product.whatsapp_number
               }}
-              customerName={firstName || 'clientSangse'} // Vous pouvez récupérer le nom réel de l'utilisateur connecté
+              customerName={firstName}
             />
 
             {/* Description */}
@@ -305,7 +305,6 @@ export default async function ProductDetailPage({ params }: Props) {
             )}
           </div>
         </div>
-
 
         {/* Localisation */}
         {product.latitude && product.longitude && (
