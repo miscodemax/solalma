@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button"
 import { MessageCircle, MapPin, Loader2, AlertTriangle, Phone, ShoppingCart, User, Package, Hash, CheckCircle2 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 
-// Mise à jour de l'interface pour inclure les options de gros
 interface ProductContactProps {
     product: {
         id: number
@@ -37,8 +36,6 @@ export default function ProductContact({ product, customerName, className = "" }
     })
 
     const clientDisplayName = customerName && customerName.trim() !== "" ? customerName : "ClientSangse"
-
-    // La détection est maintenant dynamique en fonction de la catégorie du produit
     const isClothing = product.category === 'vetement'
     const isShoes = product.category === 'chaussure'
 
@@ -47,10 +44,17 @@ export default function ProductContact({ product, customerName, className = "" }
 
     // --- LOGIQUE DE CALCUL DU PRIX ---
     const { prixTotal, prixUnitaireApplicable, isWholesaleApplied } = useMemo(() => {
-        const isWholesalePossible = product.has_wholesale && product.wholesale_price && product.min_wholesale_qty
+        // 1. On vérifie si le produit a bien toutes les informations pour un prix de gros.
+        const isWholesalePossible = product.has_wholesale && product.wholesale_price != null && product.min_wholesale_qty != null
+
+        // 2. On vérifie si la quantité actuelle est SUPÉRIEURE OU ÉGALE (>=) à la quantité minimum requise.
+        // C'est cette ligne qui applique la condition que vous avez demandée.
         const isWholesaleApplied = isWholesalePossible && customData.quantite >= product.min_wholesale_qty
 
+        // 3. On choisit le prix unitaire : si la condition précédente est vraie, on prend le prix de gros.
         const prixUnitaire = isWholesaleApplied ? product.wholesale_price : product.price
+        
+        // 4. On calcule le total en multipliant la quantité par le bon prix unitaire.
         const total = prixUnitaire * customData.quantite
 
         return {
@@ -106,10 +110,9 @@ export default function ProductContact({ product, customerName, className = "" }
         } catch { return "Adresse non trouvée" }
     }
     
-    // Le message WhatsApp inclut maintenant le prix total et les détails
     const createWhatsAppMessage = (adresse?: string, osmLink?: string, extraData?: typeof customData) => {
-        const data = extraData || customData;
-        const total = prixUnitaireApplicable * data.quantite;
+        const data = extraData || customData
+        const total = prixUnitaireApplicable * data.quantite
 
         let message = `🛍️ *Nouvelle commande SangseShop*
 
@@ -122,69 +125,65 @@ _(${prixUnitaireApplicable.toLocaleString()} FCFA / unité${isWholesaleApplied ?
 🙋 *Client :* ${data.name || clientDisplayName}
 📞 *Téléphone :* ${data.phone || "non fourni"}
 
-`;
+`
 
         if (adresse && osmLink) {
-            message += `📍 *Adresse :* ${adresse}\n🗺️ *Itinéraire :* ${osmLink}\n\n`;
+            message += `📍 *Adresse :* ${adresse}\n🗺️ *Itinéraire :* ${osmLink}\n\n`
         } else {
-            message += `📍 *Livraison :* Adresse à préciser\n\n`;
+            message += `📍 *Livraison :* Adresse à préciser\n\n`
         }
 
-        message += `👉 Dispo ou bien ?\n🔗 Voir produit : https://sangse.shop/product/${product.id}`;
+        message += `👉 Dispo ou bien ?\n🔗 Voir produit : https://sangse.shop/product/${product.id}`
 
-        const whatsappClean = product.whatsapp_number?.replace(/\D/g, "");
-        return whatsappClean ? `https://wa.me/${whatsappClean}?text=${encodeURIComponent(message)}` : null;
+        const whatsappClean = product.whatsapp_number?.replace(/\D/g, "")
+        return whatsappClean ? `https://wa.me/${whatsappClean}?text=${encodeURIComponent(message)}` : null
     }
-
 
     const generateWhatsAppLink = async (withLocation: boolean, extraData?: typeof customData): Promise<string | null> => {
         if (!withLocation) {
-            return createWhatsAppMessage(undefined, undefined, extraData);
+            return createWhatsAppMessage(undefined, undefined, extraData)
         }
 
         try {
-            setIsLoadingLocation(true);
-            setLocationError(null);
-            const location = await getCurrentLocation();
-            const adresse = await reverseGeocode(location.lat, location.lng);
-            const osmLink = `https://www.openstreetmap.org/?mlat=${location.lat}&mlon=${location.lng}#map=18/${location.lat}/${location.lng}`;
-            return createWhatsAppMessage(adresse, osmLink, extraData);
+            setIsLoadingLocation(true)
+            setLocationError(null)
+            const location = await getCurrentLocation()
+            const adresse = await reverseGeocode(location.lat, location.lng)
+            const osmLink = `https://www.openstreetmap.org/?mlat=${location.lat}&mlon=${location.lng}#map=18/${location.lat}/${location.lng}`
+            return createWhatsAppMessage(adresse, osmLink, extraData)
         } catch (error: any) {
-            setLocationError(error.message);
-            // Fallback to message without location
-            return createWhatsAppMessage(undefined, undefined, extraData);
+            setLocationError(error.message)
+            return createWhatsAppMessage(undefined, undefined, extraData)
         } finally {
-            setIsLoadingLocation(false);
+            setIsLoadingLocation(false)
         }
-    };
+    }
 
     const handleContactClick = () => {
-        setStep(0);
-        setIsPopupOpen(true);
-    };
+        setStep(0)
+        setIsPopupOpen(true)
+    }
 
-    const handleNextStep = () => setStep(step + 1);
-    const handlePrevStep = () => { if (step > 0) setStep(step - 1) };
+    const handleNextStep = () => setStep(step + 1)
+    const handlePrevStep = () => { if (step > 0) setStep(step - 1) }
 
     const handlePopupConfirm = async () => {
-        setIsPopupOpen(false);
-        const whatsappLink = await generateWhatsAppLink(true, customData);
-        if (whatsappLink) window.open(whatsappLink, "_blank");
-    };
+        setIsPopupOpen(false)
+        const whatsappLink = await generateWhatsAppLink(true, customData)
+        if (whatsappLink) window.open(whatsappLink, "_blank")
+    }
 
     const handlePopupCancel = async () => {
-        setIsPopupOpen(false);
-        // "Passer" envoie une commande simple avec la quantité par défaut
-        const defaultData = { ...customData, quantite: 1, taillePointure: "", phone: "", name: "" };
-        const whatsappLink = await generateWhatsAppLink(true, defaultData);
-        if (whatsappLink) window.open(whatsappLink, "_blank");
-    };
+        setIsPopupOpen(false)
+        const defaultData = { ...customData, quantite: 1, taillePointure: "", phone: "", name: "" }
+        const whatsappLink = await generateWhatsAppLink(true, defaultData)
+        if (whatsappLink) window.open(whatsappLink, "_blank")
+    }
 
     const handleContactWithoutLocation = async () => {
-        const whatsappLink = await generateWhatsAppLink(false);
-        if (whatsappLink) window.open(whatsappLink, "_blank");
-    };
-
+        const whatsappLink = await generateWhatsAppLink(false)
+        if (whatsappLink) window.open(whatsappLink, "_blank")
+    }
 
     const handleCallSeller = () => {
         const phoneClean = product.whatsapp_number?.replace(/\D/g, "")
@@ -227,7 +226,6 @@ _(${prixUnitaireApplicable.toLocaleString()} FCFA / unité${isWholesaleApplied ?
                     </div>
                     <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => setCustomData({ ...customData, quantite: customData.quantite + 1 })} className="w-12 h-12 rounded-full bg-gray-100 hover:bg-yellow-100 text-gray-700 hover:text-yellow-700 font-bold text-xl flex items-center justify-center transition-all duration-200">+</motion.button>
                 </div>
-                {/* AFFICAHGE DU PRIX TOTAL */}
                 <div className="mt-6 text-center bg-yellow-50/50 p-4 rounded-xl border-2 border-yellow-200/50">
                     <p className="text-sm text-yellow-700">Prix total estimé</p>
                     <p className="text-2xl font-bold text-yellow-900 mt-1">{prixTotal.toLocaleString()} FCFA</p>
