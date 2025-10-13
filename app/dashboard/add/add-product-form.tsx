@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 
@@ -68,8 +68,61 @@ export default function AddProductForm({ userId }: Props) {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
 
+  // bottom offset used to position the fixed action bar above any existing tab bar
+  const [bottomOffset, setBottomOffset] = useState(16)
+  const tabbarRefs = useRef<{ el: Element; originalDisplay: string | null }[]>([])
+
   const router = useRouter()
   const supabase = createClient()
+
+  // -- detect & optionally hide app tab bar(s) and compute offset so the action bar sits above them on mobile
+  useEffect(() => {
+    // selectors commonly used for bottom tabbars/navigation in apps
+    const selectors = [
+      '.tabbar',
+      '#tabbar',
+      '.bottom-nav',
+      '.app-tabbar',
+      '.mobile-bottom-nav',
+      'nav.bottom-navigation',
+      'footer.bottom-nav'
+    ]
+
+    const found: { el: Element; originalDisplay: string | null }[] = []
+    let totalHeight = 0
+
+    selectors.forEach((sel) => {
+      document.querySelectorAll(sel).forEach((el) => {
+        const computed = window.getComputedStyle(el)
+        const rect = (el as HTMLElement).getBoundingClientRect()
+        const h = rect.height || parseFloat(computed.height || '0') || 0
+        found.push({ el, originalDisplay: (el as HTMLElement).style.display || null })
+        // hide the element (user asked to "cache" the tab bar)
+        ;(el as HTMLElement).style.display = 'none'
+        totalHeight += h
+      })
+    })
+
+    // If we found any tabbar, push the action bar above them
+    if (found.length > 0) {
+      // set a minimum safe offset and include some breathing room and safe-area for iPhones
+      const safeArea = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--safe-area-inset-bottom') || '0') || 0
+      setBottomOffset(Math.max(12, Math.ceil(totalHeight)) + safeArea + 8)
+      tabbarRefs.current = found
+    } else {
+      // fallback: ensure we respect iOS safe area
+      const cssSafe = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--safe-area-inset-bottom') || '0') || 0
+      setBottomOffset(12 + cssSafe)
+    }
+
+    // restore on unmount
+    return () => {
+      tabbarRefs.current.forEach(({ el, originalDisplay }) => {
+        ;(el as HTMLElement).style.display = originalDisplay ?? ''
+      })
+      tabbarRefs.current = []
+    }
+  }, [])
 
   // -- location grab with friendly fallback --
   useEffect(() => {
@@ -93,7 +146,7 @@ export default function AddProductForm({ userId }: Props) {
     getUserLocation()
   }, [])
 
-  // -- small reusable UI pieces inside the file for clarity --
+  // -- reusable UI pieces --
   const StepHeader = ({ title, emoji, subtitle }: { title: string, emoji?: string, subtitle?: string }) => (
     <div className="text-center space-y-3 mb-6">
       <div className="text-5xl">{emoji}</div>
@@ -254,48 +307,46 @@ export default function AddProductForm({ userId }: Props) {
     switch (currentStep) {
       case 0:
         return (
-          <div className="space-y-6 animate-in fade-in-50 slide-in-from-right-4 duration-500">
+          <div className="space-y-6">
             <StepHeader title="Ajoutez vos photos" emoji="📸" subtitle="Des images claires et bien cadrées augmentent vos chances de vente" />
-            <div className="grid grid-cols-1 gap-4">
-              <div className="rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-700 p-4 bg-white/60 dark:bg-gray-800/60">
-                <ImageUploader onUpload={handleAddImages} maxImages={5} currentImageCount={images.length} />
-                <p className="text-sm text-gray-500 mt-2">Vous pouvez ajouter jusqu'à 5 images. La première sera utilisée comme photo principale.</p>
-              </div>
-
-              {images.length > 0 && (
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-2">
-                  {images.map((img, idx) => (
-                    <div key={idx} className="relative rounded-xl overflow-hidden border-2 border-gray-100 dark:border-gray-800">
-                      <div className="aspect-[4/3] relative">
-                        <Image src={img} alt={`Produit ${idx + 1}`} fill className="object-cover" />
-                      </div>
-                      <div className="p-2 flex justify-between items-center bg-white/80 dark:bg-black/40">
-                        <div className="flex items-center gap-2">
-                          {idx === 0 ? <span className="text-sm font-medium text-[#E9961A]">Principale</span> : <button type="button" onClick={() => handleSetMainImage(idx)} className="text-sm text-gray-600 hover:text-[#E9961A]">Définir principale</button>}
-                        </div>
-                        <button type="button" onClick={() => handleRemoveImage(idx)} className="text-sm text-red-600 hover:underline">Supprimer</button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+            <div className="rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-700 p-4 bg-white/60 dark:bg-gray-800/60">
+              <ImageUploader onUpload={handleAddImages} maxImages={5} currentImageCount={images.length} />
+              <p className="text-sm text-gray-500 mt-2">Jusqu'à 5 images — la première est la photo principale.</p>
             </div>
+
+            {images.length > 0 && (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {images.map((img, idx) => (
+                  <div key={idx} className="relative rounded-xl overflow-hidden border border-gray-100 dark:border-gray-700">
+                    <div className="aspect-[4/3] relative">
+                      <Image src={img} alt={`Produit ${idx + 1}`} fill className="object-cover" />
+                    </div>
+                    <div className="p-2 flex justify-between items-center bg-white/90 dark:bg-black/40">
+                      <div className="flex items-center gap-2">
+                        {idx === 0 ? <span className="text-sm font-medium text-[#E9961A]">Principale</span> : <button type="button" onClick={() => handleSetMainImage(idx)} className="text-sm text-gray-600 hover:text-[#E9961A]">Définir</button>}
+                      </div>
+                      <button type="button" onClick={() => handleRemoveImage(idx)} className="text-sm text-red-600 hover:underline">Supprimer</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )
       case 1:
         return (
-          <div className="space-y-6 animate-in fade-in-50 slide-in-from-right-4 duration-500">
+          <div className="space-y-6">
             <StepHeader title="Choisissez votre catégorie" emoji="🏷️" subtitle="Facilitez la recherche des acheteurs" />
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {categories.map((cat) => {
                 const selected = form.category === cat.value
                 return (
                   <button key={cat.value} type="button" onClick={() => setForm((prev) => ({ ...prev, category: cat.value }))} aria-pressed={selected}
-                    className={`flex items-center gap-4 p-4 rounded-2xl border transition-all duration-200 ${selected ? `bg-gradient-to-br ${cat.color} text-white shadow-lg border-transparent` : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:scale-[1.02]'}`}>
-                    <div className="text-3xl">{cat.icon}</div>
+                    className={`flex items-center gap-3 p-3 rounded-2xl border transition-all duration-200 ${selected ? `bg-gradient-to-br ${cat.color} text-white shadow-lg border-transparent` : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:scale-[1.02]'}`}>
+                    <div className="text-2xl">{cat.icon}</div>
                     <div className="text-left">
                       <div className="font-semibold">{cat.label}</div>
-                      <div className="text-sm text-gray-500">Cliquez pour sélectionner</div>
+                      <div className="text-xs text-gray-500">Cliquez pour sélectionner</div>
                     </div>
                     {selected && <div className="ml-auto text-white font-bold">✓</div>}
                   </button>
@@ -306,7 +357,7 @@ export default function AddProductForm({ userId }: Props) {
         )
       case 2:
         return (
-          <div className="space-y-6 animate-in fade-in-50 slide-in-from-right-4 duration-500">
+          <div className="space-y-6">
             <StepHeader title="Choisissez votre quartier" emoji="📍" subtitle="Le bon quartier aide à mieux cibler les acheteurs" />
             <div className={`p-4 rounded-xl border-2 ${locationStatus === 'success' ? 'bg-green-50 border-green-200' : locationStatus === 'error' ? 'bg-yellow-50 border-yellow-200' : 'bg-blue-50 border-blue-200'}`}>
               <div className="flex items-center gap-3">
@@ -327,7 +378,7 @@ export default function AddProductForm({ userId }: Props) {
         )
       case 3:
         return (
-          <div className="space-y-6 animate-in fade-in-50 slide-in-from-right-4 duration-500">
+          <div className="space-y-6">
             <StepHeader title="Détails du produit" emoji="✏️" subtitle="Donnez confiance aux acheteurs avec des informations précises" />
             <div className="space-y-4">
               <div>
@@ -355,13 +406,13 @@ export default function AddProductForm({ userId }: Props) {
         )
       case 4:
         return (
-          <div className="space-y-6 animate-in fade-in-50 slide-in-from-right-4 duration-500">
+          <div className="space-y-6">
             <StepHeader title="Prix et contact" emoji="💰" subtitle="Dernière étape — soyez clair pour obtenir des messages" />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-2">Prix unitaire (FCFA)</label>
                 <input type="number" name="price" placeholder="Ex: 25000" value={form.price} onChange={handleChange} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-[#E9961A]" min={0} />
-                <div className="text-sm text-gray-500 mt-2">Astuce : mettez un prix honnête — les offres suivent souvent rapidement.</div>
+                <div className="text-sm text-gray-500 mt-2">Astuce : un prix honnête attire des acheteurs sérieux.</div>
               </div>
 
               <div>
@@ -370,7 +421,7 @@ export default function AddProductForm({ userId }: Props) {
                   <div className="px-4 py-3 bg-[#F4C430]/20 text-gray-800">+221</div>
                   <input type="tel" name="whatsappNumber" placeholder="771234567" value={form.whatsappNumber} onChange={handleWhatsappChange} className="flex-1 px-4 py-3" maxLength={9} />
                 </div>
-                <div className="text-sm text-gray-500 mt-2">Nous utiliserons ce numéro pour que les acheteurs puissent vous contacter rapidement.</div>
+                <div className="text-sm text-gray-500 mt-2">Nous utiliserons ce numéro pour que les acheteurs puissent vous contacter.</div>
               </div>
             </div>
 
@@ -421,7 +472,7 @@ export default function AddProductForm({ userId }: Props) {
             </h1>
             <div className="text-sm text-gray-500">Suivez les étapes — 2 minutes suffisent.</div>
           </div>
-          <div /> {/* placeholder for three-column layout alignment */}
+          <div />
         </div>
 
         <div className="bg-white/90 dark:bg-[#121212]/90 rounded-3xl shadow-lg border border-[#F4C430]/10 p-6 sm:p-8">
@@ -458,7 +509,6 @@ export default function AddProductForm({ userId }: Props) {
               )}
 
               <div className="md:hidden mb-4">
-                {/* mobile compact step indicator */}
                 <div className="flex items-center justify-between">
                   <div className="text-sm text-gray-600">Étape {currentStep + 1} / {steps.length}</div>
                   <div className="text-sm font-semibold text-[#E9961A]">{steps[currentStep].title}</div>
@@ -473,26 +523,39 @@ export default function AddProductForm({ userId }: Props) {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="fixed bottom-4 left-1/2 transform -translate-x-1/2 w-full max-w-4xl px-4">
-          <div className="bg-white/95 dark:bg-gray-900/90 backdrop-blur-sm rounded-2xl p-3 flex items-center gap-3 border border-[#F4C430]/10 shadow-lg">
-            <Button type="button" variant="outline" onClick={handlePrevious} disabled={currentStep === 0} className="px-4 py-2 border-[#E9961A] text-[#E9961A] disabled:opacity-50">
-              ← Précédent
-            </Button>
+        {/* action bar: fixed but positioned above the (hidden) tab bar via bottomOffset.
+            On mobile the buttons are larger and stacked if needed for easy tapping.
+            We also use env(safe-area-inset-bottom) to respect iOS notch areas. */}
+        <form onSubmit={handleSubmit} className="pointer-events-auto" style={{ zIndex: 60 }}>
+          <div
+            className="fixed left-1/2 transform -translate-x-1/2 w-full max-w-4xl px-4"
+            style={{ bottom: `${bottomOffset}px`, transition: 'bottom 220ms ease' }}
+          >
+            <div className="bg-white/98 dark:bg-gray-900/95 backdrop-blur-sm rounded-2xl p-3 flex flex-col sm:flex-row items-center gap-3 border border-[#F4C430]/10 shadow-lg" style={{ paddingBottom: `calc(env(safe-area-inset-bottom, 0px) + 12px)` }}>
+              {/* Previous */}
+              <div className="w-full sm:w-auto">
+                <Button type="button" variant="outline" onClick={handlePrevious} disabled={currentStep === 0} className="w-full sm:w-auto px-4 py-3 border-[#E9961A] text-[#E9961A] disabled:opacity-50">
+                  ← Précédent
+                </Button>
+              </div>
 
-            <div className="flex-1 text-center">
-              <div className="text-sm text-gray-500">Étape {currentStep + 1} sur {steps.length}</div>
-              <div className="text-xs text-gray-700">{steps[currentStep].subtitle}</div>
+              <div className="flex-1 text-center">
+                <div className="text-sm text-gray-500">Étape {currentStep + 1} sur {steps.length}</div>
+                <div className="text-xs text-gray-700">{steps[currentStep].subtitle}</div>
+              </div>
+
+              <div className="w-full sm:w-auto">
+                {currentStep < steps.length - 1 ? (
+                  <Button type="button" onClick={handleNext} disabled={!canGoNext()} className="w-full sm:w-auto px-4 py-3 bg-gradient-to-r from-[#F4C430] to-[#E9961A] text-white disabled:opacity-50">
+                    Suivant →
+                  </Button>
+                ) : (
+                  <Button type="submit" disabled={loading || !canGoNext()} className="w-full sm:w-auto px-5 py-3 bg-gradient-to-r from-[#F4C430] to-[#E9961A] text-white font-semibold">
+                    {loading ? 'Publication...' : '🚀 Publier'}
+                  </Button>
+                )}
+              </div>
             </div>
-
-            {currentStep < steps.length - 1 ? (
-              <Button type="button" onClick={handleNext} disabled={!canGoNext()} className="px-4 py-2 bg-gradient-to-r from-[#F4C430] to-[#E9961A] text-white disabled:opacity-50">
-                Suivant →
-              </Button>
-            ) : (
-              <Button type="submit" disabled={loading || !canGoNext()} className="px-5 py-2 bg-gradient-to-r from-[#F4C430] to-[#E9961A] text-white font-semibold">
-                {loading ? 'Publication...' : '🚀 Publier'}
-              </Button>
-            )}
           </div>
         </form>
       </div>
