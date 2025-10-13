@@ -1,4 +1,4 @@
-// app/product/[id]/page.tsx
+'use client'
 
 import ProductLocationMap from "../productLocationMap"
 
@@ -8,7 +8,7 @@ import { supabaseUrl, supabaseKey } from "../../../lib/supabase"
 import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { FaClock } from "react-icons/fa"
+import { FaClock, FaTags } from "react-icons/fa"
 import dayjs from "dayjs"
 import RatingSeller from "@/app/composants/ratingseller"
 import ProductShareButton from "@/app/composants/productShare"
@@ -145,6 +145,25 @@ export default async function ProductDetailPage({ params }: Props) {
   const ratingCount = allRatings?.length || 0
   const sellerId = product.user_id
 
+  // Helpers for wholesale display
+  const hasWholesale = !!product.has_wholesale
+  const wholesalePrice = product.wholesale_price ?? null
+  const minWholesaleQty = product.min_wholesale_qty ?? null
+  const priceNumber = Number(product.price) || 0
+
+  const savingsPerUnit =
+    hasWholesale && wholesalePrice ? Math.max(0, priceNumber - Number(wholesalePrice)) : 0
+  const savingsPercent =
+    hasWholesale && wholesalePrice && priceNumber > 0
+      ? Math.round((savingsPerUnit / priceNumber) * 100)
+      : 0
+
+  // Normalize WhatsApp for direct CTA (remove non-digits)
+  const whatsappDigits = product.whatsapp_number
+    ? product.whatsapp_number.replace(/\D/g, '')
+    : null
+  const whatsappLink = whatsappDigits ? `https://wa.me/${whatsappDigits}?text=${encodeURIComponent(`Bonjour, je suis intéressé(e) par votre produit "${product.title}". Je voudrais en savoir plus sur le prix de gros.`)}` : null
+
   return (
     <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#1C2B49]">
       {/* Structured Data pour Google */}
@@ -240,10 +259,74 @@ export default async function ProductDetailPage({ params }: Props) {
               <div className="absolute -top-3 left-6 bg-[#F6C445] text-[#1C2B49] px-4 py-1 rounded-full text-sm font-bold">
                 💰 Prix
               </div>
+
+              {/* Top-right badge when wholesale available */}
+              {hasWholesale && wholesalePrice && minWholesaleQty && (
+                <div className="absolute top-4 right-4 inline-flex items-center gap-2 bg-white/90 dark:bg-[#17304f] border border-[#F6C445]/20 px-3 py-2 rounded-full shadow-md">
+                  <FaTags className="text-[#F6C445]" />
+                  <div className="text-sm font-semibold text-[#1C2B49] dark:text-white">Prix de gros</div>
+                </div>
+              )}
+
               <p className="text-5xl lg:text-6xl font-black text-[#1C2B49] dark:text-[#F6C445] mb-2">
-                {product.price.toLocaleString()}{" "}
+                {Number(product.price).toLocaleString()}{" "}
                 <span className="text-2xl font-semibold">FCFA</span>
               </p>
+
+              {/* Wholesale promotional card - compact, promotional, and harmonized */}
+              {hasWholesale && wholesalePrice && minWholesaleQty ? (
+                <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
+                  <div className="sm:col-span-2 p-4 rounded-xl bg-white/90 dark:bg-[#12223a] border border-[#E8E6E1]/40">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-sm text-gray-600 dark:text-gray-300">Prix de gros</div>
+                        <div className="text-2xl font-bold text-[#1C2B49] dark:text-white">
+                          {Number(wholesalePrice).toLocaleString()} <span className="text-base font-medium">FCFA</span>
+                        </div>
+                        <div className="text-sm text-gray-500 mt-1">à partir de <span className="font-semibold">{minWholesaleQty}</span> unités</div>
+                      </div>
+
+                      <div className="text-right">
+                        <div className="text-sm text-green-600 font-bold">{savingsPercent}%</div>
+                        <div className="text-xs text-gray-500">économisez</div>
+                        <div className="text-sm text-gray-700 mt-1">{savingsPerUnit.toLocaleString()} FCFA / unité</div>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 text-xs text-gray-500">
+                      Offre idéale pour revendeurs et achats en quantité. Contactez le vendeur pour finaliser la commande en gros.
+                    </div>
+                  </div>
+
+                  <div className="flex sm:flex-col gap-3 sm:gap-2">
+                    {whatsappLink ? (
+                      <a
+                        href={whatsappLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center justify-center px-4 py-3 bg-gradient-to-r from-[#F6C445] to-[#E9961A] text-[#1C2B49] font-semibold rounded-xl shadow hover:brightness-105 transition"
+                      >
+                        📩 Demander prix de gros
+                      </a>
+                    ) : (
+                      <button className="px-4 py-3 bg-gray-200 text-gray-700 rounded-xl" disabled>
+                        Contact indisponible
+                      </button>
+                    )}
+
+                    <Link
+                      href={`/product/${product.id}#contact`}
+                      className="inline-flex items-center justify-center px-4 py-3 border border-[#E5E7EB] rounded-xl text-sm"
+                    >
+                      Voir conditions
+                    </Link>
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-4 text-sm text-gray-600 dark:text-gray-300">
+                  Aucun prix de gros proposé — vous pouvez toutefois contacter le vendeur pour une offre personnalisée.
+                </div>
+              )}
             </div>
 
             {/* Vendeur */}
