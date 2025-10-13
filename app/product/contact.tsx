@@ -127,13 +127,14 @@ _(${prixUnitaireApplicable.toLocaleString()} FCFA / unité${isWholesaleApplied ?
 
 `
 
+        message += `👉 Dispo ou bien ?\n🔗 Voir produit : https://sangse.shop/product/${product.id}`
+        
         if (adresse && osmLink) {
             message += `📍 *Adresse :* ${adresse}\n🗺️ *Itinéraire :* ${osmLink}\n\n`
         } else {
             message += `📍 *Livraison :* Adresse à préciser\n\n`
         }
 
-        message += `👉 Dispo ou bien ?\n🔗 Voir produit : https://sangse.shop/product/${product.id}`
 
         const whatsappClean = product.whatsapp_number?.replace(/\D/g, "")
         return whatsappClean ? `https://wa.me/${whatsappClean}?text=${encodeURIComponent(message)}` : null
