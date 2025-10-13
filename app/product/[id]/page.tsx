@@ -297,30 +297,6 @@ export default async function ProductDetailPage({ params }: Props) {
                       Offre idéale pour revendeurs et achats en quantité. Contactez le vendeur pour finaliser la commande en gros.
                     </div>
                   </div>
-
-                  <div className="flex sm:flex-col gap-3 sm:gap-2">
-                    {whatsappLink ? (
-                      <a
-                        href={whatsappLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center justify-center px-4 py-3 bg-gradient-to-r from-[#F6C445] to-[#E9961A] text-[#1C2B49] font-semibold rounded-xl shadow hover:brightness-105 transition"
-                      >
-                        📩 Demander prix de gros
-                      </a>
-                    ) : (
-                      <button className="px-4 py-3 bg-gray-200 text-gray-700 rounded-xl" disabled>
-                        Contact indisponible
-                      </button>
-                    )}
-
-                    <Link
-                      href={`/product/${product.id}#contact`}
-                      className="inline-flex items-center justify-center px-4 py-3 border border-[#E5E7EB] rounded-xl text-sm"
-                    >
-                      Voir conditions
-                    </Link>
-                  </div>
                 </div>
               ) : (
                 <div className="mt-4 text-sm text-gray-600 dark:text-gray-300">
@@ -374,7 +350,11 @@ export default async function ProductDetailPage({ params }: Props) {
                 id: product.id,
                 title: product.title,
                 price: product.price,
-                whatsapp_number: product.whatsapp_number
+                whatsapp_number: product.whatsapp_number,
+                category: product.category,
+                has_wholesale: product.hasWholesale,
+                wholesale_price: product.wholesalePrice,
+                min_wholesale_qty: product.minWholesaleQty
               }}
               customerName={firstName}
             />
