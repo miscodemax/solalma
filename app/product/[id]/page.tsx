@@ -352,9 +352,9 @@ export default async function ProductDetailPage({ params }: Props) {
                 price: product.price,
                 whatsapp_number: product.whatsapp_number,
                 category: product.category,
-                has_wholesale: product.hasWholesale,
-                wholesale_price: product.wholesalePrice,
-                min_wholesale_qty: product.minWholesaleQty
+                has_wholesale: product.has_Wholesale,
+                wholesale_price: product.wholesale_Price,
+                min_wholesale_qty: product.min_Wholesale_Qty
               }}
               customerName={firstName}
             />
