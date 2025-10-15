@@ -1,21 +1,21 @@
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
-
 import Image from 'next/image'
 import ImageUploader from './imageuploader'
 import { Button } from '@/components/ui/button'
+import { ChevronLeft, Check, Camera, Tag, MapPin, FileText, DollarSign } from 'lucide-react'
 
 type Props = { userId: string }
 
 const categories = [
   { value: 'vetement', label: 'Vêtement', icon: '👗', color: 'from-pink-400 to-rose-500' },
-  { value: 'soins_et_astuces', label: 'Soins et astuces', icon: '💄', color: 'from-purple-400 to-pink-500' },
+  { value: 'soins_et_astuces', label: 'Soins', icon: '💄', color: 'from-purple-400 to-pink-500' },
   { value: 'maquillage', label: 'Maquillage', icon: '💋', color: 'from-red-400 to-pink-500' },
   { value: 'artisanat', label: 'Artisanat', icon: '🎨', color: 'from-blue-400 to-purple-500' },
-  { value: 'electronique', label: 'Electronique', icon: '📱', color: 'from-cyan-400 to-blue-500' },
+  { value: 'electronique', label: 'Électronique', icon: '📱', color: 'from-cyan-400 to-blue-500' },
   { value: 'accessoire', label: 'Accessoire', icon: '👜', color: 'from-amber-400 to-orange-500' },
   { value: 'chaussure', label: 'Chaussure', icon: '👠', color: 'from-yellow-400 to-orange-500' },
 ]
@@ -48,7 +48,6 @@ const SENEGAL_LOCATIONS = [
 ]
 
 export default function AddProductForm({ userId }: Props) {
-  // -- form state --
   const [currentStep, setCurrentStep] = useState(0)
   const [form, setForm] = useState({
     title: '',
@@ -68,63 +67,9 @@ export default function AddProductForm({ userId }: Props) {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
 
-  // bottom offset used to position the fixed action bar above any existing tab bar
-  const [bottomOffset, setBottomOffset] = useState(16)
-  const tabbarRefs = useRef<{ el: Element; originalDisplay: string | null }[]>([])
-
   const router = useRouter()
   const supabase = createClient()
 
-  // -- detect & optionally hide app tab bar(s) and compute offset so the action bar sits above them on mobile
-  useEffect(() => {
-    // selectors commonly used for bottom tabbars/navigation in apps
-    const selectors = [
-      '.tabbar',
-      '#tabbar',
-      '.bottom-nav',
-      '.app-tabbar',
-      '.mobile-bottom-nav',
-      'nav.bottom-navigation',
-      'footer.bottom-nav'
-    ]
-
-    const found: { el: Element; originalDisplay: string | null }[] = []
-    let totalHeight = 0
-
-    selectors.forEach((sel) => {
-      document.querySelectorAll(sel).forEach((el) => {
-        const computed = window.getComputedStyle(el)
-        const rect = (el as HTMLElement).getBoundingClientRect()
-        const h = rect.height || parseFloat(computed.height || '0') || 0
-        found.push({ el, originalDisplay: (el as HTMLElement).style.display || null })
-        // hide the element (user asked to "cache" the tab bar)
-        ;(el as HTMLElement).style.display = 'none'
-        totalHeight += h
-      })
-    })
-
-    // If we found any tabbar, push the action bar above them
-    if (found.length > 0) {
-      // set a minimum safe offset and include some breathing room and safe-area for iPhones
-      const safeArea = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--safe-area-inset-bottom') || '0') || 0
-      setBottomOffset(Math.max(12, Math.ceil(totalHeight)) + safeArea + 8)
-      tabbarRefs.current = found
-    } else {
-      // fallback: ensure we respect iOS safe area
-      const cssSafe = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--safe-area-inset-bottom') || '0') || 0
-      setBottomOffset(12 + cssSafe)
-    }
-
-    // restore on unmount
-    return () => {
-      tabbarRefs.current.forEach(({ el, originalDisplay }) => {
-        ;(el as HTMLElement).style.display = originalDisplay ?? ''
-      })
-      tabbarRefs.current = []
-    }
-  }, [])
-
-  // -- location grab with friendly fallback --
   useEffect(() => {
     const getUserLocation = () => {
       if (!navigator.geolocation) {
@@ -137,45 +82,21 @@ export default function AddProductForm({ userId }: Props) {
           setUserLocation(coords)
           setLocationStatus('success')
         },
-        () => {
-          setLocationStatus('error')
-        },
+        () => setLocationStatus('error'),
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
       )
     }
     getUserLocation()
   }, [])
 
-  // -- reusable UI pieces --
-  const StepHeader = ({ title, emoji, subtitle }: { title: string, emoji?: string, subtitle?: string }) => (
-    <div className="text-center space-y-3 mb-6">
-      <div className="text-5xl">{emoji}</div>
-      <h2 className="text-2xl font-bold text-gray-800 dark:text-white">{title}</h2>
-      {subtitle && <p className="text-gray-600 dark:text-gray-400">{subtitle}</p>}
-    </div>
-  )
-
-  const ProgressBar = ({ step }: { step: number }) => {
-    const percent = ((step + 1) / steps.length) * 100
-    return (
-      <div aria-hidden className="w-full mt-4">
-        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
-          <div style={{ width: `${percent}%` }} className="h-2 bg-gradient-to-r from-[#F4C430] to-[#E9961A] transition-all duration-300" />
-        </div>
-      </div>
-    )
-  }
-
-  // -- steps description (kept constant) --
   const steps = [
-    { title: 'Photos', subtitle: 'Ajoutez des images attrayantes', icon: '📸' },
-    { title: 'Catégorie', subtitle: 'Choisissez le type de produit', icon: '🏷️' },
-    { title: 'Zone', subtitle: 'Choisissez votre quartier', icon: '📍' },
-    { title: 'Détails', subtitle: 'Décrivez votre produit', icon: '✏️' },
-    { title: 'Prix & Contact', subtitle: 'Fixez votre prix et contact', icon: '💰' }
+    { title: 'Photos', icon: Camera, color: 'text-pink-500' },
+    { title: 'Catégorie', icon: Tag, color: 'text-purple-500' },
+    { title: 'Zone', icon: MapPin, color: 'text-blue-500' },
+    { title: 'Détails', icon: FileText, color: 'text-green-500' },
+    { title: 'Prix', icon: DollarSign, color: 'text-yellow-500' }
   ]
 
-  // -- handlers --
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target
     if (type === 'checkbox') {
@@ -201,7 +122,6 @@ export default function AddProductForm({ userId }: Props) {
     })
   }
 
-  // -- validation & progression --
   const canGoNext = () => {
     switch (currentStep) {
       case 0: return images.length > 0
@@ -229,33 +149,32 @@ export default function AddProductForm({ userId }: Props) {
     if (currentStep > 0) setCurrentStep(currentStep - 1)
   }
 
-  // -- submit --
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     setSuccess(false)
 
     if (!canGoNext()) {
-      setError('Veuillez remplir tous les champs correctement avant de publier.')
+      setError('Veuillez remplir tous les champs correctement')
       return
     }
 
     const fullNumber = '+221' + form.whatsappNumber.trim()
     if (!/^\+221\d{8,9}$/.test(fullNumber)) {
-      setError('Veuillez entrer un numéro WhatsApp valide (ex: 771234567)')
+      setError('Numéro WhatsApp invalide')
       return
     }
     if (images.length === 0) {
-      setError('Veuillez ajouter au moins une image.')
+      setError('Ajoutez au moins une image')
       return
     }
     if (form.hasWholesale) {
       if (parseFloat(form.wholesalePrice) >= parseFloat(form.price)) {
-        setError('Le prix de gros doit être inférieur au prix unitaire.')
+        setError('Le prix de gros doit être inférieur au prix unitaire')
         return
       }
       if (parseInt(form.minWholesaleQty) < 2) {
-        setError('La quantité minimum pour le prix de gros doit être d\'au moins 2.')
+        setError('Quantité minimum : 2 unités')
         return
       }
     }
@@ -296,36 +215,49 @@ export default function AddProductForm({ userId }: Props) {
       setSuccess(true)
       setTimeout(() => router.push('/dashboard/products'), 1800)
     } catch (err: any) {
-      setError(err.message || 'Une erreur est survenue lors de la création du produit')
+      setError(err.message || 'Erreur lors de la création')
     } finally {
       setLoading(false)
     }
   }
 
-  // -- step content refined for clarity and better UX --
   const getStepContent = () => {
     switch (currentStep) {
       case 0:
         return (
-          <div className="space-y-6">
-            <StepHeader title="Ajoutez vos photos" emoji="📸" subtitle="Des images claires et bien cadrées augmentent vos chances de vente" />
-            <div className="rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-700 p-4 bg-white/60 dark:bg-gray-800/60">
+          <div className="space-y-4">
+            <div className="text-center space-y-2 mb-6">
+              <div className="text-5xl mb-2">📸</div>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Ajoutez vos photos</h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400">De belles photos = plus de ventes</p>
+            </div>
+
+            <div className="rounded-2xl border-2 border-dashed border-[#F4B400]/40 p-6 bg-gradient-to-br from-[#F4B400]/5 to-transparent">
               <ImageUploader onUpload={handleAddImages} maxImages={5} currentImageCount={images.length} />
-              <p className="text-sm text-gray-500 mt-2">Jusqu'à 5 images — la première est la photo principale.</p>
+              <p className="text-xs text-center text-gray-500 mt-3">Maximum 5 photos · La 1ère sera la principale</p>
             </div>
 
             {images.length > 0 && (
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 gap-3 mt-4">
                 {images.map((img, idx) => (
-                  <div key={idx} className="relative rounded-xl overflow-hidden border border-gray-100 dark:border-gray-700">
-                    <div className="aspect-[4/3] relative">
-                      <Image src={img} alt={`Produit ${idx + 1}`} fill className="object-cover" />
+                  <div key={idx} className="relative rounded-xl overflow-hidden shadow-md border-2 border-gray-100 dark:border-gray-700">
+                    <div className="aspect-square relative">
+                      <Image src={img} alt={`Photo ${idx + 1}`} fill className="object-cover" />
+                      {idx === 0 && (
+                        <div className="absolute top-2 left-2 bg-[#F4B400] text-white text-xs font-bold px-2 py-1 rounded-full">
+                          Principale
+                        </div>
+                      )}
                     </div>
-                    <div className="p-2 flex justify-between items-center bg-white/90 dark:bg-black/40">
-                      <div className="flex items-center gap-2">
-                        {idx === 0 ? <span className="text-sm font-medium text-[#E9961A]">Principale</span> : <button type="button" onClick={() => handleSetMainImage(idx)} className="text-sm text-gray-600 hover:text-[#E9961A]">Définir</button>}
-                      </div>
-                      <button type="button" onClick={() => handleRemoveImage(idx)} className="text-sm text-red-600 hover:underline">Supprimer</button>
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3 flex justify-between items-center">
+                      {idx !== 0 && (
+                        <button type="button" onClick={() => handleSetMainImage(idx)} className="text-white text-xs font-medium bg-white/20 px-2 py-1 rounded-lg backdrop-blur-sm">
+                          Définir principale
+                        </button>
+                      )}
+                      <button type="button" onClick={() => handleRemoveImage(idx)} className="ml-auto text-white text-xs font-medium bg-red-500/80 px-2 py-1 rounded-lg">
+                        Supprimer
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -333,231 +265,404 @@ export default function AddProductForm({ userId }: Props) {
             )}
           </div>
         )
+
       case 1:
         return (
-          <div className="space-y-6">
-            <StepHeader title="Choisissez votre catégorie" emoji="🏷️" subtitle="Facilitez la recherche des acheteurs" />
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="space-y-4">
+            <div className="text-center space-y-2 mb-6">
+              <div className="text-5xl mb-2">🏷️</div>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Catégorie</h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Quel type de produit ?</p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
               {categories.map((cat) => {
                 const selected = form.category === cat.value
                 return (
-                  <button key={cat.value} type="button" onClick={() => setForm((prev) => ({ ...prev, category: cat.value }))} aria-pressed={selected}
-                    className={`flex items-center gap-3 p-3 rounded-2xl border transition-all duration-200 ${selected ? `bg-gradient-to-br ${cat.color} text-white shadow-lg border-transparent` : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:scale-[1.02]'}`}>
-                    <div className="text-2xl">{cat.icon}</div>
-                    <div className="text-left">
-                      <div className="font-semibold">{cat.label}</div>
-                      <div className="text-xs text-gray-500">Cliquez pour sélectionner</div>
-                    </div>
-                    {selected && <div className="ml-auto text-white font-bold">✓</div>}
+                  <button
+                    key={cat.value}
+                    type="button"
+                    onClick={() => setForm((prev) => ({ ...prev, category: cat.value }))}
+                    className={`relative p-4 rounded-2xl border-2 transition-all duration-200 active:scale-95 ${
+                      selected 
+                        ? `bg-gradient-to-br ${cat.color} text-white shadow-lg border-transparent` 
+                        : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
+                    }`}
+                  >
+                    <div className="text-4xl mb-2">{cat.icon}</div>
+                    <div className="font-semibold text-sm">{cat.label}</div>
+                    {selected && (
+                      <div className="absolute top-2 right-2 w-6 h-6 bg-white/30 rounded-full flex items-center justify-center">
+                        <Check size={16} className="text-white" />
+                      </div>
+                    )}
                   </button>
                 )
               })}
             </div>
           </div>
         )
+
       case 2:
         return (
-          <div className="space-y-6">
-            <StepHeader title="Choisissez votre quartier" emoji="📍" subtitle="Le bon quartier aide à mieux cibler les acheteurs" />
-            <div className={`p-4 rounded-xl border-2 ${locationStatus === 'success' ? 'bg-green-50 border-green-200' : locationStatus === 'error' ? 'bg-yellow-50 border-yellow-200' : 'bg-blue-50 border-blue-200'}`}>
-              <div className="flex items-center gap-3">
-                {locationStatus === 'loading' && (<><div className="animate-spin w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full" /> <div><p className="font-medium text-blue-700">Localisation en cours...</p><p className="text-sm text-blue-600">Nous utilisons votre position pour suggérer le meilleur quartier.</p></div></>)}
-                {locationStatus === 'success' && (<><div className="text-green-500 text-xl">✅</div><div><p className="font-medium text-green-700">Position détectée</p><p className="text-sm text-green-600">Vous pouvez la conserver ou choisir un quartier manuellement.</p></div></>)}
-                {locationStatus === 'error' && (<><div className="text-yellow-500 text-xl">⚠️</div><div><p className="font-medium text-yellow-700">Géolocalisation indisponible</p><p className="text-sm text-yellow-600">Choisissez votre quartier ci-dessous.</p></div></>)}
-              </div>
+          <div className="space-y-4">
+            <div className="text-center space-y-2 mb-6">
+              <div className="text-5xl mb-2">📍</div>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Votre zone</h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Où se trouve le produit ?</p>
             </div>
 
-            <div className="p-6 rounded-2xl border-2 bg-white/60 dark:bg-gray-800/60">
-              <label className="block text-sm font-medium mb-2">Sélectionnez votre quartier</label>
-              <select name="zone" value={form.zone} onChange={handleChange} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-yellow-300">
-                {SENEGAL_LOCATIONS.map((loc) => (<option key={loc.name} value={loc.name}>{loc.name}</option>))}
+            {locationStatus === 'loading' && (
+              <div className="p-4 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+                <div className="flex items-center gap-3">
+                  <div className="animate-spin w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full" />
+                  <div>
+                    <p className="font-medium text-blue-900 dark:text-blue-100 text-sm">Localisation...</p>
+                    <p className="text-xs text-blue-700 dark:text-blue-300">Détection en cours</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {locationStatus === 'success' && (
+              <div className="p-4 rounded-xl bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
+                <div className="flex items-center gap-3">
+                  <div className="text-2xl">✅</div>
+                  <div>
+                    <p className="font-medium text-green-900 dark:text-green-100 text-sm">Position détectée</p>
+                    <p className="text-xs text-green-700 dark:text-green-300">Vous pouvez la modifier ci-dessous</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {locationStatus === 'error' && (
+              <div className="p-4 rounded-xl bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800">
+                <div className="flex items-center gap-3">
+                  <div className="text-2xl">⚠️</div>
+                  <div>
+                    <p className="font-medium text-yellow-900 dark:text-yellow-100 text-sm">Sélection manuelle</p>
+                    <p className="text-xs text-yellow-700 dark:text-yellow-300">Choisissez votre quartier</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="mt-6">
+              <label className="block text-sm font-semibold mb-3 text-gray-900 dark:text-white">Sélectionnez votre quartier</label>
+              <select 
+                name="zone" 
+                value={form.zone} 
+                onChange={handleChange}
+                className="w-full px-4 py-4 text-lg rounded-xl border-2 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-[#F4B400] focus:border-[#F4B400] bg-white dark:bg-gray-800 transition-all"
+              >
+                {SENEGAL_LOCATIONS.map((loc) => (
+                  <option key={loc.name} value={loc.name}>{loc.name}</option>
+                ))}
               </select>
-              <p className="text-sm mt-3 text-gray-500">Zone affichée : <span className="font-semibold">{form.zone}</span></p>
+              <p className="text-sm mt-3 text-gray-600 dark:text-gray-400">
+                Zone : <span className="font-semibold text-[#F4B400]">{form.zone}</span>
+              </p>
             </div>
           </div>
         )
+
       case 3:
         return (
-          <div className="space-y-6">
-            <StepHeader title="Détails du produit" emoji="✏️" subtitle="Donnez confiance aux acheteurs avec des informations précises" />
+          <div className="space-y-4">
+            <div className="text-center space-y-2 mb-6">
+              <div className="text-5xl mb-2">✏️</div>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Détails</h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Décrivez votre produit</p>
+            </div>
+
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Titre</label>
-                <input type="text" name="title" placeholder="Ex: Robe Wax taille M, comme neuve" value={form.title} onChange={handleChange} maxLength={60}
-                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-[#E9961A]" />
-                <div className="text-right text-sm text-gray-500 mt-1">{form.title.length}/60</div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Description</label>
-                <textarea name="description" value={form.description} onChange={handleChange} placeholder="Décrivez l'état, la taille, la matière..." maxLength={500} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 h-36 resize-none focus:ring-2 focus:ring-[#E9961A]" />
-                <div className="text-right text-sm text-gray-500 mt-1">{form.description.length}/500</div>
+                <label className="block text-sm font-semibold mb-2 text-gray-900 dark:text-white">Titre du produit</label>
+                <input 
+                  type="text" 
+                  name="title" 
+                  placeholder="Ex: Robe Wax taille M" 
+                  value={form.title} 
+                  onChange={handleChange} 
+                  maxLength={60}
+                  className="w-full px-4 py-4 text-base rounded-xl border-2 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-[#F4B400] focus:border-[#F4B400] bg-white dark:bg-gray-800 transition-all"
+                />
+                <div className="text-right text-xs text-gray-500 mt-1">{form.title.length}/60</div>
               </div>
 
-              <div className="p-4 rounded-lg bg-blue-50 border border-blue-100">
-                <h4 className="font-medium">Conseils rapides</h4>
-                <ul className="text-sm text-gray-600 mt-2 space-y-1">
-                  <li>• Indiquez l'état exact et la taille</li>
-                  <li>• Ajoutez des mesures si nécessaire</li>
-                  <li>• Soyez transparent sur les défauts éventuels</li>
+              <div>
+                <label className="block text-sm font-semibold mb-2 text-gray-900 dark:text-white">Description</label>
+                <textarea 
+                  name="description" 
+                  value={form.description} 
+                  onChange={handleChange} 
+                  placeholder="État, taille, matière, couleur..." 
+                  maxLength={500}
+                  rows={5}
+                  className="w-full px-4 py-4 text-base rounded-xl border-2 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-[#F4B400] focus:border-[#F4B400] bg-white dark:bg-gray-800 resize-none transition-all"
+                />
+                <div className="text-right text-xs text-gray-500 mt-1">{form.description.length}/500</div>
+              </div>
+
+              <div className="p-4 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+                <h4 className="font-semibold text-sm mb-2 text-blue-900 dark:text-blue-100">💡 Conseils</h4>
+                <ul className="text-xs text-blue-800 dark:text-blue-200 space-y-1">
+                  <li>• Précisez l'état et la taille</li>
+                  <li>• Mentionnez les défauts s'il y en a</li>
+                  <li>• Soyez honnête pour gagner la confiance</li>
                 </ul>
               </div>
             </div>
           </div>
         )
+
       case 4:
         return (
-          <div className="space-y-6">
-            <StepHeader title="Prix et contact" emoji="💰" subtitle="Dernière étape — soyez clair pour obtenir des messages" />
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">Prix unitaire (FCFA)</label>
-                <input type="number" name="price" placeholder="Ex: 25000" value={form.price} onChange={handleChange} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-[#E9961A]" min={0} />
-                <div className="text-sm text-gray-500 mt-2">Astuce : un prix honnête attire des acheteurs sérieux.</div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">Numéro WhatsApp</label>
-                <div className="flex items-center border-2 border-gray-200 rounded-xl overflow-hidden">
-                  <div className="px-4 py-3 bg-[#F4C430]/20 text-gray-800">+221</div>
-                  <input type="tel" name="whatsappNumber" placeholder="771234567" value={form.whatsappNumber} onChange={handleWhatsappChange} className="flex-1 px-4 py-3" maxLength={9} />
-                </div>
-                <div className="text-sm text-gray-500 mt-2">Nous utiliserons ce numéro pour que les acheteurs puissent vous contacter.</div>
-              </div>
+          <div className="space-y-4">
+            <div className="text-center space-y-2 mb-6">
+              <div className="text-5xl mb-2">💰</div>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Prix & Contact</h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Dernière étape !</p>
             </div>
 
-            <div className="mt-4 p-4 rounded-2xl border-2 bg-white/60">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="font-semibold">Proposer un prix de gros (optionnel)</h3>
-                  <p className="text-sm text-gray-500">Attirez les acheteurs qui achètent en volume.</p>
-                </div>
-                <label className="inline-flex items-center cursor-pointer">
-                  <input type="checkbox" name="hasWholesale" checked={form.hasWholesale} onChange={handleChange} className="sr-only peer" />
-                  <div className="w-12 h-7 bg-gray-200 rounded-full relative peer-checked:bg-[#7C3AED] transition-colors">
-                    <span className={`absolute left-[4px] top-[4px] w-5 h-5 bg-white rounded-full transition-transform peer-checked:translate-x-5`} />
-                  </div>
-                </label>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold mb-2 text-gray-900 dark:text-white">Prix (FCFA)</label>
+                <input 
+                  type="number" 
+                  name="price" 
+                  placeholder="25000" 
+                  value={form.price} 
+                  onChange={handleChange}
+                  min={0}
+                  className="w-full px-4 py-4 text-lg font-semibold rounded-xl border-2 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-[#F4B400] focus:border-[#F4B400] bg-white dark:bg-gray-800 transition-all"
+                />
+                <p className="text-xs text-gray-500 mt-2">💡 Un prix juste attire plus d'acheteurs</p>
               </div>
 
-              {form.hasWholesale && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Prix de gros (FCFA)</label>
-                    <input type="number" name="wholesalePrice" placeholder="Ex: 20000" value={form.wholesalePrice} onChange={handleChange} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-purple-300" min={0} />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Quantité minimum</label>
-                    <input type="number" name="minWholesaleQty" placeholder="Ex: 10" value={form.minWholesaleQty} onChange={handleChange} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-purple-300" min={2} />
-                  </div>
+              <div>
+                <label className="block text-sm font-semibold mb-2 text-gray-900 dark:text-white">WhatsApp</label>
+                <div className="flex items-center border-2 border-gray-300 dark:border-gray-600 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-[#F4B400] focus-within:border-[#F4B400] bg-white dark:bg-gray-800 transition-all">
+                  <div className="px-4 py-4 bg-[#F4B400]/20 text-gray-900 dark:text-white font-semibold text-base">+221</div>
+                  <input 
+                    type="tel" 
+                    name="whatsappNumber" 
+                    placeholder="771234567" 
+                    value={form.whatsappNumber} 
+                    onChange={handleWhatsappChange}
+                    maxLength={9}
+                    className="flex-1 px-4 py-4 text-base bg-transparent outline-none"
+                  />
                 </div>
-              )}
+                <p className="text-xs text-gray-500 mt-2">📱 Les acheteurs vous contacteront ici</p>
+              </div>
+
+              <div className="mt-6 p-4 rounded-2xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <h3 className="font-semibold text-sm text-gray-900 dark:text-white">Prix de gros</h3>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">Pour les achats en volume</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      name="hasWholesale" 
+                      checked={form.hasWholesale} 
+                      onChange={handleChange}
+                      className="sr-only peer"
+                    />
+                    <div className="w-14 h-8 bg-gray-300 dark:bg-gray-600 rounded-full peer peer-checked:bg-[#F4B400] transition-colors relative">
+                      <span className={`absolute left-1 top-1 w-6 h-6 bg-white rounded-full transition-transform ${form.hasWholesale ? 'translate-x-6' : ''}`} />
+                    </div>
+                  </label>
+                </div>
+
+                {form.hasWholesale && (
+                  <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <div>
+                      <label className="block text-xs font-medium mb-2 text-gray-700 dark:text-gray-300">Prix gros (FCFA)</label>
+                      <input 
+                        type="number" 
+                        name="wholesalePrice" 
+                        placeholder="20000" 
+                        value={form.wholesalePrice} 
+                        onChange={handleChange}
+                        min={0}
+                        className="w-full px-3 py-3 text-sm rounded-lg border-2 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-purple-400 bg-white dark:bg-gray-700"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium mb-2 text-gray-700 dark:text-gray-300">Quantité min.</label>
+                      <input 
+                        type="number" 
+                        name="minWholesaleQty" 
+                        placeholder="10" 
+                        value={form.minWholesaleQty} 
+                        onChange={handleChange}
+                        min={2}
+                        className="w-full px-3 py-3 text-sm rounded-lg border-2 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-purple-400 bg-white dark:bg-gray-700"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )
+
       default:
         return null
     }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#FAF9F6] via-white to-[#F4C430]/5 dark:from-[#0b0b0b] dark:via-[#111] dark:to-[#1f1f1f] py-6 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-6 flex items-center justify-between">
-          <Button variant="ghost" size="lg" onClick={() => router.back()} className="text-[#E9961A]">
-            ← Retour
-          </Button>
-          <div className="text-center">
-            <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-[#F4C430] via-[#E9961A] to-[#F4C430] bg-clip-text text-transparent">
-              Publier votre produit
-            </h1>
-            <div className="text-sm text-gray-500">Suivez les étapes — 2 minutes suffisent.</div>
-          </div>
-          <div />
-        </div>
-
-        <div className="bg-white/90 dark:bg-[#121212]/90 rounded-3xl shadow-lg border border-[#F4C430]/10 p-6 sm:p-8">
-          <div className="flex items-start gap-6">
-            <div className="w-1/3 hidden md:block">
-              <div className="sticky top-6">
-                <div className="space-y-4">
-                  {steps.map((s, i) => (
-                    <button key={s.title} type="button" onClick={() => i <= currentStep && setCurrentStep(i)} className={`w-full text-left p-3 rounded-lg transition-colors ${i === currentStep ? 'bg-[#FFF3D6] border border-[#F4C430]' : 'hover:bg-gray-50'}`}>
-                      <div className="flex items-center gap-3">
-                        <div className={`w-9 h-9 flex items-center justify-center rounded-full ${i <= currentStep ? 'bg-[#F4C430] text-white' : 'bg-gray-200 text-gray-600'}`}>{i + 1}</div>
-                        <div>
-                          <div className="font-medium text-sm">{s.title}</div>
-                          <div className="text-xs text-gray-500">{s.subtitle}</div>
-                        </div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-                <ProgressBar step={currentStep} />
-              </div>
-            </div>
-
-            <div className="flex-1">
-              {error && (
-                <div className="mb-4 p-3 rounded-lg bg-red-50 border-l-4 border-red-400 text-red-700">
-                  {error}
-                </div>
-              )}
-              {success && (
-                <div className="mb-4 p-3 rounded-lg bg-green-50 border-l-4 border-green-400 text-green-700">
-                  Produit publié avec succès ! Redirection en cours...
-                </div>
-              )}
-
-              <div className="md:hidden mb-4">
-                <div className="flex items-center justify-between">
-                  <div className="text-sm text-gray-600">Étape {currentStep + 1} / {steps.length}</div>
-                  <div className="text-sm font-semibold text-[#E9961A]">{steps[currentStep].title}</div>
-                </div>
-                <ProgressBar step={currentStep} />
-              </div>
-
-              <div className="p-4 rounded-2xl border border-gray-100 bg-white/60">
-                {getStepContent()}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* action bar: fixed but positioned above the (hidden) tab bar via bottomOffset.
-            On mobile the buttons are larger and stacked if needed for easy tapping.
-            We also use env(safe-area-inset-bottom) to respect iOS notch areas. */}
-        <form onSubmit={handleSubmit} className="pointer-events-auto" style={{ zIndex: 60 }}>
-          <div
-            className="fixed left-1/2 transform -translate-x-1/2 w-full max-w-4xl px-4"
-            style={{ bottom: `${bottomOffset}px`, transition: 'bottom 220ms ease' }}
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-black pb-32">
+      {/* Header fixe */}
+      <div className="sticky top-0 z-40 bg-white/95 dark:bg-gray-900/95 backdrop-blur-lg border-b border-gray-200 dark:border-gray-800 shadow-sm">
+        <div className="px-4 py-4 flex items-center justify-between max-w-2xl mx-auto">
+          <button 
+            onClick={() => router.back()} 
+            className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 active:scale-95 transition-all"
           >
-            <div className="bg-white/98 dark:bg-gray-900/95 backdrop-blur-sm rounded-2xl p-3 flex flex-col sm:flex-row items-center gap-3 border border-[#F4C430]/10 shadow-lg" style={{ paddingBottom: `calc(env(safe-area-inset-bottom, 0px) + 12px)` }}>
-              {/* Previous */}
-              <div className="w-full sm:w-auto">
-                <Button type="button" variant="outline" onClick={handlePrevious} disabled={currentStep === 0} className="w-full sm:w-auto px-4 py-3 border-[#E9961A] text-[#E9961A] disabled:opacity-50">
-                  ← Précédent
-                </Button>
-              </div>
+            <ChevronLeft size={24} className="text-gray-700 dark:text-gray-300" />
+          </button>
+          
+          <div className="text-center flex-1">
+            <h1 className="text-lg font-bold text-gray-900 dark:text-white">Nouveau produit</h1>
+            <p className="text-xs text-gray-500">Étape {currentStep + 1}/{steps.length}</p>
+          </div>
 
-              <div className="flex-1 text-center">
-                <div className="text-sm text-gray-500">Étape {currentStep + 1} sur {steps.length}</div>
-                <div className="text-xs text-gray-700">{steps[currentStep].subtitle}</div>
-              </div>
+          <div className="w-10" />
+        </div>
 
-              <div className="w-full sm:w-auto">
-                {currentStep < steps.length - 1 ? (
-                  <Button type="button" onClick={handleNext} disabled={!canGoNext()} className="w-full sm:w-auto px-4 py-3 bg-gradient-to-r from-[#F4C430] to-[#E9961A] text-white disabled:opacity-50">
-                    Suivant →
-                  </Button>
-                ) : (
-                  <Button type="submit" disabled={loading || !canGoNext()} className="w-full sm:w-auto px-5 py-3 bg-gradient-to-r from-[#F4C430] to-[#E9961A] text-white font-semibold">
-                    {loading ? 'Publication...' : '🚀 Publier'}
-                  </Button>
-                )}
+        {/* Progress bar */}
+        <div className="w-full bg-gray-200 dark:bg-gray-800 h-1">
+          <div 
+            className="h-1 bg-gradient-to-r from-[#F4B400] to-[#E9961A] transition-all duration-300"
+            style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
+          />
+        </div>
+      </div>
+
+      {/* Indicateurs d'étapes */}
+      <div className="px-4 py-4 max-w-2xl mx-auto">
+        <div className="flex items-center justify-between">
+          {steps.map((step, idx) => {
+            const StepIcon = step.icon
+            const isActive = idx === currentStep
+            const isCompleted = idx < currentStep
+            
+            return (
+              <div key={step.title} className="flex flex-col items-center flex-1">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${
+                  isActive 
+                    ? 'bg-[#F4B400] text-white shadow-lg scale-110' 
+                    : isCompleted
+                    ? 'bg-green-500 text-white'
+                    : 'bg-gray-200 dark:bg-gray-700 text-gray-400'
+                }`}>
+                  {isCompleted ? <Check size={18} /> : <StepIcon size={18} />}
+                </div>
+                <span className={`text-[10px] mt-1 font-medium ${
+                  isActive ? 'text-[#F4B400]' : 'text-gray-500'
+                }`}>
+                  {step.title}
+                </span>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Contenu principal */}
+      <div className="px-4 max-w-2xl mx-auto">
+        {error && (
+          <div className="mb-4 p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 text-red-700 dark:text-red-200 text-sm animate-shake">
+            <div className="flex items-start gap-2">
+              <span className="text-lg">⚠️</span>
+              <div>
+                <p className="font-semibold">Erreur</p>
+                <p>{error}</p>
               </div>
             </div>
           </div>
-        </form>
+        )}
+
+        {success && (
+          <div className="mb-4 p-4 rounded-xl bg-green-50 dark:bg-green-900/20 border-l-4 border-green-500 text-green-700 dark:text-green-200 text-sm">
+            <div className="flex items-start gap-2">
+              <span className="text-lg">✅</span>
+              <div>
+                <p className="font-semibold">Succès !</p>
+                <p>Produit publié. Redirection...</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
+          {getStepContent()}
+        </div>
+      </div>
+
+      {/* Barre d'action fixe en bas */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/98 dark:bg-gray-900/98 backdrop-blur-xl border-t border-gray-200 dark:border-gray-800 shadow-2xl pb-safe">
+        <div className="px-4 py-4 max-w-2xl mx-auto">
+          <div className="flex items-center gap-3">
+            {/* Bouton Précédent */}
+            <button
+              type="button"
+              onClick={handlePrevious}
+              disabled={currentStep === 0}
+              className="px-6 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-semibold disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition-all"
+            >
+              ← Retour
+            </button>
+
+            {/* Bouton Suivant / Publier */}
+            {currentStep < steps.length - 1 ? (
+              <button
+                type="button"
+                onClick={handleNext}
+                disabled={!canGoNext()}
+                className="flex-1 px-6 py-4 rounded-xl bg-gradient-to-r from-[#F4B400] to-[#E9961A] text-white font-bold text-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-all"
+              >
+                Suivant →
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={loading || !canGoNext()}
+                className="flex-1 px-6 py-4 rounded-xl bg-gradient-to-r from-green-500 to-green-600 text-white font-bold text-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-all flex items-center justify-center gap-2"
+              >
+                {loading ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Publication...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>🚀</span>
+                    <span>Publier</span>
+                  </>
+                )}
+              </button>
+            )}
+          </div>
+
+          {/* Indicateur de progression textuel */}
+          <div className="text-center mt-3">
+            <p className="text-xs text-gray-500">
+              {!canGoNext() && currentStep === 0 && "Ajoutez au moins 1 photo"}
+              {!canGoNext() && currentStep === 3 && "Remplissez le titre et la description"}
+              {!canGoNext() && currentStep === 4 && "Prix et WhatsApp requis"}
+              {canGoNext() && currentStep < steps.length - 1 && "Prêt à continuer"}
+              {canGoNext() && currentStep === steps.length - 1 && "Prêt à publier votre produit"}
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   )
