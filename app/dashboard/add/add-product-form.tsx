@@ -517,7 +517,7 @@ export default function AddProductForm({ userId }: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-black pt-14 pb-32">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-black pb-32">
       {/* Header fixe */}
       <div className="sticky top-0 z-40 bg-white/95 dark:bg-gray-900/95 backdrop-blur-lg border-b border-gray-200 dark:border-gray-800 shadow-sm">
         <div className="px-4 py-4 flex items-center justify-between max-w-2xl mx-auto">
