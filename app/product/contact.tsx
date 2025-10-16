@@ -109,12 +109,14 @@ export default function ProductContact({ product, customerName, className = "" }
             return [addr.road, addr.house_number, addr.suburb, addr.city, addr.town, addr.village].filter(Boolean).join(", ") || "Adresse introuvable"
         } catch { return "Adresse non trouvée" }
     }
-    
-    const createWhatsAppMessage = (adresse?: string, osmLink?: string, extraData?: typeof customData) => {
+const createWhatsAppMessage = (adresse?: string, osmLink?: string, extraData?: typeof customData) => {
         const data = extraData || customData
         const total = prixUnitaireApplicable * data.quantite
 
-        let message = `🛍️ *Nouvelle commande SangseShop*
+        // Inclure l'image du produit en premier si disponible
+        let message = product.image_url ? `${product.image_url}\n\n` : ""
+        
+        message += `🛍️ *Nouvelle commande SangseShop*
 
 📦 *Produit :* ${product.title}
 ${data.taillePointure ? `🎯 *${isClothing ? 'Taille' : 'Pointure'} :* ${data.taillePointure}\n` : ""}
@@ -126,8 +128,6 @@ _(${prixUnitaireApplicable.toLocaleString()} FCFA / unité${isWholesaleApplied ?
 📞 *Téléphone :* ${data.phone || "non fourni"}
 
 `
-
-        message += `👉 Dispo ou bien ?\n🔗 Voir produit : https://sangse.shop/product/${product.id}`
         
         if (adresse && osmLink) {
             message += `📍 *Adresse :* ${adresse}\n🗺️ *Itinéraire :* ${osmLink}\n\n`
@@ -135,6 +135,7 @@ _(${prixUnitaireApplicable.toLocaleString()} FCFA / unité${isWholesaleApplied ?
             message += `📍 *Livraison :* Adresse à préciser\n\n`
         }
 
+        message += `👉 Dispo ou bien ?\n🔗 Voir produit : https://sangse.shop/product/${product.id}`
 
         const whatsappClean = product.whatsapp_number?.replace(/\D/g, "")
         return whatsappClean ? `https://wa.me/${whatsappClean}?text=${encodeURIComponent(message)}` : null
