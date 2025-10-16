@@ -45,21 +45,64 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     ? product.image_url
     : `https://sangse.shop${product.image_url}`
 
+  const productTitle = `${product.title} - ${product.price.toLocaleString()} FCFA | SangseShop`
+  const productDescription = product.description || `Commandez ${product.title} maintenant sur SangseShop. Prix: ${product.price.toLocaleString()} FCFA. Livraison rapide à Dakar.`
+
   return {
-    title: product.title,
-    description: product.description,
+    title: productTitle,
+    description: productDescription,
+    
+    // Open Graph (Facebook, WhatsApp, LinkedIn)
     openGraph: {
-      title: product.title,
-      description: product.description,
+      title: productTitle,
+      description: productDescription,
       type: "website",
       url: `https://sangse.shop/product/${product.id}`,
+      siteName: "SangseShop",
+      locale: "fr_FR",
       images: [
         {
           url: imageUrl,
           width: 1200,
           height: 630,
+          alt: product.title,
+          type: "image/jpeg",
         },
       ],
+    },
+
+    // Twitter Card (X)
+    twitter: {
+      card: "summary_large_image",
+      title: productTitle,
+      description: productDescription,
+      images: [imageUrl],
+      creator: "@sangse",
+    },
+
+    // Métadonnées supplémentaires pour le SEO
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+      },
+    },
+
+    // Alternative images pour différentes plateformes
+    alternates: {
+      canonical: `https://sangse.shop/product/${product.id}`,
+    },
+
+    // Métadonnées pour WhatsApp spécifiquement
+    other: {
+      "og:image:secure_url": imageUrl,
+      "og:image:type": "image/jpeg",
+      "og:image:width": "1200",
+      "og:image:height": "630",
     },
   }
 }
