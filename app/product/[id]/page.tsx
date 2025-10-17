@@ -1,5 +1,3 @@
-
-
 import ProductLocationMap from "../productLocationMap"
 
 import { cookies } from "next/headers"
@@ -51,8 +49,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: productTitle,
     description: productDescription,
-    
-    // Open Graph (Facebook, WhatsApp, LinkedIn)
     openGraph: {
       title: productTitle,
       description: productDescription,
@@ -70,8 +66,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         },
       ],
     },
-
-    // Twitter Card (X)
     twitter: {
       card: "summary_large_image",
       title: productTitle,
@@ -79,8 +73,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       images: [imageUrl],
       creator: "@sangse",
     },
-
-    // Métadonnées supplémentaires pour le SEO
     robots: {
       index: true,
       follow: true,
@@ -91,13 +83,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         "max-snippet": -1,
       },
     },
-
-    // Alternative images pour différentes plateformes
     alternates: {
       canonical: `https://sangse.shop/product/${product.id}`,
     },
-
-    // Métadonnées pour WhatsApp spécifiquement
     other: {
       "og:image:secure_url": imageUrl,
       "og:image:type": "image/jpeg",
@@ -133,18 +121,33 @@ export default async function ProductDetailPage({ params }: Props) {
     }
   }
 
+  const productIdNumber = Number(params.id)
+
   const { data: product, error: productError } = await supabase
     .from("product")
     .select("*")
-    .eq("id", Number(params.id))
+    .eq("id", productIdNumber)
     .single()
 
   if (productError || !product) notFound()
 
+  // ----- Incrémenter les clicks ICI (côté serveur, à chaque rendu serveur de la page) -----
+  // Attention : assure-toi que ta function increment_clicks accepte un BIGINT / INTEGER si id est un nombre.
+  try {
+    const { error: incError } = await supabase.rpc("increment_clicks", { product_id: productIdNumber })
+    if (incError) {
+      console.error("increment_clicks RPC error:", incError)
+      // on ne throw pas pour ne pas casser la page si l'incrémentation échoue
+    }
+  } catch (err) {
+    console.error("Error calling increment_clicks RPC:", err)
+  }
+  // -------------------------------------------------------------------------
+
   const { data: productImages } = await supabase
     .from("product_images")
     .select("image_url")
-    .eq("product_id", Number(params.id))
+    .eq("product_id", productIdNumber)
 
   const { data: allProducts } = await supabase
     .from("product")
