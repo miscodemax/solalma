@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase"
 import Link from "next/link"
 import ProductImage from "./productimage"
 import DeleteButton from "./deletebutton"
-import { Store, TrendingUp, Package, Star, Plus, Search, Filter, Grid } from "lucide-react"
+import { Store, TrendingUp, Package, Star, Plus, Search, Filter, Grid, Edit2, Calendar } from "lucide-react"
 import BackButton from "@/app/composants/back-button"
 import AuthModal from "@/app/composants/auth-modal"
 
@@ -257,95 +257,179 @@ export default function ProductsPage() {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {products.map((product, index) => {
-                const outOfStock = product.in_stock === false
-                return (
-                  <div
-                    key={product.id}
-                    className={`group relative bg-white/80 dark:bg-[#1a1a1a]/80 backdrop-blur-sm border border-[#F4C430]/20 dark:border-[#333]/50 rounded-2xl shadow-lg overflow-hidden ${outOfStock ? 'opacity-90' : ''}`}
-                    style={{ animationDelay: `${index * 100}ms` }}
-                  >
-                    <div className="relative overflow-hidden rounded-t-2xl">
-                      <ProductImage
-                        src={product.image_url}
-                        alt={product.title}
-                        // if out of stock, desaturate image for UX
-                      />
-                      {recentProducts > 0 && new Date(product.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) && (
-                        <div className="absolute top-3 left-3 bg-gradient-to-r from-[#F4C430] to-[#E9961A] text-[#1A1A1A] text-xs font-bold px-2 py-1 rounded-full shadow-md">
-                          ✨ Nouveau
-                        </div>
-                      )}
+           <div className="min-h-screen bg-gradient-to-br from-slate-50 via-orange-50/30 to-amber-50/20 dark:from-[#0a0a0a] dark:via-[#1a1a1a] dark:to-[#0f0f0f] p-8">
+      <div className="max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          {products.map((product, index) => {
+            const outOfStock = product.in_stock === false;
+            const isNew = new Date(product.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+            
+            return (
+              <div
+                key={product.id}
+                className={`group relative bg-white dark:bg-[#1a1a1a] rounded-3xl overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-orange-500/10 hover:-translate-y-2 ${
+                  outOfStock ? 'opacity-80' : ''
+                }`}
+                style={{ 
+                  animation: `fadeInUp 0.6s ease-out ${index * 0.1}s both`,
+                }}
+              >
+                {/* Effet de brillance au hover */}
+                <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/0 to-transparent group-hover:via-white/10 transition-all duration-700 -translate-x-full group-hover:translate-x-full pointer-events-none" />
+                
+                {/* Badge coin supérieur avec effet 3D */}
+                {isNew && (
+                  <div className="absolute top-4 -right-12 bg-gradient-to-r from-amber-400 via-orange-500 to-amber-400 text-white text-xs font-bold px-14 py-2 rotate-45 shadow-lg z-10 animate-pulse">
+                    ✨ NOUVEAU
+                  </div>
+                )}
 
-                      {/* Out of stock overlay */}
-                      {outOfStock && (
-                        <div className="absolute inset-0 bg-black/40 flex items-start justify-center p-4">
-                          <div className="mt-3 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow">
-                            Rupture de stock
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="p-6">
-                      <h3 className={`text-lg font-bold text-[#1A1A1A] dark:text-white line-clamp-1 mb-3 ${outOfStock ? 'line-through text-[#a1a1a1]' : ''}`}>
-                        {product.title}
-                      </h3>
-                      <p className="text-xs text-[#1A1A1A]/60 dark:text-[#888] mb-3">
-                        📅 Ajouté le {new Date(product.created_at).toLocaleDateString('fr-FR')}
-                      </p>
-                      <p className={`text-sm text-[#1A1A1A]/70 dark:text-[#bbb] mb-4 line-clamp-2 ${outOfStock ? 'opacity-70' : ''}`}>
-                        {product.description}
-                      </p>
-
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <span className={`text-xl font-black ${outOfStock ? 'text-gray-400 line-through' : 'text-[#E9961A]'}`}>
-                            {parseFloat(product.price).toLocaleString()} FCFA
-                          </span>
-
-                          {/* Stock toggle */}
-                          <div className="flex items-center gap-2">
-                            <label className="flex items-center gap-2 text-sm">
-                              <div className="relative">
-                                <input
-                                  type="checkbox"
-                                  checked={!!product.in_stock}
-                                  onChange={() => toggleInStock(product.id, product.in_stock)}
-                                  disabled={isUpdating(product.id)}
-                                  className="sr-only"
-                                  aria-label={product.in_stock ? "Marquer comme en rupture" : "Marquer comme en stock"}
-                                />
-                                <div className={`w-11 h-6 rounded-full transition-colors ${product.in_stock ? 'bg-emerald-400' : 'bg-gray-300 dark:bg-gray-600'}`}></div>
-                                <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transform transition-transform ${product.in_stock ? 'translate-x-5' : 'translate-x-0'}`}></div>
-                              </div>
-                              <span className={`font-semibold ${product.in_stock ? 'text-emerald-600' : 'text-red-600'}`}>
-                                {product.in_stock ? 'En stock' : 'Rupture'}
-                              </span>
-                            </label>
-                          </div>
-                        </div>
-
-                        <div className="flex gap-2 items-center">
-                          <Link href={`/dashboard/edit/${product.id}`}>
-                            <button className="text-[#E9961A] border-2 border-[#E9961A] px-3 py-1.5 rounded-lg text-sm font-semibold">
-                              Modifier
-                            </button>
-                          </Link>
-                          <DeleteButton id={product.id} />
-                        </div>
+                {/* Image container avec overlay gradient */}
+                <div className="relative h-64 overflow-hidden bg-gradient-to-b from-transparent to-black/5">
+                  <ProductImage
+                    src={product.image_url}
+                    alt={product.title}
+                    outOfStock={outOfStock}
+                  />
+                  
+                  {/* Overlay en rupture de stock avec effet glassmorphism */}
+                  {outOfStock && (
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent backdrop-blur-[2px] flex items-center justify-center">
+                      <div className="bg-red-500/90 backdrop-blur-md text-white px-6 py-2.5 rounded-full shadow-2xl font-bold text-sm border-2 border-white/20 flex items-center gap-2 animate-bounce">
+                        <Package size={16} />
+                        RUPTURE DE STOCK
                       </div>
+                    </div>
+                  )}
 
-                      {/* small action hint when out of stock */}
-                      {outOfStock && (
-                        <p className="mt-3 text-xs text-red-600">Ce produit n'apparaîtra pas comme disponible pour les acheteurs.</p>
-                      )}
+                  {/* Gradient overlay bottom */}
+                  <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white dark:from-[#1a1a1a] to-transparent" />
+                </div>
+
+                {/* Contenu de la carte */}
+                <div className="p-6 space-y-4">
+                  {/* Titre avec effet hover */}
+                  <div className="space-y-2">
+                    <h3 className={`text-xl font-bold text-slate-900 dark:text-white transition-colors duration-300 group-hover:text-orange-500 ${
+                      outOfStock ? 'line-through opacity-50' : ''
+                    }`}>
+                      {product.title}
+                    </h3>
+                    
+                    {/* Date avec icône */}
+                    <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                      <Calendar size={14} className="text-orange-400" />
+                      <span>Ajouté le {new Date(product.created_at).toLocaleDateString('fr-FR', { 
+                        day: 'numeric', 
+                        month: 'long', 
+                        year: 'numeric' 
+                      })}</span>
                     </div>
                   </div>
-                )
-              })}
-            </div>
+
+                  {/* Description avec limitation de lignes */}
+                  <p className={`text-sm text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed ${
+                    outOfStock ? 'opacity-50' : ''
+                  }`}>
+                    {product.description}
+                  </p>
+
+                  {/* Prix avec animation */}
+                  <div className="flex items-end gap-3 pt-2">
+                    <div className={`text-3xl font-black transition-all duration-300 ${
+                      outOfStock 
+                        ? 'text-slate-300 dark:text-slate-600 line-through' 
+                        : 'text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-500 group-hover:from-orange-600 group-hover:to-amber-600'
+                    }`}>
+                      {parseFloat(product.price).toLocaleString()}
+                    </div>
+                    <span className={`text-lg font-bold pb-1 ${
+                      outOfStock ? 'text-slate-400' : 'text-orange-500'
+                    }`}>
+                      FCFA
+                    </span>
+                  </div>
+
+                  {/* Toggle stock avec design moderne */}
+                  <div className="flex items-center justify-between py-3 px-4 bg-slate-50 dark:bg-[#0f0f0f] rounded-2xl border border-slate-200 dark:border-slate-800">
+                    <label className="flex items-center gap-3 cursor-pointer select-none">
+                      <div className="relative">
+                        <input
+                          type="checkbox"
+                          checked={!!product.in_stock}
+                          onChange={() => toggleInStock(product.id, product.in_stock)}
+                          disabled={isUpdating(product.id)}
+                          className="sr-only"
+                        />
+                        <div className={`w-14 h-7 rounded-full transition-all duration-300 ${
+                          product.in_stock 
+                            ? 'bg-gradient-to-r from-emerald-400 to-green-500 shadow-lg shadow-emerald-500/30' 
+                            : 'bg-slate-300 dark:bg-slate-700'
+                        }`} />
+                        <div className={`absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full shadow-md transform transition-all duration-300 flex items-center justify-center ${
+                          product.in_stock ? 'translate-x-7' : 'translate-x-0'
+                        }`}>
+                          {isUpdating(product.id) ? (
+                            <div className="w-3 h-3 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <div className={`w-2 h-2 rounded-full ${
+                              product.in_stock ? 'bg-emerald-500' : 'bg-slate-400'
+                            }`} />
+                          )}
+                        </div>
+                      </div>
+                      <span className={`text-sm font-bold transition-colors ${
+                        product.in_stock 
+                          ? 'text-emerald-600 dark:text-emerald-400' 
+                          : 'text-red-600 dark:text-red-400'
+                      }`}>
+                        {product.in_stock ? '✓ En Stock' : '✕ Rupture'}
+                      </span>
+                    </label>
+                  </div>
+
+                  {/* Boutons d'action avec effet hover sophistiqué */}
+                  <div className="flex gap-3 pt-2">
+                    <button className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white px-4 py-3 rounded-xl font-bold text-sm transition-all duration-300 shadow-lg shadow-orange-500/30 hover:shadow-xl hover:shadow-orange-500/40 hover:scale-[1.02] active:scale-95">
+                      <Edit2 size={16} />
+                      Modifier
+                    </button>
+                    <DeleteButton id={product.id} />
+                  </div>
+
+                  {/* Message rupture de stock */}
+                  {outOfStock && (
+                    <div className="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
+                      <Package size={16} className="text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
+                      <p className="text-xs text-red-700 dark:text-red-300 font-medium leading-relaxed">
+                        Ce produit n'apparaîtra pas comme disponible pour les acheteurs jusqu'à ce qu'il soit remis en stock.
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Bordure animée au hover */}
+                <div className="absolute inset-0 border-2 border-transparent group-hover:border-orange-500/20 rounded-3xl transition-all duration-500 pointer-events-none" />
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <style jsx>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
+    </div>
+  
           )}
 
           {products.length > 0 && (
