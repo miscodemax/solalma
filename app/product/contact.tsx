@@ -1,10 +1,9 @@
 'use client'
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useMemo } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { MessageCircle, MapPin, Loader2, AlertTriangle, Phone, ShoppingCart, User, Package, Hash, CheckCircle2, Navigation } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
+import { MessageCircle, MapPin, Loader2, AlertTriangle, Phone, ShoppingCart, User, Package, Hash, CheckCircle2 } from "lucide-react"
 
 interface ProductContactProps {
     product: {
@@ -44,8 +43,8 @@ export default function ProductContact({ product, customerName, className = "" }
 
     const { prixTotal, prixUnitaireApplicable, isWholesaleApplied } = useMemo(() => {
         const isWholesalePossible = product.has_wholesale && product.wholesale_price != null && product.min_wholesale_qty != null
-        const isWholesaleApplied = isWholesalePossible && customData.quantite >= product.min_wholesale_qty
-        const prixUnitaire = isWholesaleApplied ? product.wholesale_price : product.price
+        const isWholesaleApplied = isWholesalePossible && customData.quantite >= product.min_wholesale_qty!
+        const prixUnitaire = isWholesaleApplied ? product.wholesale_price! : product.price
         const total = prixUnitaire * customData.quantite
 
         return {
@@ -55,142 +54,50 @@ export default function ProductContact({ product, customerName, className = "" }
         }
     }, [customData.quantite, product])
 
-    const buttonVariants = {
-        initial: { scale: 1, y: 0 },
-        hover: { scale: 1.02, y: -2 },
-        tap: { scale: 0.98, y: 0 }
-    }
-
-    const slideVariants = {
-        initial: { opacity: 0, x: 50 },
-        animate: { opacity: 1, x: 0 },
-        exit: { opacity: 0, x: -50 }
-    }
-
-    const pulseVariants = {
-        initial: { scale: 1 },
-        animate: { scale: [1, 1.05, 1], transition: { duration: 2, repeat: Infinity } }
-    }
-
-    // LOCALISATION ULTRA-PRÉCISE avec plusieurs tentatives
-    const getCurrentLocation = (): Promise<{ lat: number; lng: number; accuracy: number }> => {
+    // LOCALISATION RAPIDE - Une seule tentative optimisée
+    const getCurrentLocation = (): Promise<{ lat: number; lng: number }> => {
         return new Promise((resolve, reject) => {
             if (!navigator.geolocation) {
-                return reject(new Error("La géolocalisation n'est pas supportée"))
+                return reject(new Error("Géolocalisation non supportée"))
             }
 
-            let bestPosition: GeolocationPosition | null = null
-            let attempts = 0
-            const maxAttempts = 3
-
-            const watchId = navigator.geolocation.watchPosition(
+            navigator.geolocation.getCurrentPosition(
                 (position) => {
-                    attempts++
-                    
-                    // Garder la position la plus précise
-                    if (!bestPosition || position.coords.accuracy < bestPosition.coords.accuracy) {
-                        bestPosition = position
-                    }
-
-                    // Si on a une précision < 20m ou atteint max tentatives
-                    if (position.coords.accuracy < 20 || attempts >= maxAttempts) {
-                        navigator.geolocation.clearWatch(watchId)
-                        resolve({
-                            lat: bestPosition.coords.latitude,
-                            lng: bestPosition.coords.longitude,
-                            accuracy: bestPosition.coords.accuracy
-                        })
-                    }
+                    resolve({
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    })
                 },
                 (err) => {
-                    navigator.geolocation.clearWatch(watchId)
                     let errorMessage = "Erreur de géolocalisation"
                     switch (err.code) {
                         case err.PERMISSION_DENIED: 
-                            errorMessage = "Permission refusée. Activez la localisation dans les paramètres."
+                            errorMessage = "Activez la localisation dans les paramètres"
                             break
                         case err.POSITION_UNAVAILABLE: 
-                            errorMessage = "Position indisponible. Vérifiez votre connexion."
+                            errorMessage = "Position indisponible"
                             break
                         case err.TIMEOUT: 
-                            errorMessage = "Timeout. Réessayez dans un endroit dégagé."
+                            errorMessage = "Timeout - Réessayez"
                             break
                     }
                     reject(new Error(errorMessage))
                 },
                 {
-                    enableHighAccuracy: true,  // GPS haute précision
-                    timeout: 20000,            // 20 secondes
-                    maximumAge: 0              // Pas de cache, position fraîche
+                    enableHighAccuracy: true,
+                    timeout: 8000,  // 8 secondes max
+                    maximumAge: 30000  // Cache de 30s acceptable
                 }
             )
-
-            // Timeout de sécurité
-            setTimeout(() => {
-                navigator.geolocation.clearWatch(watchId)
-                if (bestPosition) {
-                    resolve({
-                        lat: bestPosition.coords.latitude,
-                        lng: bestPosition.coords.longitude,
-                        accuracy: bestPosition.coords.accuracy
-                    })
-                } else {
-                    reject(new Error("Impossible d'obtenir votre position"))
-                }
-            }, 20000)
         })
     }
 
-    // Géocodage inversé avec Nominatim (OSM) - GRATUIT
-    const reverseGeocodeOSM = async (lat: number, lng: number): Promise<string> => {
-        try {
-            const res = await fetch(
-                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
-                {
-                    headers: {
-                        'User-Agent': 'SangseShop/1.0'
-                    }
-                }
-            )
-            const data = await res.json()
-            const addr = data.address || {}
-            
-            // Construire une adresse détaillée
-            const parts = [
-                addr.house_number,
-                addr.road,
-                addr.neighbourhood || addr.suburb,
-                addr.city || addr.town || addr.village,
-                addr.postcode
-            ].filter(Boolean)
-            
-            return parts.length > 0 ? parts.join(", ") : "Adresse introuvable"
-        } catch {
-            return "Adresse non trouvée"
-        }
+    // Lien Google Maps direct (comme Yango) - Simple et efficace
+    const createGoogleMapsLink = (lat: number, lng: number) => {
+        return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`
     }
 
-    // Créer des liens d'itinéraire multiples
-    const createNavigationLinks = (lat: number, lng: number, accuracy: number) => {
-        const coords = `${lat},${lng}`
-        
-        return {
-            googleMaps: `https://www.google.com/maps/dir/?api=1&destination=${coords}&travelmode=driving`,
-            googleMapsWalk: `https://www.google.com/maps/dir/?api=1&destination=${coords}&travelmode=walking`,
-            waze: `https://waze.com/ul?ll=${coords}&navigate=yes`,
-            appleMaps: `https://maps.apple.com/?daddr=${coords}&dirflg=d`,
-            osmLink: `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=18/${lat}/${lng}`,
-            coordinates: coords,
-            plusCode: `https://plus.codes/${lat},${lng}`,
-            accuracy: accuracy
-        }
-    }
-
-    const createWhatsAppMessage = (
-        adresse?: string, 
-        navLinks?: ReturnType<typeof createNavigationLinks>, 
-        extraData?: typeof customData
-    ) => {
+    const createWhatsAppMessage = (mapsLink?: string, extraData?: typeof customData) => {
         const data = extraData || customData
         const total = prixUnitaireApplicable * data.quantite
 
@@ -205,30 +112,22 @@ _(${prixUnitaireApplicable.toLocaleString()} FCFA / unité${isWholesaleApplied ?
 🙋 *Client :* ${data.name || clientDisplayName}
 📞 *Téléphone :* ${data.phone || "non fourni"}
 
-🔗 *Voir le produit avec photo :*
+🔗 *Voir le produit :*
 https://sangse.shop/product/${product.id}
-
-👉 *Dispo ou bien ?*
 `
 
-        if (adresse && navLinks) {
-            message += `📍 *Adresse de livraison :*
-${adresse}
+        if (mapsLink) {
+            message += `
+📍 *Itinéraire vers le client :*
+${mapsLink}
 
-🗺️ *ITINÉRAIRES (cliquez pour naviguer) :*
-🚗 Google Maps (Voiture): ${navLinks.googleMaps}
-🚶 Google Maps (À pied): ${navLinks.googleMapsWalk}
-🚙 Waze: ${navLinks.waze}
-
-📌 *Coordonnées exactes:* ${navLinks.coordinates}
-🎯 *Précision:* ±${Math.round(navLinks.accuracy)}m
-
-`
+👉 *Dispo ou bien ?*`
         } else {
-            message += `📍 *Livraison :* Adresse à préciser lors de la confirmation\n\n`
+            message += `
+📍 *Livraison :* Adresse à confirmer
+
+👉 *Dispo ou bien ?*`
         }
-
-
 
         const whatsappClean = product.whatsapp_number?.replace(/\D/g, "")
         return whatsappClean ? `https://wa.me/${whatsappClean}?text=${encodeURIComponent(message)}` : null
@@ -236,7 +135,7 @@ ${adresse}
 
     const generateWhatsAppLink = async (withLocation: boolean, extraData?: typeof customData): Promise<string | null> => {
         if (!withLocation) {
-            return createWhatsAppMessage(undefined, undefined, extraData)
+            return createWhatsAppMessage(undefined, extraData)
         }
 
         try {
@@ -244,13 +143,12 @@ ${adresse}
             setLocationError(null)
             
             const location = await getCurrentLocation()
-            const adresse = await reverseGeocodeOSM(location.lat, location.lng)
-            const navLinks = createNavigationLinks(location.lat, location.lng, location.accuracy)
+            const mapsLink = createGoogleMapsLink(location.lat, location.lng)
             
-            return createWhatsAppMessage(adresse, navLinks, extraData)
+            return createWhatsAppMessage(mapsLink, extraData)
         } catch (error: any) {
             setLocationError(error.message)
-            return createWhatsAppMessage(undefined, undefined, extraData)
+            return createWhatsAppMessage(undefined, extraData)
         } finally {
             setIsLoadingLocation(false)
         }
@@ -300,19 +198,17 @@ ${adresse}
                     <p className="text-gray-600 text-sm">{isClothing ? "Sélectionnez la taille qui vous convient" : "Sélectionnez votre pointure"}</p>
                     <div className="grid grid-cols-3 gap-2">
                         {(isClothing ? taillesVetements : pointuresChaussures).map(size => (
-                            <motion.button 
-                                key={size} 
-                                whileHover={{ scale: 1.05 }} 
-                                whileTap={{ scale: 0.95 }} 
+                            <button 
+                                key={size}
                                 onClick={() => setCustomData({ ...customData, taillePointure: size })} 
-                                className={`px-4 py-3 rounded-xl font-medium transition-all duration-300 ${
+                                className={`px-4 py-3 rounded-xl font-medium transition-all ${
                                     customData.taillePointure === size 
-                                        ? "bg-gradient-to-r from-yellow-400 to-yellow-500 text-white shadow-lg shadow-yellow-200 border-2 border-yellow-300" 
+                                        ? "bg-gradient-to-r from-yellow-400 to-yellow-500 text-white shadow-lg border-2 border-yellow-300" 
                                         : "bg-white hover:bg-yellow-50 text-gray-700 border-2 border-gray-200 hover:border-yellow-300"
                                 }`}
                             >
                                 {size}
-                            </motion.button>
+                            </button>
                         ))}
                     </div>
                 </div>
@@ -326,44 +222,33 @@ ${adresse}
         icon: <Hash className="w-5 h-5" />,
         content: (
             <div className="space-y-4">
-                <p className="text-gray-600 text-sm">Combien d'articles souhaitez-vous commander ?</p>
+                <p className="text-gray-600 text-sm">Combien d'articles souhaitez-vous ?</p>
                 <div className="flex items-center space-x-4">
-                    <motion.button 
-                        whileHover={{ scale: 1.1 }} 
-                        whileTap={{ scale: 0.9 }} 
+                    <button 
                         onClick={() => customData.quantite > 1 && setCustomData({ ...customData, quantite: customData.quantite - 1 })} 
-                        className="w-12 h-12 rounded-full bg-gray-100 hover:bg-yellow-100 text-gray-700 hover:text-yellow-700 font-bold text-xl flex items-center justify-center transition-all duration-200"
+                        className="w-12 h-12 rounded-full bg-gray-100 hover:bg-yellow-100 text-gray-700 font-bold text-xl transition"
                     >
                         −
-                    </motion.button>
+                    </button>
                     <div className="flex-1 text-center">
                         <div className="text-3xl font-bold text-yellow-600">{customData.quantite}</div>
                         <div className="text-sm text-gray-500">article{customData.quantite > 1 ? 's' : ''}</div>
                     </div>
-                    <motion.button 
-                        whileHover={{ scale: 1.1 }} 
-                        whileTap={{ scale: 0.9 }} 
+                    <button 
                         onClick={() => setCustomData({ ...customData, quantite: customData.quantite + 1 })} 
-                        className="w-12 h-12 rounded-full bg-gray-100 hover:bg-yellow-100 text-gray-700 hover:text-yellow-700 font-bold text-xl flex items-center justify-center transition-all duration-200"
+                        className="w-12 h-12 rounded-full bg-gray-100 hover:bg-yellow-100 text-gray-700 font-bold text-xl transition"
                     >
                         +
-                    </motion.button>
+                    </button>
                 </div>
-                <div className="mt-6 text-center bg-yellow-50/50 p-4 rounded-xl border-2 border-yellow-200/50">
+                <div className="mt-6 text-center bg-yellow-50 p-4 rounded-xl border-2 border-yellow-200">
                     <p className="text-sm text-yellow-700">Prix total estimé</p>
                     <p className="text-2xl font-bold text-yellow-900 mt-1">{prixTotal.toLocaleString()} FCFA</p>
-                    <AnimatePresence>
-                        {isWholesaleApplied && (
-                            <motion.div 
-                                initial={{ opacity: 0, y: 10 }} 
-                                animate={{ opacity: 1, y: 0 }} 
-                                exit={{ opacity: 0, y: 10 }} 
-                                className="flex items-center justify-center gap-1 text-xs text-green-600 font-semibold mt-1"
-                            >
-                                <CheckCircle2 size={14}/> Prix de gros appliqué !
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
+                    {isWholesaleApplied && (
+                        <div className="flex items-center justify-center gap-1 text-xs text-green-600 font-semibold mt-1">
+                            <CheckCircle2 size={14}/> Prix de gros appliqué !
+                        </div>
+                    )}
                 </div>
             </div>
         )
@@ -381,7 +266,7 @@ ${adresse}
                         placeholder="Entrez votre nom" 
                         value={customData.name} 
                         onChange={(e) => setCustomData({ ...customData, name: e.target.value })} 
-                        className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-yellow-400 focus:outline-none transition-all duration-200 text-gray-800 placeholder-gray-400" 
+                        className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-yellow-400 focus:outline-none transition text-gray-800 placeholder-gray-400" 
                     />
                 </div>
             )
@@ -400,7 +285,7 @@ ${adresse}
                     placeholder="Ex: 77 123 45 67" 
                     value={customData.phone} 
                     onChange={(e) => setCustomData({ ...customData, phone: e.target.value })} 
-                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-yellow-400 focus:outline-none transition-all duration-200 text-gray-800 placeholder-gray-400" 
+                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-yellow-400 focus:outline-none transition text-gray-800 placeholder-gray-400" 
                 />
             </div>
         )
@@ -412,92 +297,67 @@ ${adresse}
     return (
         <div className={`space-y-3 ${className}`}>
             {product.whatsapp_number && (
-                <motion.button 
-                    variants={buttonVariants} 
-                    initial="initial" 
-                    whileHover="hover" 
-                    whileTap="tap" 
+                <button 
                     onClick={handleContactClick} 
                     disabled={isLoadingLocation} 
-                    className={`w-full relative overflow-hidden rounded-2xl shadow-xl transition-all duration-300 ${
+                    className={`w-full relative overflow-hidden rounded-2xl shadow-xl transition-all hover:scale-[1.02] active:scale-95 ${
                         isLoadingLocation 
                             ? "bg-gradient-to-r from-gray-400 to-gray-500" 
                             : "bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700"
                     } text-white font-bold py-5 px-6 disabled:cursor-not-allowed`}
                 >
-                    <motion.div 
-                        variants={pulseVariants} 
-                        initial="initial" 
-                        animate={!isLoadingLocation ? "animate" : "initial"} 
-                        className="flex items-center justify-center gap-3"
-                    >
+                    <div className="flex items-center justify-center gap-3">
                         {isLoadingLocation ? (
                             <>
                                 <Loader2 className="animate-spin" size={24} /> 
                                 <div className="text-left">
                                     <div className="text-lg font-bold">Localisation GPS...</div>
-                                    <div className="text-xs opacity-90">Haute précision activée</div>
+                                    <div className="text-xs opacity-90">Veuillez patienter</div>
                                 </div>
                             </>
                         ) : (
                             <>
-                                <div className="flex items-center gap-2">
-                                    <Navigation size={24} />
-                                    <MapPin size={20} />
-                                </div>
+                                <MapPin size={24} />
                                 <div className="text-left">
                                     <div className="text-lg font-bold">Commander maintenant</div>
-                                    <div className="text-sm opacity-90">GPS Ultra-Précis + Itinéraires</div>
+                                    <div className="text-sm opacity-90">Avec itinéraire GPS</div>
                                 </div>
                             </>
                         )}
-                    </motion.div>
-                    <div className="absolute inset-0 -skew-x-12 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                </motion.button>
+                    </div>
+                </button>
             )}
             <div className="grid grid-cols-2 gap-3">
                 {product.whatsapp_number && (
-                    <motion.button 
-                        whileHover={{ scale: 1.02 }} 
-                        whileTap={{ scale: 0.98 }} 
+                    <button 
                         onClick={handleContactWithoutLocation} 
-                        className="bg-white hover:bg-yellow-50 text-gray-700 font-medium py-3 px-4 rounded-xl border-2 border-gray-200 hover:border-yellow-300 transition-all duration-300 text-sm"
+                        className="bg-white hover:bg-yellow-50 text-gray-700 font-medium py-3 px-4 rounded-xl border-2 border-gray-200 hover:border-yellow-300 transition text-sm hover:scale-[1.02] active:scale-95"
                     >
                         <MessageCircle size={16} className="mx-auto mb-1" />
-                        Sans localisation
-                    </motion.button>
+                        Sans GPS
+                    </button>
                 )}
                 {product.whatsapp_number && (
-                    <motion.button 
-                        whileHover={{ scale: 1.02 }} 
-                        whileTap={{ scale: 0.98 }} 
+                    <button 
                         onClick={handleCallSeller} 
-                        className="bg-white hover:bg-yellow-50 text-gray-700 font-medium py-3 px-4 rounded-xl border-2 border-gray-200 hover:border-yellow-300 transition-all duration-300 text-sm"
+                        className="bg-white hover:bg-yellow-50 text-gray-700 font-medium py-3 px-4 rounded-xl border-2 border-gray-200 hover:border-yellow-300 transition text-sm hover:scale-[1.02] active:scale-95"
                     >
                         <Phone size={16} className="mx-auto mb-1" />
                         Appeler
-                    </motion.button>
+                    </button>
                 )}
             </div>
-            <AnimatePresence>
-                {locationError && (
-                    <motion.div 
-                        initial={{ opacity: 0, height: 0 }} 
-                        animate={{ opacity: 1, height: "auto" }} 
-                        exit={{ opacity: 0, height: 0 }} 
-                        className="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-xl p-4 shadow-sm"
-                    >
-                        <div className="flex items-start gap-3">
-                            <AlertTriangle className="text-orange-500 flex-shrink-0 mt-0.5" size={20} />
-                            <div>
-                                <p className="text-sm text-orange-700 font-medium">Erreur de géolocalisation</p>
-                                <p className="text-xs text-orange-600 mt-1">{locationError}</p>
-                                <p className="text-xs text-orange-500 mt-2">💡 Astuce : Allez dehors pour un meilleur signal GPS</p>
-                            </div>
+            {locationError && (
+                <div className="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-xl p-4">
+                    <div className="flex items-start gap-3">
+                        <AlertTriangle className="text-orange-500 flex-shrink-0 mt-0.5" size={20} />
+                        <div>
+                            <p className="text-sm text-orange-700 font-medium">Erreur GPS</p>
+                            <p className="text-xs text-orange-600 mt-1">{locationError}</p>
                         </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                    </div>
+                </div>
+            )}
             <Dialog open={isPopupOpen} onOpenChange={setIsPopupOpen}>
                 <DialogContent className="sm:max-w-[450px] rounded-3xl border-0 shadow-2xl p-0 overflow-hidden">
                     <div className="bg-gradient-to-r from-yellow-400 to-yellow-500 p-6 text-white">
@@ -509,27 +369,14 @@ ${adresse}
                             </div>
                         </div>
                         <div className="mt-4 bg-yellow-300/30 rounded-full h-2">
-                            <motion.div 
-                                className="bg-white rounded-full h-2" 
-                                initial={{ width: 0 }} 
-                                animate={{ width: `${((step + 1) / formSteps.length) * 100}%` }} 
-                                transition={{ duration: 0.3 }} 
+                            <div 
+                                className="bg-white rounded-full h-2 transition-all duration-300" 
+                                style={{ width: `${((step + 1) / formSteps.length) * 100}%` }}
                             />
                         </div>
                     </div>
                     <div className="p-6">
-                        <AnimatePresence mode="wait">
-                            <motion.div 
-                                key={step} 
-                                variants={slideVariants} 
-                                initial="initial" 
-                                animate="animate" 
-                                exit="exit" 
-                                transition={{ duration: 0.3 }}
-                            >
-                                {currentStepData?.content}
-                            </motion.div>
-                        </AnimatePresence>
+                        {currentStepData?.content}
                     </div>
                     <DialogFooter className="p-6 pt-0 flex justify-between">
                         <div className="flex gap-2">
@@ -542,18 +389,16 @@ ${adresse}
                                 Passer
                             </Button>
                         </div>
-                        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                            {isLastStep ? (
-                                <Button onClick={handlePopupConfirm} className="bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-white rounded-xl px-8 shadow-lg">
-                                    <ShoppingCart className="w-4 h-4 mr-2" />
-                                    Commander
-                                </Button>
-                            ) : (
-                                <Button onClick={handleNextStep} className="bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-white rounded-xl px-6">
-                                    Suivant
-                                </Button>
-                            )}
-                        </motion.div>
+                        {isLastStep ? (
+                            <Button onClick={handlePopupConfirm} className="bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-white rounded-xl px-8 shadow-lg hover:scale-105 active:scale-95 transition">
+                                <ShoppingCart className="w-4 h-4 mr-2" />
+                                Commander
+                            </Button>
+                        ) : (
+                            <Button onClick={handleNextStep} className="bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-white rounded-xl px-6 hover:scale-105 active:scale-95 transition">
+                                Suivant
+                            </Button>
+                        )}
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
