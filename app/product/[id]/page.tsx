@@ -49,6 +49,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: productTitle,
     description: productDescription,
+    
+    // Open Graph (Facebook, WhatsApp, LinkedIn)
     openGraph: {
       title: productTitle,
       description: productDescription,
@@ -66,6 +68,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         },
       ],
     },
+
+    // Twitter Card (X)
     twitter: {
       card: "summary_large_image",
       title: productTitle,
@@ -73,6 +77,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       images: [imageUrl],
       creator: "@sangse",
     },
+
+    // Métadonnées supplémentaires pour le SEO
     robots: {
       index: true,
       follow: true,
@@ -83,9 +89,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         "max-snippet": -1,
       },
     },
+
+    // Alternative images pour différentes plateformes
     alternates: {
       canonical: `https://sangse.shop/product/${product.id}`,
     },
+
+    // Métadonnées pour WhatsApp spécifiquement
     other: {
       "og:image:secure_url": imageUrl,
       "og:image:type": "image/jpeg",
@@ -131,18 +141,17 @@ export default async function ProductDetailPage({ params }: Props) {
 
   if (productError || !product) notFound()
 
-  // ----- Incrémenter les clicks ICI (côté serveur, à chaque rendu serveur de la page) -----
-  // Attention : assure-toi que ta function increment_clicks accepte un BIGINT / INTEGER si id est un nombre.
-  try {
-    const { error: incError } = await supabase.rpc("increment_clicks", { product_id: productIdNumber })
-    if (incError) {
-      console.error("increment_clicks RPC error:", incError)
-      // on ne throw pas pour ne pas casser la page si l'incrémentation échoue
-    }
-  } catch (err) {
-    console.error("Error calling increment_clicks RPC:", err)
+  // ----- Incrémenter le nombre de vues -----
+  const { error: rpcError } = await supabase.rpc('increment_clicks', {
+    product_id: productIdNumber
+  });
+
+  if (rpcError) {
+    // On affiche l'erreur dans la console du serveur pour le débogage,
+    // mais on ne bloque pas le chargement de la page si ça échoue.
+    console.error(`Erreur RPC pour increment_clicks sur produit ${productIdNumber}:`, rpcError);
   }
-  // -------------------------------------------------------------------------
+  // -----------------------------------------
 
   const { data: productImages } = await supabase
     .from("product_images")
