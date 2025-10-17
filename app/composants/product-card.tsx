@@ -1,10 +1,10 @@
 'use client'
 
+import { useState } from 'react'
 import Link from "next/link"
 import Image from "next/image"
 import LikeButton from "./likeButton"
 
-// 1. Le type Product a été enrichi pour inclure les informations de stock et de promotion.
 type Product = {
     id: number
     title: string
@@ -28,9 +28,9 @@ export default function ProductCard({
     product: Product
     userId?: string
 }) {
-    // On considère par défaut que le produit est en stock si la propriété n'est pas définie.
-    const inStock = product.in_stock !== false;
-    const hasPromo = inStock && product.has_promo && product.promo_price;
+    const [imageLoaded, setImageLoaded] = useState(false)
+    const inStock = product.in_stock !== false
+    const hasPromo = inStock && product.has_promo && product.promo_price
 
     const getFirstImage = (imageUrl: string | string[] | null): string => {
         if (!imageUrl) return "/placeholder.jpg"
@@ -61,112 +61,180 @@ export default function ProductCard({
     const firstImage = getFirstImage(product.image_url)
     const imageCount = getImageCount(product.image_url)
     const isNew = isNewProduct(product.created_at)
-
-    const economy = hasPromo ? product.price - (product.promo_price || 0) : 0;
+    const economy = hasPromo ? product.price - (product.promo_price || 0) : 0
 
     return (
-        // 2. Gestion de l'état "Rupture de stock" sur la carte entière.
-        <article className={`group relative w-full flex flex-col overflow-hidden rounded-2xl bg-gradient-to-br from-white to-gray-50/50 dark:from-[#1C2B49] dark:to-[#162041] border border-gray-200/60 dark:border-gray-700/50 hover:border-[#F6C445]/30 dark:hover:border-[#F6C445]/40 transition-all duration-500 backdrop-blur-sm 
-            ${!inStock ? 'grayscale opacity-75 hover:shadow-none hover:-translate-y-0' : 'hover:shadow-2xl hover:shadow-[#F6C445]/10 dark:hover:shadow-[#F6C445]/20 hover:-translate-y-1'}`}>
-            
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out pointer-events-none" />
+        <article className={`group relative w-full flex flex-col overflow-hidden rounded-3xl transition-all duration-500 backdrop-blur-sm
+            ${!inStock 
+                ? 'bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 opacity-85' 
+                : 'bg-white dark:bg-gradient-to-br dark:from-[#1a1f35] dark:to-[#141929] shadow-lg hover:shadow-2xl hover:shadow-[#F6C445]/15 dark:hover:shadow-[#F6C445]/25'
+            }
+            border ${!inStock ? 'border-gray-300 dark:border-gray-700' : 'border-gray-100 dark:border-gray-800 hover:border-[#F6C445]/40'}
+            ${inStock ? 'hover:-translate-y-2 active:translate-y-0' : ''}`}
+        >
+            {/* Shine effect sur hover */}
+            {inStock && (
+                <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/[0.03] to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out pointer-events-none z-10" />
+            )}
 
-            <div className="relative w-full aspect-square overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900">
+            {/* Image Container avec skeleton loader */}
+            <div className="relative w-full aspect-square overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900">
                 <Link href={`/product/${product.id}`} className={`block w-full h-full ${!inStock ? 'pointer-events-none' : ''}`}>
+                    {/* Skeleton loader */}
+                    {!imageLoaded && (
+                        <div className="absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700 animate-pulse" />
+                    )}
+                    
                     <Image
                         src={firstImage}
                         alt={product.title}
                         fill
-                        className={`object-cover transition-all duration-500 ${inStock ? 'group-hover:scale-105 group-active:scale-110' : ''}`}
+                        className={`object-cover transition-all duration-700 ${
+                            imageLoaded ? 'opacity-100' : 'opacity-0'
+                        } ${inStock ? 'group-hover:scale-110 group-hover:rotate-1' : 'grayscale'}`}
                         sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                         priority={false}
+                        onLoad={() => setImageLoaded(true)}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/15 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-400" />
+                    
+                    {/* Gradient overlay subtil */}
+                    {inStock && (
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                    )}
                 </Link>
 
-                {/* 3. Overlay et badge pour la rupture de stock */}
+                {/* Badge Rupture de stock redesigné */}
                 {!inStock && (
-                    <div className="absolute inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-20">
-                        <div className="flex items-center gap-2 px-4 py-2 border-2 border-white/20 bg-white/10 rounded-xl">
-                            <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" /></svg>
-                            <span className="font-bold text-white text-sm">RUPTURE DE STOCK</span>
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center z-20">
+                        <div className="flex items-center gap-2 px-5 py-3 bg-white/10 border border-white/30 rounded-2xl backdrop-blur-md">
+                            <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                            <span className="font-extrabold text-white text-sm tracking-wide">RUPTURE DE STOCK</span>
                         </div>
                     </div>
                 )}
 
-                {/* Badge PROMO */}
+                {/* Badge PROMO moderne avec animation */}
                 {hasPromo && (
-                    <div className="absolute top-2 left-2 z-20">
-                        <div className="px-2 py-1 rounded-md text-[10px] font-bold text-white bg-gradient-to-r from-red-500 to-orange-500 shadow-lg">
-                            -{product.promo_percentage}%
+                    <div className="absolute top-3 left-3 z-20 animate-pulse">
+                        <div className="relative px-3 py-1.5 rounded-xl text-xs font-black text-white bg-gradient-to-r from-red-500 via-red-600 to-orange-500 shadow-2xl shadow-red-500/50">
+                            <span className="relative z-10">-{product.promo_percentage}%</span>
+                            <div className="absolute inset-0 bg-white/20 rounded-xl animate-ping opacity-75" />
                         </div>
                     </div>
                 )}
                 
+                {/* Badge NEW élégant */}
                 {isNew && !hasPromo && (
-                     <div className="absolute top-2 left-2 z-20"> {/* ... code du badge NEW ... */} </div>
+                    <div className="absolute top-3 left-3 z-20">
+                        <div className="px-3 py-1.5 rounded-xl text-xs font-black text-white bg-gradient-to-r from-emerald-500 to-teal-500 shadow-lg shadow-emerald-500/40">
+                            <span className="flex items-center gap-1">
+                                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                                NOUVEAU
+                            </span>
+                        </div>
+                    </div>
                 )}
                 
-                {/* ... autres badges ... */}
-                <div className="absolute top-2 right-2 z-10">{/* ... code du LikeButton ... */}</div>
-                {imageCount > 1 && (<div className="absolute bottom-2 right-2 z-10">{/* ... code du compteur d'images ... */}</div>)}
+                {/* LikeButton avec meilleur positionnement */}
+                <div className="absolute top-3 right-3 z-20 transform transition-transform duration-300 hover:scale-110">
+                    <div className="bg-white/90 dark:bg-black/50 backdrop-blur-md rounded-full p-2 shadow-lg">
+                        <LikeButton productId={product.id} userId={userId} />
+                    </div>
+                </div>
+
+                {/* Compteur d'images modernisé */}
+                {imageCount > 1 && (
+                    <div className="absolute bottom-3 right-3 z-20">
+                        <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-black/70 backdrop-blur-md rounded-full">
+                            <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            <span className="text-xs font-bold text-white">{imageCount}</span>
+                        </div>
+                    </div>
+                )}
             </div>
 
-            <div className="flex-1 p-3 sm:p-4 space-y-2.5 sm:space-y-3">
+            {/* Contenu de la carte */}
+            <div className="flex-1 p-4 sm:p-5 space-y-3">
                 <Link href={`/product/${product.id}`} className={`block group/title ${!inStock ? 'pointer-events-none' : ''}`}>
-                    <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 leading-tight line-clamp-2 group-hover/title:text-[#F6C445] transition-colors duration-300">
+                    <h3 className="text-sm sm:text-base font-bold text-gray-900 dark:text-white leading-snug line-clamp-2 group-hover/title:text-[#F6C445] transition-colors duration-300">
                         {product.title}
                     </h3>
                 </Link>
 
-                {product.zone && (<p className="text-[10px] sm:text-xs font-medium text-[#F6C445] dark:text-[#FFD700]">{product.zone}</p>)}
-                <p className="hidden sm:block text-xs text-gray-600 dark:text-gray-400 line-clamp-2 leading-relaxed">{product.description}</p>
+                {/* Zone avec icône */}
+                {product.zone && (
+                    <div className="flex items-center gap-1.5">
+                        <svg className="w-3.5 h-3.5 text-[#F6C445]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <p className="text-xs font-semibold text-[#F6C445] dark:text-[#FFD700]">{product.zone}</p>
+                    </div>
+                )}
 
-                <div className="flex items-end justify-between pt-1 sm:pt-2">
-                    {/* 4. Affichage du prix : conditionnel s'il y a une promotion ou non. */}
+                {/* Description améliorée */}
+                <p className="hidden sm:block text-xs text-gray-600 dark:text-gray-400 line-clamp-2 leading-relaxed">
+                    {product.description}
+                </p>
+
+                {/* Section prix et bouton */}
+                <div className="flex items-end justify-between pt-2 gap-3">
+                    {/* Prix avec meilleur design */}
                     {hasPromo ? (
-                        <div className="flex flex-col">
+                        <div className="flex flex-col gap-1">
                             <div className="flex items-baseline gap-2">
-                                <span className="text-base font-black text-red-500 dark:text-orange-400">
-                                    {product.promo_price?.toLocaleString()} FCFA
+                                <span className="text-lg sm:text-xl font-black text-red-600 dark:text-orange-500">
+                                    {product.promo_price?.toLocaleString()}
                                 </span>
-                                <span className="text-xs font-medium text-gray-500 dark:text-gray-400 line-through">
-                                    {product.price.toLocaleString()} FCFA
+                                <span className="text-xs font-semibold text-gray-400 line-through">
+                                    {product.price.toLocaleString()}
                                 </span>
                             </div>
-                            <span className="text-[10px] text-green-600 dark:text-green-400 font-semibold">
-                                Économisez {economy.toLocaleString()} FCFA
+                            <span className="text-[10px] font-bold text-white bg-green-500 px-2 py-0.5 rounded-md inline-block w-fit">
+                                Économie {economy.toLocaleString()} FCFA
                             </span>
                         </div>
                     ) : (
                         <div className="flex flex-col">
-                            <span className="text-base font-black text-gray-900 dark:text-gray-100 group-hover:text-[#F6C445] transition-colors duration-300">
+                            <span className="text-lg sm:text-xl font-black text-gray-900 dark:text-white">
                                 {product.price.toLocaleString()}
                             </span>
-                            <span className="text-[10px] text-gray-500 dark:text-gray-400 font-medium">
+                            <span className="text-[10px] font-semibold text-gray-500 dark:text-gray-400 tracking-wider">
                                 FCFA
                             </span>
                         </div>
                     )}
 
+                    {/* Bouton CTA amélioré */}
                     <Link
                         href={`/product/${product.id}`}
-                        // 5. Style du bouton désactivé en cas de rupture de stock.
-                        className={`relative px-3 py-2 sm:px-4 sm:py-2 rounded-xl text-[10px] sm:text-xs font-bold transition-all duration-300 transform group/btn overflow-hidden touch-manipulation
+                        className={`relative px-4 sm:px-5 py-2.5 sm:py-3 rounded-2xl text-xs sm:text-sm font-black transition-all duration-300 transform overflow-hidden touch-manipulation flex items-center gap-2
                         ${!inStock 
-                            ? 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 pointer-events-none' 
-                            : 'text-[#1C2B49] bg-gradient-to-r from-[#F6C445] to-[#FFD700] hover:from-[#FFD700] hover:to-[#F6C445] active:from-[#F6C445] active:to-[#FFD700] shadow-md hover:shadow-lg hover:shadow-[#F6C445]/25 hover:scale-105 active:scale-95'}`}
+                            ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed' 
+                            : 'text-[#1C2B49] bg-gradient-to-r from-[#F6C445] via-[#FFD700] to-[#F6C445] bg-size-200 bg-pos-0 hover:bg-pos-100 shadow-lg hover:shadow-xl hover:shadow-[#F6C445]/40 hover:scale-105 active:scale-95'
+                        }`}
                     >
-                        <span className="relative z-10 flex items-center gap-1">Voir
-                            <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3 transition-transform duration-300 group-hover/btn:translate-x-0.5 group-active/btn:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-                        </span>
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full group-hover/btn:translate-x-full group-active/btn:translate-x-full transition-transform duration-400" />
+                        <span className="relative z-10 font-black tracking-wide">VOIR</span>
+                        <svg className="relative z-10 w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                        </svg>
+                        {inStock && (
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+                        )}
                     </Link>
                 </div>
             </div>
 
-            <div className={`absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[#F6C445]/60 to-transparent transform transition-transform duration-400 origin-center ${inStock ? 'scale-x-0 group-hover:scale-x-100 group-active:scale-x-100' : 'scale-x-0'}`} />
-            <div className="absolute inset-0 rounded-2xl ring-2 ring-[#F6C445]/50 ring-offset-2 ring-offset-white dark:ring-offset-[#1C2B49] opacity-0 focus-within:opacity-100 transition-opacity duration-300 pointer-events-none" />
+            {/* Barre de focus élégante */}
+            {inStock && (
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#F6C445] to-transparent transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-center" />
+            )}
         </article>
     )
 }
