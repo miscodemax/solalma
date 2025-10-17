@@ -104,9 +104,9 @@ export default function ImageUploader({
             return
         }
 
-        // Créer des previews immédiatement
-        const newItems: ImageItem[] = toUpload.map((file) => ({
-            id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+        // Créer des previews immédiatement avec des IDs uniques
+        const newItems: ImageItem[] = toUpload.map((file, index) => ({
+            id: `${Date.now()}-${index}-${Math.random().toString(36).slice(2, 9)}`,
             previewUrl: URL.createObjectURL(file),
             name: file.name,
             size: file.size,
@@ -185,10 +185,19 @@ export default function ImageUploader({
             })
         )
 
-        // Notifier le parent
-        const existingUploaded = images.filter(i => i.url).map(i => i.url!)
-        const allUrls = [...existingUploaded, ...uploadedUrls]
-        if (allUrls.length > 0) onUpload(allUrls)
+        // Notifier le parent avec toutes les URLs après upload
+        setTimeout(() => {
+            const finalUrls = [...images, ...newItems]
+                .filter(i => i.url && !i.error)
+                .map(i => i.url!)
+            
+            // Supprimer les doublons avec Set
+            const uniqueUrls = Array.from(new Set(finalUrls))
+            
+            if (uniqueUrls.length > 0) {
+                onUpload(uniqueUrls)
+            }
+        }, 100)
 
         // Nettoyer les previews
         setTimeout(() => {
