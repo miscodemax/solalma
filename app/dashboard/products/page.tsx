@@ -542,7 +542,6 @@ export default function ProductsPage() {
                   <p className="text-sm text-red-900 dark:text-red-100">Promos Actives</p>
                   <p className="text-2xl font-bold text-red-600 dark:text-red-400">{activePromos}</p>
                 </div>
-                <ApplyAllPromo />
               </div>
             </div>
           </div>
