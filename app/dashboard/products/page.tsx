@@ -8,6 +8,7 @@ import DeleteButton from "./deletebutton"
 import { Store, TrendingUp, Package, Star, Plus, Search, Filter, Grid, Edit2, Calendar, Tag, Percent, Clock, Zap, X, Sparkles } from "lucide-react"
 import BackButton from "@/app/composants/back-button"
 import AuthModal from "@/app/composants/auth-modal"
+import ApplyAllPromo from "@/app/composants/applyAllpromo"
 
 type Product = {
   id: number
@@ -541,6 +542,7 @@ export default function ProductsPage() {
                   <p className="text-sm text-red-900 dark:text-red-100">Promos Actives</p>
                   <p className="text-2xl font-bold text-red-600 dark:text-red-400">{activePromos}</p>
                 </div>
+                <ApplyAllPromo />
               </div>
             </div>
           </div>
