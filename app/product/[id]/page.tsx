@@ -141,17 +141,19 @@ export default async function ProductDetailPage({ params }: Props) {
 
   if (productError || !product) notFound()
 
-  // ----- Incrémenter le nombre de vues -----
-  const { error: rpcError } = await supabase.rpc('increment_clicks', {
-    product_id: productIdNumber
-  });
+  // ----- Incrémentation directe de la colonne 'clicks' -----
+  const currentClicks = product.clicks || 0;
+  const { error: updateError } = await supabase
+    .from('product')
+    .update({ clicks: currentClicks + 1 })
+    .eq('id', productIdNumber);
 
-  if (rpcError) {
+  if (updateError) {
     // On affiche l'erreur dans la console du serveur pour le débogage,
     // mais on ne bloque pas le chargement de la page si ça échoue.
-    console.error(`Erreur RPC pour increment_clicks sur produit ${productIdNumber}:`, rpcError);
+    console.error(`Erreur lors de la mise à jour des vues pour le produit ${productIdNumber}:`, updateError);
   }
-  // -----------------------------------------
+  // --------------------------------------------------------
 
   const { data: productImages } = await supabase
     .from("product_images")
