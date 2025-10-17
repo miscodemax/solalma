@@ -1,8 +1,9 @@
 'use client'
 
-import React, { useState, useRef, useCallback } from 'react'
+import React, { useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase'
-import { ImagePlus, Loader2, X, Star, Upload, CheckCircle2, AlertCircle } from 'lucide-react'
+import { ImagePlus, Loader2, X, Star } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 
 interface ImageUploaderProps {
     onUpload: (urls: string[]) => void
@@ -17,8 +18,6 @@ interface ImageItem {
     name: string
     size: number
     uploading?: boolean
-    progress?: number
-    error?: boolean
 }
 
 export default function ImageUploader({
@@ -28,7 +27,6 @@ export default function ImageUploader({
 }: ImageUploaderProps) {
     const [images, setImages] = useState<ImageItem[]>([])
     const [error, setError] = useState('')
-    const [isDragging, setIsDragging] = useState(false)
     const fileInputRef = useRef<HTMLInputElement | null>(null)
     const supabase = createClient()
 
@@ -40,366 +38,175 @@ export default function ImageUploader({
         return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i]
     }
 
-    // Conversion et compression d'image automatique
-    const compressImage = async (file: File): Promise<File> => {
-        return new Promise((resolve) => {
-            const reader = new FileReader()
-            reader.onload = (e) => {
-                const img = document.createElement('img')
-                img.onload = () => {
-                    const canvas = document.createElement('canvas')
-                    let width = img.width
-                    let height = img.height
-
-                    // Redimensionner si trop grand (max 1920px)
-                    const maxSize = 1920
-                    if (width > maxSize || height > maxSize) {
-                        if (width > height) {
-                            height = (height / width) * maxSize
-                            width = maxSize
-                        } else {
-                            width = (width / height) * maxSize
-                            height = maxSize
-                        }
-                    }
-
-                    canvas.width = width
-                    canvas.height = height
-
-                    const ctx = canvas.getContext('2d')
-                    ctx?.drawImage(img, 0, 0, width, height)
-
-                    // Convertir en WebP (meilleure compression) ou JPEG
-                    canvas.toBlob(
-                        (blob) => {
-                            if (blob) {
-                                const compressedFile = new File(
-                                    [blob],
-                                    file.name.replace(/\.[^/.]+$/, '.webp'),
-                                    { type: 'image/webp' }
-                                )
-                                resolve(compressedFile)
-                            } else {
-                                resolve(file)
-                            }
-                        },
-                        'image/webp',
-                        0.85 // Qualité 85%
-                    )
-                }
-                img.src = e.target?.result as string
-            }
-            reader.readAsDataURL(file)
-        })
-    }
-
     const handleFiles = async (files: FileList | null) => {
         if (!files || files.length === 0) return
-        
         const remaining = maxImages - (currentImageCount + images.length)
         const toUpload = Array.from(files).slice(0, remaining)
 
         if (toUpload.length === 0) {
-            setError(`Maximum ${maxImages} images`)
+            setError(`Limite atteinte (${maxImages} images max)`)
             setTimeout(() => setError(''), 3000)
             return
         }
 
-        // Créer des previews immédiatement
+        // Create previews immediately
         const newItems: ImageItem[] = toUpload.map((file) => ({
             id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
             previewUrl: URL.createObjectURL(file),
             name: file.name,
             size: file.size,
             uploading: true,
-            progress: 0,
         }))
 
         setImages(prev => [...prev, ...newItems])
 
         const uploadedUrls: string[] = []
 
-        // Upload en parallèle pour plus de rapidité
-        await Promise.all(
-            toUpload.map(async (file, index) => {
-                const itemId = newItems[index].id
+        // Upload serially to simplify error handling and avoid race conditions
+        for (let i = 0; i < toUpload.length; i++) {
+            const file = toUpload[i]
+            const itemId = newItems[i].id
 
-                try {
-                    // Vérifier que c'est bien une image
-                    if (!file.type.startsWith('image/')) {
-                        throw new Error('Fichier non supporté')
-                    }
+            // Basic validation
+            if (!file.type.startsWith('image/')) {
+                setError(`${file.name} n'est pas une image`)
+                setTimeout(() => setError(''), 2500)
+                setImages(prev => prev.map(it => it.id === itemId ? { ...it, uploading: false } : it))
+                continue
+            }
+            if (file.size > 10 * 1024 * 1024) {
+                setError(`${file.name} dépasse 10MB`)
+                setTimeout(() => setError(''), 2500)
+                setImages(prev => prev.map(it => it.id === itemId ? { ...it, uploading: false } : it))
+                continue
+            }
 
-                    // Compression automatique
-                    setImages(prev => prev.map(it => 
-                        it.id === itemId ? { ...it, progress: 20 } : it
-                    ))
+            try {
+                const ext = file.name.split('.').pop() || 'jpg'
+                const filename = `${itemId}.${ext}`
 
-                    const compressedFile = file.size > 500 * 1024 
-                        ? await compressImage(file) 
-                        : file
+                // upload
+                const { error: uploadError } = await supabase.storage
+                    .from('product')
+                    .upload(filename, file, { cacheControl: '3600', upsert: false })
 
-                    setImages(prev => prev.map(it => 
-                        it.id === itemId ? { ...it, progress: 40 } : it
-                    ))
+                if (uploadError) throw uploadError
 
-                    const ext = compressedFile.name.split('.').pop() || 'webp'
-                    const filename = `${itemId}.${ext}`
+                const { data } = supabase.storage.from('product').getPublicUrl(filename)
+                const publicUrl = data.publicUrl
 
-                    // Upload
-                    setImages(prev => prev.map(it => 
-                        it.id === itemId ? { ...it, progress: 60 } : it
-                    ))
+                // replace preview with final url
+                setImages(prev => prev.map(it => it.id === itemId ? { ...it, url: publicUrl, uploading: false } : it))
+                uploadedUrls.push(publicUrl)
+            } catch (err) {
+                console.error('upload error', err)
+                setError(`Échec upload: ${file.name}`)
+                setTimeout(() => setError(''), 3000)
+                setImages(prev => prev.filter(it => it.id !== itemId))
+            }
+        }
 
-                    const { error: uploadError } = await supabase.storage
-                        .from('product')
-                        .upload(filename, compressedFile, { 
-                            cacheControl: '3600', 
-                            upsert: false 
-                        })
-
-                    if (uploadError) throw uploadError
-
-                    setImages(prev => prev.map(it => 
-                        it.id === itemId ? { ...it, progress: 90 } : it
-                    ))
-
-                    const { data } = supabase.storage.from('product').getPublicUrl(filename)
-                    const publicUrl = data.publicUrl
-
-                    // Marquer comme terminé
-                    setImages(prev => prev.map(it => 
-                        it.id === itemId 
-                            ? { ...it, url: publicUrl, uploading: false, progress: 100 } 
-                            : it
-                    ))
-                    
-                    uploadedUrls.push(publicUrl)
-                } catch (err) {
-                    console.error('Upload error:', err)
-                    setImages(prev => prev.map(it => 
-                        it.id === itemId 
-                            ? { ...it, uploading: false, error: true, progress: 0 } 
-                            : it
-                    ))
-                }
-            })
-        )
-
-        // Notifier le parent
+        // notify parent with all uploaded urls (including previous ones already uploaded)
         const existingUploaded = images.filter(i => i.url).map(i => i.url!)
         const allUrls = [...existingUploaded, ...uploadedUrls]
         if (allUrls.length > 0) onUpload(allUrls)
 
-        // Nettoyer les previews
+        // revoke previews for items that now have public url to free memory
         setTimeout(() => {
             newItems.forEach(it => {
                 try { URL.revokeObjectURL(it.previewUrl) } catch { }
             })
         }, 1000)
 
+        // reset input
         if (fileInputRef.current) fileInputRef.current.value = ''
     }
 
-    const handleRemove = useCallback((id: string) => {
+    const handleRemove = (id: string) => {
         const removed = images.find(i => i.id === id)
-        if (removed?.previewUrl) {
-            try { URL.revokeObjectURL(removed.previewUrl) } catch { }
-        }
+        if (removed?.previewUrl) try { URL.revokeObjectURL(removed.previewUrl) } catch { }
         const updated = images.filter(i => i.id !== id)
         setImages(updated)
         const urls = updated.filter(i => i.url).map(i => i.url!)
         onUpload(urls)
-    }, [images, onUpload])
-
-    // Drag & Drop
-    const handleDragEnter = (e: React.DragEvent) => {
-        e.preventDefault()
-        e.stopPropagation()
-        setIsDragging(true)
     }
-
-    const handleDragLeave = (e: React.DragEvent) => {
-        e.preventDefault()
-        e.stopPropagation()
-        setIsDragging(false)
-    }
-
-    const handleDragOver = (e: React.DragEvent) => {
-        e.preventDefault()
-        e.stopPropagation()
-    }
-
-    const handleDrop = (e: React.DragEvent) => {
-        e.preventDefault()
-        e.stopPropagation()
-        setIsDragging(false)
-        
-        const files = e.dataTransfer.files
-        if (files) handleFiles(files)
-    }
-
-    const totalImages = currentImageCount + images.length
-    const canAddMore = totalImages < maxImages
 
     return (
         <div className="space-y-4">
-            {/* Zone d'upload avec drag & drop */}
-            <div
-                onDragEnter={handleDragEnter}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                className="relative"
-            >
-                <label className={`block cursor-pointer transition-all duration-300 ${!canAddMore ? 'opacity-50 cursor-not-allowed' : ''}`}>
+            <div>
+                <label className="w-full cursor-pointer">
                     <input
                         ref={fileInputRef}
                         type="file"
                         accept="image/*"
                         multiple
                         onChange={(e) => handleFiles(e.target.files)}
-                        disabled={!canAddMore}
                         className="hidden"
                     />
 
-                    <div className={`relative w-full rounded-2xl border-2 border-dashed transition-all duration-300 overflow-hidden ${
-                        isDragging 
-                            ? 'border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20 scale-[1.02]' 
-                            : canAddMore
-                                ? 'border-gray-300 dark:border-gray-600 bg-gradient-to-br from-gray-50 to-white dark:from-gray-800 dark:to-gray-900 hover:border-yellow-400 hover:bg-yellow-50/50 dark:hover:bg-yellow-900/10'
-                                : 'border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800'
-                    }`}>
-                        <div className="p-8 text-center">
-                            <div className="flex justify-center mb-4">
-                                {isDragging ? (
-                                    <Upload className="w-12 h-12 text-yellow-500 animate-bounce" />
-                                ) : (
-                                    <div className="relative">
-                                        <ImagePlus className="w-12 h-12 text-yellow-500" />
-                                        <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-yellow-500 rounded-full flex items-center justify-center">
-                                            <span className="text-white text-xs font-bold">+</span>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                            
-                            <div className="space-y-2">
-                                <p className="text-base font-semibold text-gray-800 dark:text-gray-200">
-                                    {isDragging ? 'Déposez vos images ici' : 'Ajoutez vos photos'}
-                                </p>
-                                <p className="text-sm text-gray-600 dark:text-gray-400">
-                                    Glissez-déposez ou cliquez pour sélectionner
-                                </p>
-                                <div className="flex items-center justify-center gap-4 text-xs text-gray-500 dark:text-gray-500 mt-3">
-                                    <span className="flex items-center gap-1">
-                                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                        </svg>
-                                        Tous formats
-                                    </span>
-                                    <span className="flex items-center gap-1">
-                                        <CheckCircle2 className="w-3.5 h-3.5" />
-                                        Auto-compression
-                                    </span>
-                                    <span className="flex items-center gap-1">
-                                        <Star className="w-3.5 h-3.5" />
-                                        Max {maxImages}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Compteur d'images */}
-                        {totalImages > 0 && (
-                            <div className="absolute top-3 right-3 px-3 py-1 bg-yellow-500 text-white text-xs font-bold rounded-full shadow-lg">
-                                {totalImages}/{maxImages}
-                            </div>
-                        )}
+                    <div className="w-full flex items-center justify-center gap-3 px-5 py-3 rounded-xl border border-gray-200 bg-white hover:shadow-md transition-colors">
+                        <ImagePlus className="w-5 h-5 text-yellow-600" />
+                        <div className="text-sm text-gray-700">Ajouter des photos</div>
+                        <div className="ml-2 text-xs text-gray-400">(PNG, JPG, WEBP — max 10MB)</div>
                     </div>
                 </label>
             </div>
 
-            {/* Galerie d'images */}
-            {images.length > 0 && (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                    {images.map((img, idx) => (
-                        <div
-                            key={img.id}
-                            className="group relative aspect-square rounded-2xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
-                        >
-                            {/* Image */}
-                            <img
-                                src={img.url || img.previewUrl}
-                                alt={img.name}
-                                className="w-full h-full object-cover"
-                            />
+            {/* gallery */}
+            <div className="flex gap-3 flex-wrap">
+                {images.map((img, idx) => (
+                    <motion.div
+                        key={img.id}
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        className="relative w-28 h-28 rounded-lg overflow-hidden shadow-sm bg-gray-50"
+                    >
+                        <img
+                            src={img.url || img.previewUrl}
+                            alt={img.name}
+                            className="w-full h-full object-cover"
+                        />
 
-                            {/* Badge Principal */}
-                            {idx === 0 && !img.uploading && !img.error && (
-                                <div className="absolute top-2 left-2 flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-yellow-400 to-yellow-500 text-white text-xs font-bold rounded-lg shadow-lg">
-                                    <Star className="w-3 h-3 fill-white" />
-                                    Principal
-                                </div>
-                            )}
+                        {idx === 0 && !img.uploading && (
+                            <span className="absolute top-2 left-2 bg-yellow-500 text-white text-xs px-2 py-1 rounded-md flex items-center gap-1 shadow">
+                                <Star className="w-3 h-3" />
+                                Principal
+                            </span>
+                        )}
 
-                            {/* État d'upload */}
-                            {img.uploading && (
-                                <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center gap-2">
-                                    <Loader2 className="w-8 h-8 text-white animate-spin" />
-                                    <div className="w-3/4 h-1.5 bg-white/20 rounded-full overflow-hidden">
-                                        <div 
-                                            className="h-full bg-gradient-to-r from-yellow-400 to-yellow-500 transition-all duration-300"
-                                            style={{ width: `${img.progress || 0}%` }}
-                                        />
-                                    </div>
-                                    <span className="text-xs text-white font-medium">
-                                        {img.progress || 0}%
-                                    </span>
-                                </div>
-                            )}
-
-                            {/* Erreur */}
-                            {img.error && (
-                                <div className="absolute inset-0 bg-red-500/80 flex flex-col items-center justify-center gap-2">
-                                    <AlertCircle className="w-8 h-8 text-white" />
-                                    <span className="text-xs text-white font-medium">Échec</span>
-                                </div>
-                            )}
-
-                            {/* Bouton supprimer */}
-                            <button
-                                onClick={() => handleRemove(img.id)}
-                                className="absolute top-2 right-2 w-8 h-8 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-110 active:scale-95 opacity-0 group-hover:opacity-100"
-                                aria-label="Supprimer"
-                            >
-                                <X className="w-4 h-4" />
-                            </button>
-
-                            {/* Infos fichier */}
-                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <div className="text-xs text-white/90 truncate">{img.name}</div>
-                                <div className="text-[10px] text-white/70">{formatSize(img.size)}</div>
+                        {img.uploading && (
+                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                                <Loader2 className="w-5 h-5 text-white animate-spin" />
                             </div>
+                        )}
 
-                            {/* Succès */}
-                            {img.url && !img.uploading && !img.error && (
-                                <div className="absolute top-2 right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <CheckCircle2 className="w-4 h-4 text-white" />
-                                </div>
-                            )}
+                        <button
+                            onClick={() => handleRemove(img.id)}
+                            className="absolute top-2 right-2 bg-black/60 text-white rounded-full p-1 hover:bg-black/80"
+                            aria-label="Supprimer l'image"
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
+
+                        <div className="absolute bottom-1 left-1 right-1 px-2 text-xs text-white/90">
+                            <div className="flex justify-between items-center">
+                                <div className="truncate">{img.name}</div>
+                                <div className="ml-2 text-[10px] text-white/80">{formatSize(img.size)}</div>
+                            </div>
                         </div>
-                    ))}
-                </div>
-            )}
+                    </motion.div>
+                ))}
+            </div>
 
-            {/* Message d'erreur */}
-            {error && (
-                <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl animate-pulse">
-                    <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
-                    <p className="text-sm text-red-700 dark:text-red-400 font-medium">{error}</p>
-                </div>
-            )}
+            <AnimatePresence>
+                {error && (
+                    <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} className="text-sm text-red-600">
+                        {error}
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
         </div>
     )
 }
