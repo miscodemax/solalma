@@ -13,7 +13,8 @@ import ProductShareButton from "@/app/composants/productShare"
 import type { Metadata } from "next"
 import BackButton from "@/app/composants/back-button"
 import ProductImageCarousel from "@/app/composants/ProductImageCarousel"
-import ProductContact from "../contact" // Le nouveau composant
+import ProductContact from "../contact"
+import { Eye, Heart } from "lucide-react"
 
 type Props = {
   params: {
@@ -141,7 +142,7 @@ export default async function ProductDetailPage({ params }: Props) {
 
   if (productError || !product) notFound()
 
-  // ----- Incrémentation directe de la colonne 'clicks' -----
+  // Incrémentation directe de la colonne 'clicks'
   const currentClicks = product.clicks || 0;
   const { error: updateError } = await supabase
     .from('product')
@@ -153,7 +154,16 @@ export default async function ProductDetailPage({ params }: Props) {
     // mais on ne bloque pas le chargement de la page si ça échoue.
     console.error(`Erreur lors de la mise à jour des vues pour le produit ${productIdNumber}:`, updateError);
   }
-  // --------------------------------------------------------
+  
+  // Compter le nombre de likes pour ce produit
+  const { count: likeCount, error: likeError } = await supabase
+    .from("product_like")
+    .select('*', { count: 'exact', head: true })
+    .eq('product_id', productIdNumber);
+
+  if (likeError) {
+    console.error("Erreur lors du comptage des likes:", likeError);
+  }
 
   const { data: productImages } = await supabase
     .from("product_images")
@@ -294,10 +304,20 @@ export default async function ProductDetailPage({ params }: Props) {
                 {product.title}
               </h1>
 
-              <div className="flex flex-wrap items-center gap-3 mb-6">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-3 mb-6">
                 <span className="inline-flex items-center bg-[#F6C445]/20 text-[#1C2B49] px-4 py-2 rounded-full text-sm font-bold border border-[#F6C445]/40 dark:text-[#F6C445]">
                   📁 {product.category || "Non spécifiée"}
                 </span>
+                
+                <span className="inline-flex items-center gap-2 bg-gray-100 dark:bg-gray-700/50 px-3 py-1.5 rounded-full text-sm font-medium text-gray-600 dark:text-gray-300">
+                  <Eye size={16} className="text-gray-500 dark:text-gray-400" />
+                  {currentClicks + 1} vues
+                </span>
+                <span className="inline-flex items-center gap-2 bg-red-100 dark:bg-red-500/20 px-3 py-1.5 rounded-full text-sm font-medium text-red-600 dark:text-red-400">
+                  <Heart size={16} />
+                  {likeCount || 0} likes
+                </span>
+                
                 {isNew && (
                   <span className="inline-flex items-center bg-[#1C2B49]/20 text-[#F6C445] px-4 py-2 rounded-full text-sm font-bold border border-[#1C2B49]/40">
                     ✨ Nouveau
