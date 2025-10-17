@@ -566,7 +566,7 @@ export default function ProductsPage() {
                   <Grid className="w-4 h-4" />
                 </button>
               </div>
-
+              <ApplyAllPromo />
               <Link
                 href="/dashboard/add"
                 className="bg-gradient-to-r from-[#F4C430] to-[#E9961A] text-[#1A1A1A] px-6 py-3 rounded-xl shadow-lg font-semibold flex items-center justify-center gap-2 hover:shadow-xl transition-all"
