@@ -289,9 +289,9 @@ export default async function ProductDetailPage({ params }: Props) {
                   {product.title}
                 </h1>
                 {/* On ne passe le userId que s'il existe */}
-                {user && (
+                {user != null && (
                   <div className="mt-2">
-                    <LikeButton productId={productIdNumber} userId={user.id} />
+                    <LikeButton productId={productIdNumber} userId={user?.id} />
                   </div>
                 )}
               </div>
