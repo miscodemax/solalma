@@ -17,6 +17,7 @@ type Product = {
   created_at: string
   image_url: string
   user_id: string
+  in_stock?: boolean
 }
 
 export default function ProductsPage() {
@@ -24,6 +25,7 @@ export default function ProductsPage() {
   const [loading, setLoading] = useState(true)
   const [products, setProducts] = useState<Product[]>([])
   const [error, setError] = useState<string | null>(null)
+  const [updatingIds, setUpdatingIds] = useState<number[]>([]) // track toggles in flight
   const supabase = createClient()
 
   useEffect(() => {
@@ -50,7 +52,8 @@ export default function ProductsPage() {
       if (productsError) {
         setError(productsError.message)
       } else {
-        setProducts(products || [])
+        // ensure in_stock defaults to true if undefined (for backward compatibility)
+        setProducts((products || []).map((p: any) => ({ ...p, in_stock: typeof p.in_stock === 'boolean' ? p.in_stock : true })))
       }
 
       setLoading(false)
@@ -70,8 +73,7 @@ export default function ProductsPage() {
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#FAF9F6] dark:bg-black">
-        <AuthModal
-        />
+        <AuthModal />
       </div>
     )
   }
@@ -92,6 +94,28 @@ export default function ProductsPage() {
     lastWeek.setDate(lastWeek.getDate() - 7)
     return createdAt >= lastWeek
   }).length
+
+  const isUpdating = (id: number) => updatingIds.includes(id)
+
+  const toggleInStock = async (productId: number, currentValue: boolean | undefined) => {
+    const newValue = !currentValue
+    // optimistic UI
+    setProducts(prev => prev.map(p => p.id === productId ? { ...p, in_stock: newValue } : p))
+    setUpdatingIds(prev => [...prev, productId])
+
+    const { error: updateError } = await supabase
+      .from("product")
+      .update({ in_stock: newValue })
+      .eq("id", productId)
+
+    if (updateError) {
+      // rollback optimistic change on error
+      setProducts(prev => prev.map(p => p.id === productId ? { ...p, in_stock: !!currentValue } : p))
+      setError(updateError.message)
+    }
+
+    setUpdatingIds(prev => prev.filter(id => id !== productId))
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#FAF9F6] via-[#F4C430]/5 to-[#FFD55A]/10 dark:from-[#0a0a0a] dark:via-[#111111] dark:to-[#0f0f0f] relative overflow-hidden">
@@ -234,51 +258,93 @@ export default function ProductsPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {products.map((product, index) => (
-                <div
-                  key={product.id}
-                  className="group bg-white/80 dark:bg-[#1a1a1a]/80 backdrop-blur-sm border border-[#F4C430]/20 dark:border-[#333]/50 rounded-2xl shadow-lg overflow-hidden"
-                  style={{ animationDelay: `${index * 100}ms` }}
-                >
-                  <div className="relative overflow-hidden rounded-t-2xl">
-                    <ProductImage
-                      src={product.image_url}
-                      alt={product.title}
-                    />
-                    {recentProducts > 0 && new Date(product.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) && (
-                      <div className="absolute top-3 left-3 bg-gradient-to-r from-[#F4C430] to-[#E9961A] text-[#1A1A1A] text-xs font-bold px-2 py-1 rounded-full shadow-md">
-                        ✨ Nouveau
-                      </div>
-                    )}
-                  </div>
+              {products.map((product, index) => {
+                const outOfStock = product.in_stock === false
+                return (
+                  <div
+                    key={product.id}
+                    className={`group relative bg-white/80 dark:bg-[#1a1a1a]/80 backdrop-blur-sm border border-[#F4C430]/20 dark:border-[#333]/50 rounded-2xl shadow-lg overflow-hidden ${outOfStock ? 'opacity-90' : ''}`}
+                    style={{ animationDelay: `${index * 100}ms` }}
+                  >
+                    <div className="relative overflow-hidden rounded-t-2xl">
+                      <ProductImage
+                        src={product.image_url}
+                        alt={product.title}
+                        // if out of stock, desaturate image for UX
+                      />
+                      {recentProducts > 0 && new Date(product.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) && (
+                        <div className="absolute top-3 left-3 bg-gradient-to-r from-[#F4C430] to-[#E9961A] text-[#1A1A1A] text-xs font-bold px-2 py-1 rounded-full shadow-md">
+                          ✨ Nouveau
+                        </div>
+                      )}
 
-                  <div className="p-6">
-                    <h3 className="text-lg font-bold text-[#1A1A1A] dark:text-white line-clamp-1 mb-3">
-                      {product.title}
-                    </h3>
-                    <p className="text-xs text-[#1A1A1A]/60 dark:text-[#888] mb-3">
-                      📅 Ajouté le {new Date(product.created_at).toLocaleDateString('fr-FR')}
-                    </p>
-                    <p className="text-sm text-[#1A1A1A]/70 dark:text-[#bbb] mb-4 line-clamp-2">
-                      {product.description}
-                    </p>
+                      {/* Out of stock overlay */}
+                      {outOfStock && (
+                        <div className="absolute inset-0 bg-black/40 flex items-start justify-center p-4">
+                          <div className="mt-3 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow">
+                            Rupture de stock
+                          </div>
+                        </div>
+                      )}
+                    </div>
 
-                    <div className="flex items-center justify-between">
-                      <span className="text-xl font-black text-[#E9961A]">
-                        {parseFloat(product.price).toLocaleString()} FCFA
-                      </span>
-                      <div className="flex gap-2">
-                        <Link href={`/dashboard/edit/${product.id}`}>
-                          <button className="text-[#E9961A] border-2 border-[#E9961A] px-3 py-1.5 rounded-lg text-sm font-semibold">
-                            Modifier
-                          </button>
-                        </Link>
-                        <DeleteButton id={product.id} />
+                    <div className="p-6">
+                      <h3 className={`text-lg font-bold text-[#1A1A1A] dark:text-white line-clamp-1 mb-3 ${outOfStock ? 'line-through text-[#a1a1a1]' : ''}`}>
+                        {product.title}
+                      </h3>
+                      <p className="text-xs text-[#1A1A1A]/60 dark:text-[#888] mb-3">
+                        📅 Ajouté le {new Date(product.created_at).toLocaleDateString('fr-FR')}
+                      </p>
+                      <p className={`text-sm text-[#1A1A1A]/70 dark:text-[#bbb] mb-4 line-clamp-2 ${outOfStock ? 'opacity-70' : ''}`}>
+                        {product.description}
+                      </p>
+
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <span className={`text-xl font-black ${outOfStock ? 'text-gray-400 line-through' : 'text-[#E9961A]'}`}>
+                            {parseFloat(product.price).toLocaleString()} FCFA
+                          </span>
+
+                          {/* Stock toggle */}
+                          <div className="flex items-center gap-2">
+                            <label className="flex items-center gap-2 text-sm">
+                              <div className="relative">
+                                <input
+                                  type="checkbox"
+                                  checked={!!product.in_stock}
+                                  onChange={() => toggleInStock(product.id, product.in_stock)}
+                                  disabled={isUpdating(product.id)}
+                                  className="sr-only"
+                                  aria-label={product.in_stock ? "Marquer comme en rupture" : "Marquer comme en stock"}
+                                />
+                                <div className={`w-11 h-6 rounded-full transition-colors ${product.in_stock ? 'bg-emerald-400' : 'bg-gray-300 dark:bg-gray-600'}`}></div>
+                                <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transform transition-transform ${product.in_stock ? 'translate-x-5' : 'translate-x-0'}`}></div>
+                              </div>
+                              <span className={`font-semibold ${product.in_stock ? 'text-emerald-600' : 'text-red-600'}`}>
+                                {product.in_stock ? 'En stock' : 'Rupture'}
+                              </span>
+                            </label>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-2 items-center">
+                          <Link href={`/dashboard/edit/${product.id}`}>
+                            <button className="text-[#E9961A] border-2 border-[#E9961A] px-3 py-1.5 rounded-lg text-sm font-semibold">
+                              Modifier
+                            </button>
+                          </Link>
+                          <DeleteButton id={product.id} />
+                        </div>
                       </div>
+
+                      {/* small action hint when out of stock */}
+                      {outOfStock && (
+                        <p className="mt-3 text-xs text-red-600">Ce produit n'apparaîtra pas comme disponible pour les acheteurs.</p>
+                      )}
                     </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           )}
 
