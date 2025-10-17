@@ -2,15 +2,26 @@
 
 import Image from 'next/image'
 import { useState } from 'react'
-import { ImageOff } from 'lucide-react'
+// J'ai ajouté l'icône Percent pour le badge
+import { ImageOff, Percent } from 'lucide-react'
 
+// 1. Mise à jour des props
 type ProductImageProps = {
   src: string | null
   alt: string
   outOfStock?: boolean
+  hasPromo?: boolean
+  promoPercentage?: number | null
 }
 
-export default function ProductImage({ src, alt, outOfStock = false }: ProductImageProps) {
+export default function ProductImage({ 
+  src, 
+  alt, 
+  outOfStock = false, 
+  // 2. Récupération des nouvelles props avec des valeurs par défaut
+  hasPromo = false, 
+  promoPercentage = 0 
+}: ProductImageProps) {
   const [imgSrc, setImgSrc] = useState(src || '/placeholder.png')
   const [isLoading, setIsLoading] = useState(true)
   const [hasError, setHasError] = useState(false)
@@ -35,6 +46,17 @@ export default function ProductImage({ src, alt, outOfStock = false }: ProductIm
             animation: 'shimmer 1.5s infinite'
           }}
         />
+      )}
+      
+      {/* 3. Ajout du badge de promotion */}
+      {hasPromo && promoPercentage && (
+        <div 
+          className="absolute top-3 left-3 z-10 flex items-center gap-1.5 bg-gradient-to-br from-red-500 to-pink-500 text-white px-3 py-1.5 rounded-full shadow-lg transform transition-transform group-hover:scale-110"
+          title={`Promotion de ${promoPercentage}%`}
+        >
+          <Percent size={14} className="stroke-white/90" />
+          <span className="font-black text-sm">-{promoPercentage}%</span>
+        </div>
       )}
 
       {/* Image principale */}
