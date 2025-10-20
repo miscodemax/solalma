@@ -1,5 +1,4 @@
 import ProductLocationMap from "../productLocationMap"
-
 import { cookies } from "next/headers"
 import { createServerClient } from "@supabase/ssr"
 import { supabaseUrl, supabaseKey } from "../../../lib/supabase"
@@ -12,10 +11,13 @@ import RatingSeller from "@/app/composants/ratingseller"
 import ProductShareButton from "@/app/composants/productShare"
 import type { Metadata } from "next"
 import BackButton from "@/app/composants/back-button"
-import ProductImageCarousel from "@/app/composants/ProductImageCarousel"
 import ProductContact from "../contact"
-import { Eye, Heart } from "lucide-react"
-import LikeButton from "@/app/composants/likeButton" // AJOUT : Import du composant LikeButton
+import { Eye, Heart, Store } from "lucide-react"
+import LikeButton from "@/app/composants/likeButton"
+
+// 🎨 NOUVEAUX COMPOSANTS UX
+import EnhancedProductCarousel from "@/app/composants/EnhancedProductCaroussel"
+import GlassCard from "@/app/composants/Glasscard"
 
 type Props = {
   params: {
@@ -23,7 +25,7 @@ type Props = {
   }
 }
 
-// La fonction generateMetadata reste inchangée
+// ✅ BACKEND INTACT - Ne touche à rien ici
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const cookieStore = await cookies()
     const supabase = createServerClient(supabaseUrl, supabaseKey, {
@@ -51,7 +53,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return {
       title: productTitle,
       description: productDescription,
-      
       openGraph: {
         title: productTitle,
         description: productDescription,
@@ -69,7 +70,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
           },
         ],
       },
-  
       twitter: {
         card: "summary_large_image",
         title: productTitle,
@@ -77,7 +77,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         images: [imageUrl],
         creator: "@sangse",
       },
-  
       robots: {
         index: true,
         follow: true,
@@ -88,11 +87,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
           "max-snippet": -1,
         },
       },
-  
       alternates: {
         canonical: `https://sangse.shop/product/${product.id}`,
       },
-  
       other: {
         "og:image:secure_url": imageUrl,
         "og:image:type": "image/jpeg",
@@ -103,6 +100,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function ProductDetailPage({ params }: Props) {
+  // ✅ BACKEND INTACT - Toute la logique Supabase reste identique
   const cookieStore = await cookies()
   const supabase = createServerClient(supabaseUrl, supabaseKey, {
     cookies: {
@@ -110,17 +108,14 @@ export default async function ProductDetailPage({ params }: Props) {
     },
   })
 
-  // Récupérer l'utilisateur connecté
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Initialiser firstName avec une valeur par défaut
   let firstName = 'clientSangse'
 
   if (user) {
     const displayName = user.user_metadata?.full_name || user.user_metadata?.name
-    
     if (displayName) {
       firstName = displayName.split(" ")[0]
     }
@@ -136,7 +131,6 @@ export default async function ProductDetailPage({ params }: Props) {
 
   if (productError || !product) notFound()
 
-  // Incrémentation directe de la colonne 'clicks'
   const currentClicks = product.clicks || 0;
   const { error: updateError } = await supabase
     .from('product')
@@ -147,7 +141,6 @@ export default async function ProductDetailPage({ params }: Props) {
     console.error(`Erreur lors de la mise à jour des vues pour le produit ${productIdNumber}:`, updateError);
   }
   
-  // Compter le nombre de likes pour ce produit
   const { count: likeCount, error: likeError } = await supabase
     .from("product_like")
     .select('*', { count: 'exact', head: true })
@@ -166,8 +159,6 @@ export default async function ProductDetailPage({ params }: Props) {
     .from("product")
     .select("*")
     .eq("user_id", product?.user_id)
-
-  console.log(allProducts?.length || 0)
 
   const allImages = [
     product.image_url,
@@ -216,13 +207,10 @@ export default async function ProductDetailPage({ params }: Props) {
       ? Math.round((savingsPerUnit / priceNumber) * 100)
       : 0
 
-  const whatsappDigits = product.whatsapp_number
-    ? product.whatsapp_number.replace(/\D/g, '')
-    : null
-  const whatsappLink = whatsappDigits ? `https://wa.me/${whatsappDigits}?text=${encodeURIComponent(`Bonjour, je suis intéressé(e) par votre produit "${product.title}". Je voudrais en savoir plus sur le prix de gros.`)}` : null
+  // ✅ FIN BACKEND - Maintenant juste l'UI améliorée
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#1C2B49]">
+    <div className="min-h-screen bg-gradient-to-br from-[#FAFAFA] via-[#FFF8E7] to-[#F0F4FF] dark:bg-gradient-to-br dark:from-[#1C2B49] dark:via-[#1a2538] dark:to-[#0f1729]">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -243,31 +231,37 @@ export default async function ProductDetailPage({ params }: Props) {
         }}
       />
 
+      {/* Blobs améliorés */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-64 h-64 bg-[#F6C445]/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-32 right-16 w-80 h-80 bg-[#1C2B49]/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-20 left-10 w-96 h-96 bg-[#F6C445]/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-32 right-16 w-96 h-96 bg-[#1C2B49]/15 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-blue-400/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 py-8">
         <BackButton />
 
-        <nav className="flex items-center space-x-2 text-sm text-[#1C2B49] mb-8 dark:text-gray-200">
-          <Link href="/" className="hover:text-[#F6C445] transition-colors font-medium">
+        {/* Breadcrumb amélioré */}
+        <nav className="flex items-center space-x-2 text-sm mb-8">
+          <Link href="/" className="text-[#1C2B49] dark:text-gray-200 hover:text-[#F6C445] transition-colors font-medium">
             🏠 Accueil
           </Link>
           <span className="text-[#F6C445]">›</span>
-          <span className="bg-[#F6C445]/20 text-[#1C2B49] px-3 py-1 rounded-full font-medium border border-[#F6C445]/30 dark:text-[#F6C445]">
+          <span className="bg-[#F6C445]/20 text-[#1C2B49] dark:text-[#F6C445] px-4 py-1.5 rounded-full font-medium border border-[#F6C445]/30 shadow-sm">
             {product.category || "Produit"}
           </span>
         </nav>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+          {/* Colonne gauche - Images avec effet 3D */}
           <div className="space-y-6">
-            <ProductImageCarousel
+            {/* 🎨 NOUVEAU : Carousel amélioré avec effet 3D */}
+            <EnhancedProductCarousel
               images={allImages}
               productTitle={product.title}
               isNew={isNew}
             />
+            
             <ProductShareButton
               product={{
                 id: product.id,
@@ -275,97 +269,91 @@ export default async function ProductDetailPage({ params }: Props) {
                 price: product.price,
                 description: product.description
               }}
-              className="w-full"
+              className="w-full py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all"
             >
               Partager ce produit
             </ProductShareButton>
           </div>
 
-          <div className="space-y-8">
-            <div>
-              {/* AJOUT : Conteneur pour le titre et le bouton Like */}
-              <div className="flex justify-between items-start gap-4">
-                <h1 className="text-4xl lg:text-5xl font-black text-[#1C2B49] dark:text-white leading-tight mb-4 flex-1">
-                  {product.title}
-                </h1>
-                {/* On ne passe le userId que s'il existe */}
-                {user != null && (
-                  <div className="mt-2">
-                    <LikeButton productId={productIdNumber} userId={user?.id} />
-                  </div>
-                )}
-              </div>
-              {/* FIN DE L'AJOUT */}
-              
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-3 mb-6">
-                <span className="inline-flex items-center bg-[#F6C445]/20 text-[#1C2B49] px-4 py-2 rounded-full text-sm font-bold border border-[#F6C445]/40 dark:text-[#F6C445]">
-                  📁 {product.category || "Non spécifiée"}
-                </span>
-                <span className="inline-flex items-center gap-2 bg-gray-100 dark:bg-gray-700/50 px-3 py-1.5 rounded-full text-sm font-medium text-gray-600 dark:text-gray-300">
-                  <Eye size={16} className="text-gray-500 dark:text-gray-400" />
-                  {currentClicks + 1} vues
-                </span>
-                <span className="inline-flex items-center gap-2 bg-red-100 dark:bg-red-500/20 px-3 py-1.5 rounded-full text-sm font-medium text-red-600 dark:text-red-400">
-                  <Heart size={16} />
-                  {likeCount || 0} likes
-                </span>
-                {isNew && (
-                  <span className="inline-flex items-center bg-[#1C2B49]/20 text-[#F6C445] px-4 py-2 rounded-full text-sm font-bold border border-[#1C2B49]/40">
-                    ✨ Nouveau
-                  </span>
-                )}
-                <span className="text-sm text-[#1C2B49] bg-[#E5E7EB]/50 px-3 py-1 rounded-full border border-[#E5E7EB]">
-                  <FaClock className="inline mr-1" />
-                  {dayjs(product.created_at).format("DD/MM/YYYY")}
-                </span>
-              </div>
-            </div>
-
-            <div className="relative bg-gradient-to-br from-[#F6C445]/10 via-[#1C2B49]/5 to-[#F6C445]/5 p-8 rounded-3xl border-2 border-[#F6C445]/30 shadow-2xl">
-              <div className="absolute -top-3 left-6 bg-[#F6C445] text-[#1C2B49] px-4 py-1 rounded-full text-sm font-bold">
-                💰 Prix
-              </div>
-              {hasWholesale && wholesalePrice && minWholesaleQty && (
-                <div className="absolute top-4 right-4 inline-flex items-center gap-2 bg-white/90 dark:bg-[#17304f] border border-[#F6C445]/20 px-3 py-2 rounded-full shadow-md">
-                  <FaTags className="text-[#F6C445]" />
-                  <div className="text-sm font-semibold text-[#1C2B49] dark:text-white">Prix de gros</div>
+          {/* Colonne droite - Infos */}
+          <div className="space-y-6">
+            {/* Titre et Like */}
+            <div className="flex justify-between items-start gap-4">
+              <h1 className="text-4xl lg:text-5xl font-black text-[#1C2B49] dark:text-white leading-tight flex-1">
+                {product.title}
+              </h1>
+              {user && (
+                <div className="flex-shrink-0">
+                  <LikeButton productId={productIdNumber} userId={user.id} />
                 </div>
               )}
-              <p className="text-5xl lg:text-6xl font-black text-[#1C2B49] dark:text-[#F6C445] mb-2">
-                {Number(product.price).toLocaleString()}{" "}
-                <span className="text-2xl font-semibold">FCFA</span>
-              </p>
-              {hasWholesale && wholesalePrice && minWholesaleQty ? (
-                <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
-                  <div className="sm:col-span-2 p-4 rounded-xl bg-white/90 dark:bg-[#12223a] border border-[#E8E6E1]/40">
+            </div>
+
+            {/* Badges améliorés */}
+            <div className="flex flex-wrap gap-3">
+              <span className="inline-flex items-center bg-[#F6C445]/20 text-[#1C2B49] dark:text-[#F6C445] px-4 py-2 rounded-full text-sm font-bold border border-[#F6C445]/40 shadow-sm transition-all hover:scale-105">
+                📁 {product.category || "Non spécifiée"}
+              </span>
+              <span className="inline-flex items-center gap-2 bg-gray-100 dark:bg-gray-700/50 px-4 py-2 rounded-full text-sm font-medium text-gray-600 dark:text-gray-300 shadow-sm transition-all hover:scale-105">
+                <Eye size={16} />
+                {currentClicks + 1} vues
+              </span>
+              <span className="inline-flex items-center gap-2 bg-red-100 dark:bg-red-500/20 px-4 py-2 rounded-full text-sm font-medium text-red-600 dark:text-red-400 shadow-sm transition-all hover:scale-105">
+                <Heart size={16} />
+                {likeCount || 0} likes
+              </span>
+              {isNew && (
+                <span className="inline-flex items-center bg-gradient-to-r from-[#F6C445] to-orange-500 text-[#1C2B49] px-4 py-2 rounded-full text-sm font-bold shadow-md animate-pulse">
+                  ✨ Nouveau
+                </span>
+              )}
+              <span className="inline-flex items-center gap-2 text-sm text-[#1C2B49] dark:text-gray-300 bg-gray-100 dark:bg-gray-700/50 px-4 py-2 rounded-full shadow-sm">
+                <FaClock />
+                {dayjs(product.created_at).format("DD/MM/YYYY")}
+              </span>
+            </div>
+
+            {/* 🎨 NOUVEAU : Prix avec GlassCard */}
+            <GlassCard className="p-8 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-40 h-40 bg-[#F6C445]/20 rounded-full blur-3xl"></div>
+              <div className="relative">
+                <div className="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-2">Prix unitaire</div>
+                <p className="text-5xl lg:text-6xl font-black text-[#1C2B49] dark:text-[#F6C445] mb-4">
+                  {Number(product.price).toLocaleString()}{" "}
+                  <span className="text-2xl font-semibold">FCFA</span>
+                </p>
+
+                {/* Prix de gros */}
+                {hasWholesale && wholesalePrice && minWholesaleQty && (
+                  <div className="mt-6 p-6 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl border-2 border-green-200 dark:border-green-700/50">
+                    <div className="flex items-center gap-2 mb-3">
+                      <FaTags className="text-green-600 dark:text-green-400" />
+                      <span className="text-sm font-bold text-green-700 dark:text-green-300">Prix de gros disponible</span>
+                    </div>
                     <div className="flex items-center justify-between">
                       <div>
-                        <div className="text-sm text-gray-600 dark:text-gray-300">Prix de gros</div>
-                        <div className="text-2xl font-bold text-[#1C2B49] dark:text-white">
-                          {Number(wholesalePrice).toLocaleString()} <span className="text-base font-medium">FCFA</span>
+                        <div className="text-3xl font-bold text-[#1C2B49] dark:text-white">
+                          {Number(wholesalePrice).toLocaleString()}
+                          <span className="text-base ml-1">FCFA</span>
                         </div>
-                        <div className="text-sm text-gray-500 mt-1">à partir de <span className="font-semibold">{minWholesaleQty}</span> unités</div>
+                        <div className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                          à partir de <span className="font-bold text-green-600 dark:text-green-400">{minWholesaleQty}</span> unités
+                        </div>
                       </div>
                       <div className="text-right">
-                        <div className="text-sm text-green-600 font-bold">{savingsPercent}%</div>
-                        <div className="text-xs text-gray-500">économisez</div>
-                        <div className="text-sm text-gray-700 mt-1">{savingsPerUnit.toLocaleString()} FCFA / unité</div>
+                        <div className="text-3xl font-black text-green-600 dark:text-green-400">-{savingsPercent}%</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">économisez</div>
+                        <div className="text-sm text-gray-700 dark:text-gray-300 mt-1">{savingsPerUnit.toLocaleString()} FCFA</div>
                       </div>
                     </div>
-                    <div className="mt-3 text-xs text-gray-500">
-                      Offre idéale pour revendeurs et achats en quantité. Contactez le vendeur pour finaliser la commande en gros.
-                    </div>
                   </div>
-                </div>
-              ) : (
-                <div className="mt-4 text-sm text-gray-600 dark:text-gray-300">
-                  Aucun prix de gros proposé — vous pouvez toutefois contacter le vendeur pour une offre personnalisée.
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            </GlassCard>
 
-            <div className="bg-white dark:bg-[#1C2B49]/70 p-8 rounded-3xl border border-[#E5E7EB] shadow-2xl">
-              <div className="flex items-center gap-4 mb-6">
+            {/* 🎨 NOUVEAU : Vendeur avec GlassCard */}
+            <GlassCard className="p-6">
+              <div className="flex items-center gap-4 mb-4">
                 <Image
                   src={profile?.avatar_url || "/placeholder-avatar.jpg"}
                   alt={profile?.username || "Vendeur"}
@@ -378,29 +366,30 @@ export default async function ProductDetailPage({ params }: Props) {
                     {profile?.username || "Vendeur vérifié"}
                   </h3>
                   {sellerId && (
-                    <p className="text-xs text-[#1C2B49]/70 dark:text-gray-300">ID: {sellerId}</p>
+                    <p className="text-xs text-[#1C2B49]/70 dark:text-gray-400">ID: {sellerId}</p>
                   )}
                 </div>
-                {sellerId ? (
+                {sellerId && (
                   <Link
                     href={`/profile/${sellerId}`}
-                    className="bg-[#1C2B49] hover:bg-[#2a3b60] text-white px-6 py-3 rounded-xl font-medium shadow-lg transition"
+                    className="px-6 py-3 bg-[#1C2B49] hover:bg-[#2a3b60] dark:bg-[#F6C445] dark:hover:bg-[#e5b339] text-white dark:text-[#1C2B49] rounded-xl font-medium shadow-lg transition-all hover:scale-105 flex items-center gap-2"
                   >
-                    🏪 Voir boutique
+                    <Store size={18} />
+                    Boutique
                   </Link>
-                ) : (
-                  <div className="bg-[#E5E7EB] text-[#1C2B49] px-6 py-3 rounded-xl">Boutique indisponible</div>
                 )}
               </div>
               {profile?.bio && (
-                <p className="text-sm text-[#1C2B49]/80 dark:text-gray-200 bg-[#F6C445]/10 p-3 rounded-xl">
+                <p className="text-sm text-[#1C2B49]/80 dark:text-gray-200 bg-[#F6C445]/10 p-4 rounded-xl">
                   📝 {profile.bio}
                 </p>
               )}
               {sellerId && (
-                <RatingSeller sellerId={sellerId} initialAverage={averageRating} initialCount={ratingCount} />
+                <div className="mt-4">
+                  <RatingSeller sellerId={sellerId} initialAverage={averageRating} initialCount={ratingCount} />
+                </div>
               )}
-            </div>
+            </GlassCard>
 
             <ProductContact
               product={{
@@ -416,44 +405,62 @@ export default async function ProductDetailPage({ params }: Props) {
               customerName={firstName}
             />
 
+            {/* Description */}
             {product.description && (
-              <div className="bg-white dark:bg-[#1C2B49]/70 p-8 rounded-3xl border border-[#E5E7EB] shadow-xl">
+              <GlassCard className="p-6">
                 <h3 className="font-black text-xl text-[#1C2B49] dark:text-[#F6C445] mb-4">📝 Description</h3>
-                <p className="text-[#1C2B49] dark:text-gray-200">{product.description}</p>
-              </div>
+                <p className="text-[#1C2B49] dark:text-gray-200 leading-relaxed">{product.description}</p>
+              </GlassCard>
             )}
           </div>
         </div>
 
+        {/* Localisation */}
         {product.latitude && product.longitude && (
-          <div className="mt-8">
-            <h3 className="font-black text-xl text-[#1C2B49] dark:text-[#F6C445] mb-4">📍 Localisation</h3>
-            <ProductLocationMap
-              productTitle={product.title}
-              latitude={product.latitude}
-              longitude={product.longitude}
-              address={product.zone}
-            />
+          <div className="mt-12">
+            <h3 className="font-black text-2xl text-[#1C2B49] dark:text-[#F6C445] mb-6">📍 Localisation</h3>
+            <GlassCard className="p-6 overflow-hidden">
+              <ProductLocationMap
+                productTitle={product.title}
+                latitude={product.latitude}
+                longitude={product.longitude}
+                address={product.zone}
+              />
+            </GlassCard>
           </div>
         )}
 
+        {/* Produits similaires */}
         {similarProducts && similarProducts.length > 0 && (
           <section className="mt-24">
-            <h2 className="text-3xl font-black text-[#1C2B49] dark:text-white mb-6">Découvrez aussi</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            <h2 className="text-3xl font-black text-[#1C2B49] dark:text-white mb-8">Découvrez aussi</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {similarProducts.map((p) => (
                 <Link
                   key={p.id}
                   href={`/product/${p.id}`}
-                  className="bg-white dark:bg-[#1C2B49]/70 rounded-3xl shadow-xl border border-[#E5E7EB] hover:scale-105 transition overflow-hidden"
+                  className="group"
                 >
-                  <div className="relative h-64">
-                    <Image src={p.image_url || "/placeholder.jpg"} alt={p.title} fill className="object-cover" />
-                  </div>
-                  <div className="p-6">
-                    <h3 className="font-bold text-[#1C2B49] dark:text-white text-lg line-clamp-2">{p.title}</h3>
-                    <p className="text-[#F6C445] font-black text-xl">{p.price.toLocaleString()} FCFA</p>
-                  </div>
+                  <GlassCard hover className="overflow-hidden h-full">
+                    <div className="relative h-64 overflow-hidden">
+                      <Image 
+                        src={p.image_url || "/placeholder.jpg"} 
+                        alt={p.title} 
+                        fill 
+                        className="object-cover group-hover:scale-110 transition-transform duration-500" 
+                      />
+                      {/* Overlay au hover */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    </div>
+                    <div className="p-6">
+                      <h3 className="font-bold text-[#1C2B49] dark:text-white text-lg line-clamp-2 mb-2 group-hover:text-[#F6C445] transition-colors">
+                        {p.title}
+                      </h3>
+                      <p className="text-[#F6C445] font-black text-xl">
+                        {p.price.toLocaleString()} FCFA
+                      </p>
+                    </div>
+                  </GlassCard>
                 </Link>
               ))}
             </div>
