@@ -416,65 +416,98 @@ ${mapsLink}
                 </DialogContent>
             </Dialog>
 
-            {/* CONFIRMATION POPUP (classy & modern summary) */}
-            <Dialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
-                <DialogContent className="sm:max-w-[480px] rounded-3xl border-0 shadow-2xl p-0 overflow-hidden">
-                    <div className="bg-gray-900 p-6 text-white">
-                        <div className="flex items-center gap-4">
-                            {product.image_url ? (
-                                <img src={product.image_url} alt={product.title} className="w-16 h-16 object-cover rounded-lg border border-white/10" />
-                            ) : (
-                                <div className="w-16 h-16 bg-gray-800 rounded-lg flex items-center justify-center text-gray-300 text-sm">Image</div>
-                            )}
-                            <div>
-                                <h3 className="text-lg font-bold">{product.title}</h3>
-                                <p className="text-sm text-gray-300">{isClothing ? "Vêtement" : isShoes ? "Chaussure" : "Produit"}</p>
-                            </div>
-                        </div>
+           {/* CONFIRMATION POPUP (Sangse style – warm & elegant) */}
+<Dialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
+  <DialogContent className="sm:max-w-[480px] rounded-3xl border-0 shadow-2xl p-0 overflow-hidden">
+    {/* HEADER SECTION */}
+    <div className="bg-[#111] p-6 text-white">
+      <div className="flex items-center gap-4">
+        {product.image_url ? (
+          <img
+            src={product.image_url}
+            alt={product.title}
+            className="w-16 h-16 object-cover rounded-lg border border-[#F5B301]/30"
+          />
+        ) : (
+          <div className="w-16 h-16 bg-[#222] rounded-lg flex items-center justify-center text-gray-400 text-sm">
+            Image
+          </div>
+        )}
+        <div>
+          <h3 className="text-lg font-bold text-[#F5B301]">{product.title}</h3>
+          <p className="text-sm text-gray-400">
+            {isClothing ? "Vêtement" : isShoes ? "Chaussure" : "Produit"}
+          </p>
+        </div>
+      </div>
 
-                        <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-                            <div className="bg-white/5 p-3 rounded-lg">
-                                <div className="text-xs text-gray-300">Quantité</div>
-                                <div className="font-semibold text-white">{customData.quantite}</div>
-                            </div>
-                            <div className="bg-white/5 p-3 rounded-lg">
-                                <div className="text-xs text-gray-300">{isClothing ? "Taille" : isShoes ? "Pointure" : "Option"}</div>
-                                <div className="font-semibold text-white">{customData.taillePointure || "—"}</div>
-                            </div>
-                            <div className="bg-white/5 p-3 rounded-lg">
-                                <div className="text-xs text-gray-300">Prix unitaire</div>
-                                <div className="font-semibold text-white">{prixUnitaireApplicable.toLocaleString()} FCFA</div>
-                            </div>
-                            <div className="bg-white/5 p-3 rounded-lg">
-                                <div className="text-xs text-gray-300">Prix total</div>
-                                <div className="font-semibold text-white">{prixTotal.toLocaleString()} FCFA</div>
-                            </div>
-                        </div>
+      {/* GRID SUMMARY */}
+      <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+        <div className="bg-[#F5B301]/10 p-3 rounded-lg">
+          <div className="text-xs text-gray-400">Quantité</div>
+          <div className="font-semibold text-white">{customData.quantite}</div>
+        </div>
+        <div className="bg-[#F5B301]/10 p-3 rounded-lg">
+          <div className="text-xs text-gray-400">
+            {isClothing ? "Taille" : isShoes ? "Pointure" : "Option"}
+          </div>
+          <div className="font-semibold text-white">
+            {customData.taillePointure || "—"}
+          </div>
+        </div>
+        <div className="bg-[#F5B301]/10 p-3 rounded-lg">
+          <div className="text-xs text-gray-400">Prix unitaire</div>
+          <div className="font-semibold text-white">
+            {prixUnitaireApplicable.toLocaleString()} FCFA
+          </div>
+        </div>
+        <div className="bg-[#F5B301]/10 p-3 rounded-lg">
+          <div className="text-xs text-gray-400">Prix total</div>
+          <div className="font-semibold text-[#F5B301]">
+            {prixTotal.toLocaleString()} FCFA
+          </div>
+        </div>
+      </div>
 
-                        <div className="mt-4 p-4 bg-white/5 rounded-lg">
-                            <div className="text-xs text-gray-300">Client</div>
-                            <div className="font-semibold text-white">{customData.name || clientDisplayName}</div>
-                            <div className="text-xs text-gray-400 mt-2">Téléphone</div>
-                            <div className="font-medium text-white">{customData.phone || "Non fourni"}</div>
-                        </div>
+      {/* CLIENT INFO */}
+      <div className="mt-4 p-4 bg-[#F5B301]/10 rounded-lg">
+        <div className="text-xs text-gray-400">Client</div>
+        <div className="font-semibold text-white">
+          {customData.name || clientDisplayName}
+        </div>
+        <div className="text-xs text-gray-400 mt-2">Téléphone</div>
+        <div className="font-medium text-white">
+          {customData.phone || "Non fourni"}
+        </div>
+      </div>
 
-                        {locationError && (
-                            <div className="mt-3 bg-orange-50/20 rounded-lg p-3 text-xs text-orange-300">
-                                ⚠️ Note: {locationError}
-                            </div>
-                        )}
-                    </div>
+      {/* LOCATION ERROR */}
+      {locationError && (
+        <div className="mt-3 bg-[#F5B301]/10 rounded-lg p-3 text-xs text-[#F5B301]">
+          ⚠️ Note : {locationError}
+        </div>
+      )}
+    </div>
 
-                    <div className="p-6 flex justify-between items-center">
-                        <Button variant="ghost" onClick={handleConfirmCancel} className="rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50">
-                            Annuler
-                        </Button>
-                        <Button onClick={handleConfirmContinue} className="bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl px-6 shadow-lg hover:scale-105 active:scale-95 transition">
-                            Continuer
-                        </Button>
-                    </div>
-                </DialogContent>
-            </Dialog>
+    {/* ACTION BUTTONS */}
+    <div className="p-6 flex justify-between items-center bg-white">
+      <Button
+        variant="ghost"
+        onClick={handleConfirmCancel}
+        className="rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50"
+      >
+        Annuler
+      </Button>
+      <Button
+        onClick={handleConfirmContinue}
+        className="bg-[#F5B301] text-black font-semibold rounded-xl px-6 shadow-md hover:bg-[#f7c32a] hover:scale-105 active:scale-95 transition"
+      >
+        Continuer
+      </Button>
+    </div>
+  </DialogContent>
+</Dialog>
+
         </div>
     )
 }
