@@ -11,14 +11,56 @@ import { ChevronLeft, Check, Camera, Tag, MapPin, FileText, DollarSign } from 'l
 type Props = { userId: string }
 
 const categories = [
-  { value: 'vetement', label: 'Vêtement', icon: '👗', color: 'from-pink-400 to-rose-500' },
-  { value: 'soins_et_astuces', label: 'Soins', icon: '💄', color: 'from-purple-400 to-pink-500' },
-  { value: 'maquillage', label: 'Maquillage', icon: '💋', color: 'from-red-400 to-pink-500' },
-  { value: 'artisanat', label: 'Artisanat', icon: '🎨', color: 'from-blue-400 to-purple-500' },
-  { value: 'electronique', label: 'Électronique', icon: '📱', color: 'from-cyan-400 to-blue-500' },
-  { value: 'accessoire', label: 'Accessoire', icon: '👜', color: 'from-amber-400 to-orange-500' },
-  { value: 'chaussure', label: 'Chaussure', icon: '👠', color: 'from-yellow-400 to-orange-500' },
+  { 
+    value: 'vetement', 
+    label: 'Vêtements', 
+    icon: '👗', 
+    color: 'from-amber-300 to-saffron-500' // jaune safran chaud
+  },
+  { 
+    value: 'soins_et_astuces', 
+    label: 'Soins & Astuces', 
+    icon: '🧴', 
+    color: 'from-rose-300 to-pink-500' // ton doux et féminin
+  },
+  { 
+    value: 'maquillage', 
+    label: 'Maquillage', 
+    icon: '💋', 
+    color: 'from-rose-400 to-amber-500' // mix glamour / chaleur
+  },
+  { 
+    value: 'artisanat', 
+    label: 'Artisanat', 
+    icon: '🧶', 
+    color: 'from-orange-300 to-amber-500' // teinte artisanale, terreuse
+  },
+  { 
+    value: 'electronique', 
+    label: 'Électronique', 
+    icon: '💻', 
+    color: 'from-cyan-400 to-blue-500' // moderne, technologique
+  },
+  { 
+    value: 'accessoire', 
+    label: 'Accessoires', 
+    icon: '🕶️', 
+    color: 'from-amber-400 to-yellow-500' // doré chic
+  },
+  { 
+    value: 'chaussure', 
+    label: 'Chaussures', 
+    icon: '👠', 
+    color: 'from-rose-400 to-red-500' // féminin & énergique
+  },
+  { 
+    value: 'otaku', 
+    label: 'Otaku', 
+    icon: '🎌', 
+    color: 'from-indigo-400 to-purple-500' // culture pop japonaise
+  },
 ]
+
 
 const SENEGAL_LOCATIONS = [
   { name: "Dakar", lat: 14.6928, lng: -17.4467 },

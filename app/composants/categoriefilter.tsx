@@ -1,12 +1,38 @@
 const categories = [
-  { label: "vetement", tip: "Découvre nos habits tendances pour tous les styles !" },
-  { label: "artisanat", tip: "Des pièces uniques faites main, pour offrir ou se faire plaisir." },
-  { label: "maquillage", tip: "Sublime-toi grâce à notre sélection de makeup." },
-  { label: "soins_et_astuces", tip: "Prends soin de toi avec nos produits naturels et conseils." },
-  { label: "electronique", tip: "Encore plus de style avec notre gamme d'appareils électroniques." },
-  { label: "accessoire", tip: "devenez encore plus classe avec nos accessoires haut de gamme à acompagenrer avec votre accoutrement." },
-  { label: "chaussure", tip: "Rien ne vaut un accoutrement classe avec des chaussures classes" },
+  { 
+    label: "vetement", 
+    tip: "Découvre nos vêtements tendances — élégance, confort et style réunis !" 
+  },
+  { 
+    label: "artisanat", 
+    tip: "Des créations artisanales uniques, faites main avec passion et authenticité." 
+  },
+  { 
+    label: "maquillage", 
+    tip: "Sublime ta beauté naturelle avec notre sélection de maquillage éclatante." 
+  },
+  { 
+    label: "soins_et_astuces", 
+    tip: "Prends soin de toi avec nos produits doux et nos astuces bien-être inspirantes." 
+  },
+  { 
+    label: "electronique", 
+    tip: "Découvre nos gadgets et accessoires high-tech au service de ton quotidien." 
+  },
+  { 
+    label: "accessoire", 
+    tip: "Affirme ton style avec nos accessoires chic — sacs, lunettes, bijoux et plus encore." 
+  },
+  { 
+    label: "chaussure", 
+    tip: "Complète ton look avec nos chaussures tendances, alliant confort et élégance." 
+  },
+  { 
+    label: "otaku", 
+    tip: "Plonge dans l’univers Otaku : figurines, vêtements et accessoires inspirés de tes animes préférés !" 
+  },
 ]
+
 
 export default function CategoryFilter({
   selectedCategory,
