@@ -19,13 +19,46 @@ import Image from 'next/image'
 import Search from './search'
 
 const categories = [
-  { label: 'vetement', emoji: '👗', color: 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400' },
-  { label: 'artisanat', emoji: '🎨', color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' },
-  { label: 'maquillage', emoji: '💄', color: 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400' },
-  { label: 'soins_et_astuces', emoji: '🧴', color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' },
-  { label: 'electronique', emoji: '📱', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' },
-  { label: 'accessoire', emoji: '💎', color: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400' },
-  { label: 'chaussure', emoji: '👟', color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' },
+  { 
+    label: 'vetement', 
+    emoji: '👗', 
+    color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' 
+  },
+  { 
+    label: 'artisanat', 
+    emoji: '🧶', 
+    color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' 
+  },
+  { 
+    label: 'maquillage', 
+    emoji: '💋', 
+    color: 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400' 
+  },
+  { 
+    label: 'soins_et_astuces', 
+    emoji: '🧴', 
+    color: 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400' 
+  },
+  { 
+    label: 'electronique', 
+    emoji: '💻', 
+    color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' 
+  },
+  { 
+    label: 'accessoire', 
+    emoji: '🕶️', 
+    color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' 
+  },
+  { 
+    label: 'chaussure', 
+    emoji: '👠', 
+    color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' 
+  },
+  { 
+    label: 'otaku', 
+    emoji: '🎌', 
+    color: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400' 
+  },
 ]
 
 const navLinks = [
