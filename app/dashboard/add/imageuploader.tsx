@@ -1,15 +1,19 @@
 'use client'
 
-import React, { useState, useRef, useCallback } from 'react'
+import React, { useState, useRef, useCallback, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import {
     ImagePlus,
     Loader2,
     X,
     Star,
-    Camera, // NOUVEAU: Import de l'icône caméra
+    Camera,
     CheckCircle2,
     AlertCircle,
+    RotateCw,
+    ZoomIn,
+    ZoomOut,
+    Check,
 } from 'lucide-react'
 
 interface ImageUploaderProps {
@@ -36,8 +40,12 @@ export default function ImageUploader({
 }: ImageUploaderProps) {
     const [images, setImages] = useState<ImageItem[]>([])
     const [error, setError] = useState('')
+    const [editingImage, setEditingImage] = useState<{file: File, url: string} | null>(null)
+    const [rotation, setRotation] = useState(0)
+    const [zoom, setZoom] = useState(1)
     const fileInputRef = useRef<HTMLInputElement | null>(null)
-    const cameraInputRef = useRef<HTMLInputElement | null>(null) // NOUVEAU: Ref pour l'input caméra
+    const cameraInputRef = useRef<HTMLInputElement | null>(null)
+    const canvasRef = useRef<HTMLCanvasElement | null>(null)
     const supabase = createClient()
 
     const formatSize = (bytes: number) => {
@@ -98,7 +106,109 @@ export default function ImageUploader({
         })
     }
 
-    const handleFiles = async (files: FileList | null) => {
+    const openImageEditor = (file: File, url: string) => {
+        setEditingImage({ file, url })
+        setRotation(0)
+        setZoom(1)
+    }
+
+    // Effet pour dessiner l'image sur le canvas quand on édite
+    useEffect(() => {
+        if (!editingImage || !canvasRef.current) return
+
+        const canvas = canvasRef.current
+        const ctx = canvas.getContext('2d')
+        if (!ctx) return
+
+        const img = new Image()
+        img.onload = () => {
+            // Définir la taille du canvas
+            const maxWidth = 800
+            const maxHeight = 600
+            let width = img.width
+            let height = img.height
+
+            if (width > maxWidth) {
+                height = (height / width) * maxWidth
+                width = maxWidth
+            }
+            if (height > maxHeight) {
+                width = (width / height) * maxHeight
+                height = maxHeight
+            }
+
+            canvas.width = width
+            canvas.height = height
+
+            // Dessiner l'image
+            ctx.clearRect(0, 0, width, height)
+            ctx.drawImage(img, 0, 0, width, height)
+        }
+        img.src = editingImage.url
+    }, [editingImage])
+
+    const applyEditsAndUpload = async () => {
+        if (!editingImage || !canvasRef.current) return
+
+        const canvas = canvasRef.current
+        const ctx = canvas.getContext('2d')
+        if (!ctx) return
+
+        // Créer un nouveau canvas pour appliquer les transformations
+        const finalCanvas = document.createElement('canvas')
+        const finalCtx = finalCanvas.getContext('2d')
+        if (!finalCtx) return
+
+        const img = new Image()
+        img.onload = () => {
+            // Calculer les dimensions avec rotation
+            const rad = (rotation * Math.PI) / 180
+            const sin = Math.abs(Math.sin(rad))
+            const cos = Math.abs(Math.cos(rad))
+            
+            const newWidth = img.width * cos + img.height * sin
+            const newHeight = img.width * sin + img.height * cos
+
+            finalCanvas.width = newWidth * zoom
+            finalCanvas.height = newHeight * zoom
+
+            // Centrer et appliquer les transformations
+            finalCtx.translate(finalCanvas.width / 2, finalCanvas.height / 2)
+            finalCtx.rotate(rad)
+            finalCtx.scale(zoom, zoom)
+            finalCtx.drawImage(img, -img.width / 2, -img.height / 2)
+
+            finalCanvas.toBlob(async (blob) => {
+                if (!blob) return
+
+                const editedFile = new File(
+                    [blob],
+                    editingImage.file.name.replace(/\.[^/.]+$/, '.webp'),
+                    { type: 'image/webp' }
+                )
+
+                URL.revokeObjectURL(editingImage.url)
+                setEditingImage(null)
+
+                // Uploader le fichier édité
+                const fileList = new DataTransfer()
+                fileList.items.add(editedFile)
+                await handleFiles(fileList.files, false)
+            }, 'image/webp', 0.85)
+        }
+        img.src = editingImage.url
+    }
+
+    const cancelEdit = () => {
+        if (editingImage) {
+            URL.revokeObjectURL(editingImage.url)
+            setEditingImage(null)
+        }
+        setRotation(0)
+        setZoom(1)
+    }
+
+    const handleFiles = async (files: FileList | null, fromCamera = false) => {
         if (!files || files.length === 0) return
 
         const remaining = maxImages - (currentImageCount + images.length)
@@ -107,6 +217,16 @@ export default function ImageUploader({
         if (toUpload.length === 0) {
             setError(`Maximum ${maxImages} images`)
             setTimeout(() => setError(''), 3000)
+            return
+        }
+
+        // Si c'est depuis la caméra et une seule image, ouvrir l'éditeur
+        if (fromCamera && toUpload.length === 1) {
+            const file = toUpload[0]
+            const previewUrl = URL.createObjectURL(file)
+            
+            // Ouvrir l'éditeur d'image
+            openImageEditor(file, previewUrl)
             return
         }
 
@@ -200,22 +320,18 @@ export default function ImageUploader({
             }),
         )
         
-        // Timeout pour s'assurer que les états sont bien à jour avant de notifier
-        setTimeout(() => {
-            const finalImages = images.map(img => {
-                const updated = newItems.find(newItem => newItem.id === img.id)
-                return updated || img
-            })
-            
-            const currentUrls = [...finalImages, ...newItems]
-              .filter(i => i.url && !i.error)
-              .map(i => i.url!)
-            
-            const uniqueUrls = Array.from(new Set(currentUrls))
-            if (uniqueUrls.length > 0) {
-                onUpload(uniqueUrls)
-            }
-        }, 100)
+        // Notifier le parent avec toutes les URLs disponibles
+        if (uploadedUrls.length > 0) {
+            setTimeout(() => {
+                setImages((currentImages) => {
+                    const allUrls = currentImages
+                        .filter(i => i.url && !i.error)
+                        .map(i => i.url!)
+                    onUpload(allUrls)
+                    return currentImages
+                })
+            }, 100)
+        }
 
         setTimeout(() => {
             newItems.forEach((it) => {
@@ -226,7 +342,7 @@ export default function ImageUploader({
         }, 1000)
 
         if (fileInputRef.current) fileInputRef.current.value = ''
-        if (cameraInputRef.current) cameraInputRef.current.value = '' // NOUVEAU: Nettoyer l'input caméra
+        if (cameraInputRef.current) cameraInputRef.current.value = ''
     }
 
     const handleRemove = useCallback(
@@ -245,10 +361,7 @@ export default function ImageUploader({
         [images, onUpload],
     )
 
-    // NOUVEAU: Handler pour le clic sur le bouton caméra
     const handleCameraClick = (e: React.MouseEvent) => {
-        // Empêche le clic de se propager au <label> parent,
-        // ce qui ouvrirait aussi le sélecteur de fichiers.
         e.preventDefault()
         e.stopPropagation()
         cameraInputRef.current?.click()
@@ -279,13 +392,13 @@ export default function ImageUploader({
                     aria-label="Sélectionner des fichiers"
                 />
 
-                {/* --- NOUVEAU: Input caché pour la caméra --- */}
+                {/* --- Input caché pour la caméra --- */}
                 <input
                     ref={cameraInputRef}
                     type="file"
                     accept="image/*"
-                    capture="environment" // Ouvre la caméra arrière (ou 'user' pour l'avant)
-                    onChange={(e) => handleFiles(e.target.files)}
+                    capture="environment"
+                    onChange={(e) => handleFiles(e.target.files, true)}
                     disabled={!canAddMore}
                     className="hidden"
                     aria-label="Prendre une photo"
@@ -306,23 +419,26 @@ export default function ImageUploader({
                             Ajouter des photos
                         </p>
                         
-                        {/* --- NOUVEAU: Conteneur pour les deux boutons d'action --- */}
-                        <div className="flex flex-col sm:flex-row items-center justify-center gap-2 mt-2">
-                           <label className={`w-full sm:w-auto px-4 py-2 rounded-lg text-sm transition-colors duration-200 ${canAddMore ? 'cursor-pointer bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700' : 'cursor-not-allowed'}`}>
-                               <button onClick={() => canAddMore && fileInputRef.current?.click()} className="w-full text-gray-600 dark:text-gray-300">
-                                   Choisir des fichiers
-                               </button>
-                           </label>
+                        {/* --- Conteneur pour les deux boutons d'action --- */}
+                        <div className="flex flex-col sm:flex-row items-center justify-center gap-2 mt-3">
+                           <button 
+                               onClick={() => canAddMore && fileInputRef.current?.click()} 
+                               disabled={!canAddMore}
+                               className={`flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${canAddMore ? 'bg-white dark:bg-gray-700/50 border-2 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-yellow-400 active:scale-95' : 'cursor-not-allowed opacity-50'}`}
+                           >
+                               <ImagePlus className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+                               <span className="text-gray-700 dark:text-gray-200">Choisir des fichiers</span>
+                           </button>
                            
-                           <span className="text-xs text-gray-400">ou</span>
+                           <span className="text-xs text-gray-400 font-medium">ou</span>
 
                            <button
                                onClick={handleCameraClick}
                                disabled={!canAddMore}
-                               className={`flex items-center gap-2 w-full sm:w-auto px-4 py-2 rounded-lg text-sm transition-colors duration-200 ${canAddMore ? 'bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700' : 'cursor-not-allowed'}`}
+                               className={`flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${canAddMore ? 'bg-gradient-to-r from-yellow-400 to-yellow-500 text-white hover:from-yellow-500 hover:to-yellow-600 shadow-md hover:shadow-lg active:scale-95' : 'cursor-not-allowed opacity-50'}`}
                            >
-                               <Camera className="w-4 h-4 text-gray-600 dark:text-gray-300" />
-                               <span className="text-gray-600 dark:text-gray-300">Prendre une photo</span>
+                               <Camera className="w-4 h-4" />
+                               <span>Prendre une photo</span>
                            </button>
                         </div>
 
@@ -358,7 +474,7 @@ export default function ImageUploader({
                 )}
             </div>
 
-            {/* --- GALERIE D'IMAGES (inchangée) --- */}
+            {/* --- GALERIE D'IMAGES --- */}
             {images.length > 0 && (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                     {images.map((img, idx) => (
@@ -420,13 +536,122 @@ export default function ImageUploader({
                 </div>
             )}
 
-            {/* --- MESSAGE D'ERREUR (inchangé) --- */}
+            {/* --- MESSAGE D'ERREUR --- */}
             {error && (
                 <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl animate-pulse">
                     <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
                     <p className="text-sm text-red-700 dark:text-red-400 font-medium">
                         {error}
                     </p>
+                </div>
+            )}
+
+            {/* --- ÉDITEUR D'IMAGE --- */}
+            {editingImage && (
+                <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col">
+                        {/* Header */}
+                        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+                            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+                                Éditer votre photo
+                            </h3>
+                            <button
+                                onClick={cancelEdit}
+                                className="w-8 h-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center transition-colors"
+                            >
+                                <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                            </button>
+                        </div>
+
+                        {/* Canvas Preview */}
+                        <div className="flex-1 overflow-auto p-6 bg-gray-50 dark:bg-gray-900/50">
+                            <div className="flex items-center justify-center h-full">
+                                <canvas
+                                    ref={canvasRef}
+                                    className="max-w-full max-h-full rounded-lg shadow-lg"
+                                    style={{
+                                        transform: `rotate(${rotation}deg) scale(${zoom})`,
+                                        transition: 'transform 0.3s ease'
+                                    }}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Controls */}
+                        <div className="p-4 border-t border-gray-200 dark:border-gray-700 space-y-4">
+                            {/* Rotation */}
+                            <div className="flex items-center gap-3">
+                                <RotateCw className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300 w-20">
+                                    Rotation
+                                </span>
+                                <button
+                                    onClick={() => setRotation((r) => (r - 90) % 360)}
+                                    className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-sm transition-colors"
+                                >
+                                    -90°
+                                </button>
+                                <span className="text-sm text-gray-600 dark:text-gray-400 font-mono min-w-[3rem] text-center">
+                                    {rotation}°
+                                </span>
+                                <button
+                                    onClick={() => setRotation((r) => (r + 90) % 360)}
+                                    className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-sm transition-colors"
+                                >
+                                    +90°
+                                </button>
+                            </div>
+
+                            {/* Zoom */}
+                            <div className="flex items-center gap-3">
+                                <ZoomIn className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300 w-20">
+                                    Zoom
+                                </span>
+                                <button
+                                    onClick={() => setZoom((z) => Math.max(0.5, z - 0.1))}
+                                    className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-sm transition-colors"
+                                >
+                                    <ZoomOut className="w-4 h-4" />
+                                </button>
+                                <input
+                                    type="range"
+                                    min="0.5"
+                                    max="3"
+                                    step="0.1"
+                                    value={zoom}
+                                    onChange={(e) => setZoom(parseFloat(e.target.value))}
+                                    className="flex-1 h-2 rounded-lg appearance-none cursor-pointer bg-gray-200 dark:bg-gray-700"
+                                />
+                                <button
+                                    onClick={() => setZoom((z) => Math.min(3, z + 0.1))}
+                                    className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-sm transition-colors"
+                                >
+                                    <ZoomIn className="w-4 h-4" />
+                                </button>
+                                <span className="text-sm text-gray-600 dark:text-gray-400 font-mono min-w-[3rem] text-center">
+                                    {Math.round(zoom * 100)}%
+                                </span>
+                            </div>
+
+                            {/* Actions */}
+                            <div className="flex items-center justify-end gap-3 pt-2">
+                                <button
+                                    onClick={cancelEdit}
+                                    className="px-5 py-2.5 rounded-xl border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                                >
+                                    Annuler
+                                </button>
+                                <button
+                                    onClick={applyEditsAndUpload}
+                                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-yellow-400 to-yellow-500 text-white font-medium hover:from-yellow-500 hover:to-yellow-600 shadow-md hover:shadow-lg transition-all flex items-center gap-2"
+                                >
+                                    <Check className="w-4 h-4" />
+                                    Valider et uploader
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>
