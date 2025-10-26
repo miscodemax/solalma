@@ -22,9 +22,9 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title:
-    "Sangse - Marketplace Mode Féminine abordable | Vêtements, Hijabs & Accessoires tendance",
+    "Sangse - Marketplace sénégalaise | Mode, Beauté, Électronique & Artisanat",
   description:
-    "Découvrez Sangse, la marketplace sénégalaise dédiée à la mode à prix abordable. Vêtements stylés, hijabs colorés, maquillage et accessoires tendance, livrés rapidement partout au Sénégal.",
+    "Découvrez Sangse, la marketplace sénégalaise où style et innovation se rencontrent. Mode homme, femme et enfant, soins, maquillage, accessoires, artisanat et gadgets électroniques — trouvez tout ce que vous aimez au même endroit.",
   metadataBase: new URL("https://sangse.shop"),
   icons: { icon: "/favicon.png" },
   openGraph: {
@@ -33,9 +33,9 @@ export const metadata: Metadata = {
     url: "https://sangse.shop",
     siteName: "Sangse",
     title:
-      "Sangse - Marketplace Mode Féminine abordable | Vêtements, Hijabs & Accessoires tendance",
+      "Sangse - Marketplace sénégalaise | Mode, Beauté, Électronique & Artisanat",
     description:
-      "Achetez et vendez vos vêtements, hijabs et accessoires facilement sur Sangse. La nouvelle marketplace mode au Sénégal ✨.",
+      "Achetez et vendez sur Sangse, la marketplace moderne du Sénégal. Mode pour tous, soins cosmétiques, artisanat local, accessoires et gadgets électroniques ✨.",
     images: [
       {
         url: "https://sangse.shop/favicon.png",
@@ -49,9 +49,9 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title:
-      "Sangse - Marketplace Mode Féminine abordable | Vêtements, Hijabs & Accessoires tendance",
+      "Sangse - Marketplace sénégalaise | Mode, Beauté, Électronique & Artisanat",
     description:
-      "Achetez et vendez vos vêtements, hijabs et accessoires facilement sur Sangse. La nouvelle marketplace mode au Sénégal ✨.",
+      "Sangse, la nouvelle marketplace du Sénégal : vêtements, soins, artisanat, accessoires et électroniques au meilleur prix. Achetez et vendez facilement 🌍.",
     images: [
       {
         url: "https://sangse.shop/favicon.png",
@@ -70,6 +70,7 @@ export const metadata: Metadata = {
     "og:image:height": "512",
   },
 };
+
 
 export default async function RootLayout({
   children,
