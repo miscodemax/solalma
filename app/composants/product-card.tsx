@@ -58,10 +58,17 @@ export default function ProductCard({
         return diffDays <= 7
     }
 
+    const truncateText = (text: string, maxWords: number): string => {
+        const words = text.split(' ')
+        if (words.length <= maxWords) return text
+        return words.slice(0, maxWords).join(' ') + '...'
+    }
+
     const firstImage = getFirstImage(product.image_url)
     const imageCount = getImageCount(product.image_url)
     const isNew = isNewProduct(product.created_at)
     const economy = hasPromo ? product.price - (product.promo_price || 0) : 0
+    const truncatedDescription = truncateText(product.description, 15)
 
     return (
         <article className={`group relative w-full h-full flex flex-col overflow-hidden rounded-3xl transition-all duration-500 backdrop-blur-sm
@@ -179,9 +186,9 @@ export default function ProductCard({
                 )}
 
                 {/* Description améliorée */}
-                <p className="hidden sm:block text-xs text-gray-600 dark:text-gray-400 line-clamp-2 leading-relaxed min-h-[2.25rem]">
-                    {product.description}
-                </p>
+                <div className="hidden sm:block text-xs text-gray-600 dark:text-gray-400 leading-relaxed min-h-[2.25rem]">
+                    {truncatedDescription}
+                </div>
 
                 {/* Section prix et bouton */}
                 <div className="flex items-end justify-between pt-2 gap-3">

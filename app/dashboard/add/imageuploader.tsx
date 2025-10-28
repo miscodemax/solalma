@@ -7,7 +7,7 @@ import {
     Loader2,
     X,
     Star,
-    Camera, // NOUVEAU: Import de l'icône caméra
+    Camera,
     CheckCircle2,
     AlertCircle,
 } from 'lucide-react'
@@ -37,7 +37,7 @@ export default function ImageUploader({
     const [images, setImages] = useState<ImageItem[]>([])
     const [error, setError] = useState('')
     const fileInputRef = useRef<HTMLInputElement | null>(null)
-    const cameraInputRef = useRef<HTMLInputElement | null>(null) // NOUVEAU: Ref pour l'input caméra
+    const cameraInputRef = useRef<HTMLInputElement | null>(null)
     const supabase = createClient()
 
     const formatSize = (bytes: number) => {
@@ -121,102 +121,102 @@ export default function ImageUploader({
 
         setImages((prev) => [...prev, ...newItems])
 
-        const uploadedUrls: string[] = []
+        const uploadPromises = toUpload.map(async (file, index) => {
+            const itemId = newItems[index].id
 
-        await Promise.all(
-            toUpload.map(async (file, index) => {
-                const itemId = newItems[index].id
-
-                try {
-                    if (!file.type.startsWith('image/')) {
-                        throw new Error('Fichier non supporté')
-                    }
-
-                    setImages((prev) =>
-                        prev.map((it) =>
-                            it.id === itemId ? { ...it, progress: 20 } : it,
-                        ),
-                    )
-
-                    const compressedFile =
-                        file.size > 500 * 1024
-                            ? await compressImage(file)
-                            : file
-
-                    setImages((prev) =>
-                        prev.map((it) =>
-                            it.id === itemId ? { ...it, progress: 40 } : it,
-                        ),
-                    )
-
-                    const ext = compressedFile.name.split('.').pop() || 'webp'
-                    const filename = `${itemId}.${ext}`
-
-                    setImages((prev) =>
-                        prev.map((it) =>
-                            it.id === itemId ? { ...it, progress: 60 } : it,
-                        ),
-                    )
-
-                    const { error: uploadError } = await supabase.storage
-                        .from('product')
-                        .upload(filename, compressedFile, {
-                            cacheControl: '3600',
-                            upsert: false,
-                        })
-
-                    if (uploadError) throw uploadError
-
-                    setImages((prev) =>
-                        prev.map((it) =>
-                            it.id === itemId ? { ...it, progress: 90 } : it,
-                        ),
-                    )
-
-                    const { data } = supabase.storage
-                        .from('product')
-                        .getPublicUrl(filename)
-                    const publicUrl = data.publicUrl
-
-                    setImages((prev) =>
-                        prev.map((it) =>
-                            it.id === itemId
-                                ? { ...it, url: publicUrl, uploading: false, progress: 100 }
-                                : it,
-                        ),
-                    )
-
-                    uploadedUrls.push(publicUrl)
-                } catch (err) {
-                    console.error('Upload error:', err)
-                    setImages((prev) =>
-                        prev.map((it) =>
-                            it.id === itemId
-                                ? { ...it, uploading: false, error: true, progress: 0 }
-                                : it,
-                        ),
-                    )
+            try {
+                if (!file.type.startsWith('image/')) {
+                    throw new Error('Fichier non supporté')
                 }
-            }),
-        )
-        
-        // Timeout pour s'assurer que les états sont bien à jour avant de notifier
-        setTimeout(() => {
-            const finalImages = images.map(img => {
-                const updated = newItems.find(newItem => newItem.id === img.id)
-                return updated || img
-            })
-            
-            const currentUrls = [...finalImages, ...newItems]
-              .filter(i => i.url && !i.error)
-              .map(i => i.url!)
-            
-            const uniqueUrls = Array.from(new Set(currentUrls))
-            if (uniqueUrls.length > 0) {
-                onUpload(uniqueUrls)
-            }
-        }, 100)
 
+                setImages((prev) =>
+                    prev.map((it) =>
+                        it.id === itemId ? { ...it, progress: 20 } : it,
+                    ),
+                )
+
+                const compressedFile =
+                    file.size > 500 * 1024
+                        ? await compressImage(file)
+                        : file
+
+                setImages((prev) =>
+                    prev.map((it) =>
+                        it.id === itemId ? { ...it, progress: 40 } : it,
+                    ),
+                )
+
+                const ext = compressedFile.name.split('.').pop() || 'webp'
+                const filename = `${itemId}.${ext}`
+
+                setImages((prev) =>
+                    prev.map((it) =>
+                        it.id === itemId ? { ...it, progress: 60 } : it,
+                    ),
+                )
+
+                const { error: uploadError } = await supabase.storage
+                    .from('product')
+                    .upload(filename, compressedFile, {
+                        cacheControl: '3600',
+                        upsert: false,
+                    })
+
+                if (uploadError) throw uploadError
+
+                setImages((prev) =>
+                    prev.map((it) =>
+                        it.id === itemId ? { ...it, progress: 90 } : it,
+                    ),
+                )
+
+                const { data } = supabase.storage
+                    .from('product')
+                    .getPublicUrl(filename)
+                const publicUrl = data.publicUrl
+
+                setImages((prev) => {
+                    const updated = prev.map((it) =>
+                        it.id === itemId
+                            ? { ...it, url: publicUrl, uploading: false, progress: 100 }
+                            : it,
+                    )
+                    return updated
+                })
+
+                return publicUrl
+            } catch (err) {
+                console.error('Upload error:', err)
+                setImages((prev) =>
+                    prev.map((it) =>
+                        it.id === itemId
+                            ? { ...it, uploading: false, error: true, progress: 0 }
+                            : it,
+                    ),
+                )
+                return null
+            }
+        })
+
+        // Attendre que tous les uploads soient terminés
+        const uploadedUrls = await Promise.all(uploadPromises)
+        
+        // Récupérer toutes les URLs valides (anciennes + nouvelles)
+        setTimeout(() => {
+            setImages((currentImages) => {
+                const allValidUrls = currentImages
+                    .filter(img => img.url && !img.error)
+                    .map(img => img.url!)
+                
+                if (allValidUrls.length > 0) {
+                    onUpload(allValidUrls)
+                }
+                
+                return currentImages
+            })
+        }, 150)
+
+        // Nettoyer les URLs de preview
         setTimeout(() => {
             newItems.forEach((it) => {
                 try {
@@ -226,7 +226,7 @@ export default function ImageUploader({
         }, 1000)
 
         if (fileInputRef.current) fileInputRef.current.value = ''
-        if (cameraInputRef.current) cameraInputRef.current.value = '' // NOUVEAU: Nettoyer l'input caméra
+        if (cameraInputRef.current) cameraInputRef.current.value = ''
     }
 
     const handleRemove = useCallback(
@@ -245,10 +245,7 @@ export default function ImageUploader({
         [images, onUpload],
     )
 
-    // NOUVEAU: Handler pour le clic sur le bouton caméra
     const handleCameraClick = (e: React.MouseEvent) => {
-        // Empêche le clic de se propager au <label> parent,
-        // ce qui ouvrirait aussi le sélecteur de fichiers.
         e.preventDefault()
         e.stopPropagation()
         cameraInputRef.current?.click()
@@ -259,7 +256,7 @@ export default function ImageUploader({
 
     return (
         <div className="space-y-4">
-            {/* --- ZONE D'UPLOAD --- */}
+            {/* Zone d'upload */}
             <div
                 className={`relative w-full rounded-2xl border-2 transition-all duration-300 overflow-hidden ${
                     canAddMore
@@ -267,7 +264,6 @@ export default function ImageUploader({
                         : 'border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 opacity-50 cursor-not-allowed'
                 }`}
             >
-                {/* --- Input pour la sélection de fichiers --- */}
                 <input
                     ref={fileInputRef}
                     type="file"
@@ -279,12 +275,11 @@ export default function ImageUploader({
                     aria-label="Sélectionner des fichiers"
                 />
 
-                {/* --- NOUVEAU: Input caché pour la caméra --- */}
                 <input
                     ref={cameraInputRef}
                     type="file"
                     accept="image/*"
-                    capture="environment" // Ouvre la caméra arrière (ou 'user' pour l'avant)
+                    capture="environment"
                     onChange={(e) => handleFiles(e.target.files)}
                     disabled={!canAddMore}
                     className="hidden"
@@ -306,20 +301,21 @@ export default function ImageUploader({
                             Ajouter des photos
                         </p>
                         
-                        {/* --- NOUVEAU: Conteneur pour les deux boutons d'action --- */}
                         <div className="flex flex-col sm:flex-row items-center justify-center gap-2 mt-2">
-                           <label className={`w-full sm:w-auto px-4 py-2 rounded-lg text-sm transition-colors duration-200 ${canAddMore ? 'cursor-pointer bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700' : 'cursor-not-allowed'}`}>
-                               <button onClick={() => canAddMore && fileInputRef.current?.click()} className="w-full text-gray-600 dark:text-gray-300">
-                                   Choisir des fichiers
-                               </button>
-                           </label>
+                           <button
+                               onClick={() => canAddMore && fileInputRef.current?.click()}
+                               disabled={!canAddMore}
+                               className={`w-full sm:w-auto px-4 py-2 rounded-lg text-sm transition-colors duration-200 ${canAddMore ? 'bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300' : 'cursor-not-allowed opacity-50'}`}
+                           >
+                               Choisir des fichiers
+                           </button>
                            
                            <span className="text-xs text-gray-400">ou</span>
 
                            <button
                                onClick={handleCameraClick}
                                disabled={!canAddMore}
-                               className={`flex items-center gap-2 w-full sm:w-auto px-4 py-2 rounded-lg text-sm transition-colors duration-200 ${canAddMore ? 'bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700' : 'cursor-not-allowed'}`}
+                               className={`flex items-center gap-2 w-full sm:w-auto px-4 py-2 rounded-lg text-sm transition-colors duration-200 ${canAddMore ? 'bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700' : 'cursor-not-allowed opacity-50'}`}
                            >
                                <Camera className="w-4 h-4 text-gray-600 dark:text-gray-300" />
                                <span className="text-gray-600 dark:text-gray-300">Prendre une photo</span>
@@ -358,7 +354,7 @@ export default function ImageUploader({
                 )}
             </div>
 
-            {/* --- GALERIE D'IMAGES (inchangée) --- */}
+            {/* Galerie d'images */}
             {images.length > 0 && (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                     {images.map((img, idx) => (
@@ -420,7 +416,7 @@ export default function ImageUploader({
                 </div>
             )}
 
-            {/* --- MESSAGE D'ERREUR (inchangé) --- */}
+            {/* Message d'erreur */}
             {error && (
                 <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl animate-pulse">
                     <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
