@@ -64,7 +64,7 @@ export default function ProductCard({
     const economy = hasPromo ? product.price - (product.promo_price || 0) : 0
 
     return (
-        <article className={`group relative w-full flex flex-col overflow-hidden rounded-3xl transition-all duration-500 backdrop-blur-sm
+        <article className={`group relative w-full h-full flex flex-col overflow-hidden rounded-3xl transition-all duration-500 backdrop-blur-sm
             ${!inStock 
                 ? 'bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 opacity-85' 
                 : 'bg-white dark:bg-gradient-to-br dark:from-[#1a1f35] dark:to-[#141929] shadow-lg hover:shadow-2xl hover:shadow-[#F6C445]/15 dark:hover:shadow-[#F6C445]/25'
@@ -162,7 +162,7 @@ export default function ProductCard({
             {/* Contenu de la carte */}
             <div className="flex-1 p-4 sm:p-5 space-y-3">
                 <Link href={`/product/${product.id}`} className={`block group/title ${!inStock ? 'pointer-events-none' : ''}`}>
-                    <h3 className="text-sm sm:text-base font-bold text-gray-900 dark:text-white leading-snug line-clamp-2 group-hover/title:text-[#F6C445] transition-colors duration-300">
+                    <h3 className="text-sm sm:text-base font-bold text-gray-900 dark:text-white leading-snug line-clamp-2 min-h-[2.5rem] group-hover/title:text-[#F6C445] transition-colors duration-300">
                         {product.title}
                     </h3>
                 </Link>
@@ -179,7 +179,7 @@ export default function ProductCard({
                 )}
 
                 {/* Description améliorée */}
-                <p className="hidden sm:block text-xs text-gray-600 dark:text-gray-400 line-clamp-2 leading-relaxed">
+                <p className="hidden sm:block text-xs text-gray-600 dark:text-gray-400 line-clamp-2 leading-relaxed min-h-[2.25rem]">
                     {product.description}
                 </p>
 
