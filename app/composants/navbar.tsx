@@ -200,26 +200,7 @@ export default function Navbar({ products }: { products: Product[] }) {
             {/* Right actions mobile */}
             <div className="flex items-center gap-2">
 
-              <Link href="/dashboard/add" className="block w-full sm:w-auto">
-                <Button
-                  className="
-          sm:w-auto lg:hidden
-          p-4
-          text-lg font-semibold 
-          bg-yellow-500 
-          hover:bg-yellow-600 
-          active:scale-95 
-          text-white 
-          rounded-2xl 
-          shadow-md 
-          transition 
-          duration-200 
-          ease-out
-        "
-                >
-                  🚀 Vendre
-                </Button>
-              </Link>
+            
 
 
 
