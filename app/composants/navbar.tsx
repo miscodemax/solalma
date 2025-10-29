@@ -131,35 +131,7 @@ export default function Navbar({ products }: { products: Product[] }) {
               </span>
             </Link>
 
-            {/* Search bar mobile - Expandable */}
-            <div
-              ref={searchRef}
-              className={`absolute left-1/2 transform -translate-x-1/2 transition-all duration-300 ${searchExpanded
-                ? 'w-[calc(100%-140px)] bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700'
-                : 'w-10 h-10'
-                }`}
-            >
-              {searchExpanded ? (
-                <div className="p-3">
-                  <div className="relative">
-                    <Search products={products} />
-                    <button
-                      onClick={() => setSearchExpanded(false)}
-                      className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <button
-                  onClick={() => setSearchExpanded(true)}
-                  className="w-10 h-10 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                >
-                  <SearchIcon className="w-4 h-4 text-gray-600 dark:text-gray-300" />
-                </button>
-              )}
-            </div>
+           
 
             {/* Desktop navigation */}
             <div className="hidden lg:flex items-center gap-1 flex-shrink-0">
