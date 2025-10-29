@@ -99,7 +99,7 @@ export default async function RootLayout({
             <Navbar products={products} />
 
             {/* Main avec padding bottom */}
-            <main className="flex-grow pt-7 pb-10 md:pb-0">
+            <main className="flex-grow pb-10 md:pb-0">
               {children}
               <Toaster />
             </main>
