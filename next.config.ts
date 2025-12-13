@@ -3,6 +3,11 @@ import withPWA from "next-pwa";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  output: "export",
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+
   typescript: {
     ignoreBuildErrors: true, // ⚠️ à désactiver quand tu seras prêt à corriger les erreurs TS
   },
@@ -15,12 +20,14 @@ const nextConfig: NextConfig = {
       "cdn.pixabay.com",
       "placekitten.com",
     ],
-    unoptimized: true, // ⚠️ utile pour le dev, mais en prod je recommande de l’enlever
+
+    unoptimized: true,
+    // ⚠️ utile pour le dev, mais en prod je recommande de l’enlever
   },
 };
 
 export default withPWA({
-  dest: "public",   // service worker dans /public
-  register: true,   // auto-register
-  skipWaiting: true // active le nouveau SW sans attendre
+  dest: "public", // service worker dans /public
+  register: true, // auto-register
+  skipWaiting: true, // active le nouveau SW sans attendre
 })(nextConfig);

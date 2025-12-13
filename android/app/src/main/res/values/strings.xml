@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">sangse</string>
+    <string name="title_activity_main">sangse</string>
+    <string name="package_name">com.sangse.app</string>
+    <string name="custom_url_scheme">com.sangse.app</string>
+</resources>
