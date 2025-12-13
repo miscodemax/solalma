@@ -6,7 +6,6 @@ const config: CapacitorConfig = {
   webDir: "out",
   server: {
     url: "https://sangse.shop", // ou ton domaine
-    cleartext: true,
   },
 };
 
