@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: "sangse",
   webDir: "out",
   server: {
-    url: "https://solalma.vercel.app", // ou ton domaine
+    url: "https://sangse.shop", // ou ton domaine
     cleartext: true,
   },
 };
