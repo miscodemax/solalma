@@ -90,18 +90,21 @@ export default function ImageUploader({
     setError("");
 
     const newUrls: string[] = [];
-
     for (const file of toUpload) {
-      const isImage =
-        file.type?.startsWith("image/") ||
-        file.name.match(/\.(jpg|jpeg|png|webp)$/i);
       try {
+        const isImage =
+          file.type?.startsWith("image/") ||
+          file.name.match(/\.(jpg|jpeg|png|webp)$/i);
+
         if (!isImage) {
           throw new Error("Fichier non supporté");
         }
 
-        const compressedFile =
-          file.size > 500 * 1024 ? await compressImage(file) : file;
+        const compressedFile = Capacitor.isNativePlatform()
+          ? file
+          : file.size > 500 * 1024
+          ? await compressImage(file)
+          : file;
 
         const ext = compressedFile.name.split(".").pop() || "webp";
         const filename = `${Date.now()}-${Math.random()
