@@ -2,7 +2,7 @@
 
 import React, { useState, useRef } from "react";
 import { createClient } from "@/lib/supabase";
-import { Loader2, X, Camera } from "lucide-react";
+import { Loader2, Trash2, Camera } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
 import { takePhotoAsFile } from "@/lib/camera";
 
@@ -255,19 +255,26 @@ export default function ImageUploader({
                 alt={`Image ${index + 1}`}
                 className="w-full h-full object-cover"
               />
-
               {index === 0 && (
                 <div className="absolute top-1 left-1 bg-[#F4B400] text-white text-[10px] font-bold px-2 py-0.5 rounded">
                   Principale
                 </div>
               )}
-
               <button
                 type="button"
                 onClick={() => handleRemove(index)}
-                className="absolute top-1 right-1 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                className="
+                absolute top-1 right-1
+                w-7 h-7
+                bg-red-500 hover:bg-red-600
+                text-white
+                rounded-full
+                flex items-center justify-center
+                shadow-lg
+                z-10
+                "
               >
-                <X className="w-4 h-4" />
+                <Trash2 className="w-4 h-4" />
               </button>
             </div>
           ))}
