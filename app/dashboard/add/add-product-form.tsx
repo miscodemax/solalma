@@ -1,5 +1,6 @@
 "use client";
 
+import { getCurrentPositionSafe } from "@/lib/location";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase";
@@ -119,32 +120,22 @@ export default function AddProductForm({ userId }: Props) {
     return nearest;
   };
 
-  const handleDetectLocation = () => {
-    if (!navigator.geolocation) {
-      setError("Géolocalisation non disponible");
-      return;
-    }
-
+  const handleDetectLocation = async () => {
     setDetectingLocation(true);
     setError("");
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const coords = {
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        };
-        const nearest = findNearestLocation(coords.lat, coords.lng);
-        setForm((prev) => ({ ...prev, zone: nearest.name }));
-        setUseAutoLocation(true);
-        setDetectingLocation(false);
-      },
-      () => {
-        setError("Impossible de détecter votre position");
-        setDetectingLocation(false);
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-    );
+    const coords = await getCurrentPositionSafe();
+
+    if (!coords) {
+      setError("Impossible de détecter votre position");
+      setDetectingLocation(false);
+      return;
+    }
+
+    const nearest = findNearestLocation(coords.lat, coords.lng);
+    setForm((prev) => ({ ...prev, zone: nearest.name }));
+    setUseAutoLocation(true);
+    setDetectingLocation(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
