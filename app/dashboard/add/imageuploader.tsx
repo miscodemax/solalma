@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useState, useRef } from "react";
 import { createClient } from "@/lib/supabase";
 import { Loader2, X, Camera } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
@@ -14,19 +14,15 @@ interface ImageUploaderProps {
 
 export default function ImageUploader({
   onUpload,
-  maxImages = 10,
+  maxImages = 5,
   currentImageCount = 0,
 }: ImageUploaderProps) {
-  const [localUrls, setLocalUrls] = useState<string[]>([]);
+  const [uploadedUrls, setUploadedUrls] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const cameraInputRef = useRef<HTMLInputElement | null>(null);
   const supabase = createClient();
-
-  /* ---------------------------------- */
-  /* Utils                              */
-  /* ---------------------------------- */
 
   const compressImage = async (file: File): Promise<File> => {
     return new Promise((resolve) => {
@@ -35,27 +31,38 @@ export default function ImageUploader({
         const img = document.createElement("img");
         img.onload = () => {
           const canvas = document.createElement("canvas");
-          let { width, height } = img;
+          let width = img.width;
+          let height = img.height;
 
           const maxSize = 1920;
           if (width > maxSize || height > maxSize) {
-            const ratio = width > height ? maxSize / width : maxSize / height;
-            width *= ratio;
-            height *= ratio;
+            if (width > height) {
+              height = (height / width) * maxSize;
+              width = maxSize;
+            } else {
+              width = (width / height) * maxSize;
+              height = maxSize;
+            }
           }
 
           canvas.width = width;
           canvas.height = height;
-          canvas.getContext("2d")?.drawImage(img, 0, 0, width, height);
+
+          const ctx = canvas.getContext("2d");
+          ctx?.drawImage(img, 0, 0, width, height);
 
           canvas.toBlob(
             (blob) => {
-              if (!blob) return resolve(file);
-              resolve(
-                new File([blob], file.name.replace(/\..+$/, ".webp"), {
-                  type: "image/webp",
-                })
-              );
+              if (blob) {
+                const compressedFile = new File(
+                  [blob],
+                  file.name.replace(/\.[^/.]+$/, ".webp"),
+                  { type: "image/webp" }
+                );
+                resolve(compressedFile);
+              } else {
+                resolve(file);
+              }
             },
             "image/webp",
             0.85
@@ -67,18 +74,15 @@ export default function ImageUploader({
     });
   };
 
-  /* ---------------------------------- */
-  /* Upload logic                       */
-  /* ---------------------------------- */
-
   const handleFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
 
-    const remaining = maxImages - (currentImageCount + localUrls.length);
+    const remaining = maxImages - (currentImageCount + uploadedUrls.length);
     const toUpload = Array.from(files).slice(0, remaining);
 
     if (toUpload.length === 0) {
       setError(`Maximum ${maxImages} images`);
+      setTimeout(() => setError(""), 3000);
       return;
     }
 
@@ -89,16 +93,21 @@ export default function ImageUploader({
 
     for (const file of toUpload) {
       try {
-        if (!file.type.startsWith("image/")) continue;
+        if (!file.type || !file.type.startsWith("image/")) {
+          throw new Error("Fichier non supporté");
+        }
 
-        const finalFile =
+        const compressedFile =
           file.size > 500 * 1024 ? await compressImage(file) : file;
 
-        const filename = `${crypto.randomUUID()}.webp`;
+        const ext = compressedFile.name.split(".").pop() || "webp";
+        const filename = `${Date.now()}-${Math.random()
+          .toString(36)
+          .slice(2, 9)}.${ext}`;
 
         const { error: uploadError } = await supabase.storage
           .from("product")
-          .upload(filename, finalFile, {
+          .upload(filename, compressedFile, {
             cacheControl: "3600",
             upsert: false,
           });
@@ -111,128 +120,158 @@ export default function ImageUploader({
 
         newUrls.push(data.publicUrl);
       } catch (err) {
-        console.error(err);
-        setError("Erreur lors de l’upload");
+        console.error("Upload error:", err);
+        setError("Erreur lors de l'upload");
       }
     }
 
     if (newUrls.length > 0) {
-      const updated = [...localUrls, ...newUrls];
-      setLocalUrls(updated);
-      onUpload(updated); // 🔥 synchro parent
+      const allUrls = [...uploadedUrls, ...newUrls];
+      setUploadedUrls(allUrls);
+      onUpload(allUrls);
     }
 
     setUploading(false);
+
     if (fileInputRef.current) fileInputRef.current.value = "";
     if (cameraInputRef.current) cameraInputRef.current.value = "";
   };
 
-  /* ---------------------------------- */
-  /* Camera (Web + Mobile)              */
-  /* ---------------------------------- */
+  const handleRemove = (index: number) => {
+    const newUrls = uploadedUrls.filter((_, i) => i !== index);
+    setUploadedUrls(newUrls);
+    onUpload(newUrls);
+  };
 
-  const handleCameraClick = async () => {
+  const handleCameraClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // MOBILE (Capacitor)
     if (Capacitor.isNativePlatform()) {
       const file = await takePhotoAsFile();
-      if (!file) return;
+      if (file) {
+        const fakeList = {
+          0: file,
+          length: 1,
+          item: () => file,
+        } as FileList;
 
-      const fakeList = {
-        0: file,
-        length: 1,
-        item: () => file,
-      } as FileList;
-
-      handleFiles(fakeList);
-    } else {
-      cameraInputRef.current?.click();
+        await handleFiles(fakeList);
+      }
+      return;
     }
+
+    // WEB
+    cameraInputRef.current?.click();
   };
 
-  const handleRemove = (index: number) => {
-    const updated = localUrls.filter((_, i) => i !== index);
-    setLocalUrls(updated);
-    onUpload(updated); // 🔥 synchro parent
-  };
-
-  const canAddMore = currentImageCount + localUrls.length < maxImages;
-
-  /* ---------------------------------- */
-  /* Render                             */
-  /* ---------------------------------- */
+  const totalImages = currentImageCount + uploadedUrls.length;
+  const canAddMore = totalImages < maxImages;
 
   return (
     <div className="space-y-4">
+      {/* Zone d'upload */}
       {canAddMore && (
-        <div className="border-2 border-dashed rounded-lg p-6 text-center">
+        <div className="relative w-full rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-[#F4B400] transition-colors">
           <input
             ref={fileInputRef}
             type="file"
-            multiple
             accept="image/*"
+            multiple
             onChange={(e) => handleFiles(e.target.files)}
+            disabled={!canAddMore || uploading}
             className="hidden"
           />
+
           <input
             ref={cameraInputRef}
             type="file"
             accept="image/*"
             capture="environment"
             onChange={(e) => handleFiles(e.target.files)}
+            disabled={!canAddMore || uploading}
             className="hidden"
           />
 
-          {uploading ? (
-            <Loader2 className="mx-auto animate-spin text-yellow-500" />
-          ) : (
-            <div className="flex flex-col gap-3">
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="border rounded-lg px-4 py-2"
-              >
-                Choisir des images
-              </button>
-              <button
-                type="button"
-                onClick={handleCameraClick}
-                className="border rounded-lg px-4 py-2 flex items-center justify-center gap-2"
-              >
-                <Camera size={16} /> Prendre une photo
-              </button>
-            </div>
-          )}
+          <div className="p-6 text-center">
+            {uploading ? (
+              <div className="flex flex-col items-center gap-3">
+                <Loader2 className="w-8 h-8 text-[#F4B400] animate-spin" />
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Upload en cours...
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="text-4xl mb-3">📸</div>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  Ajouter des photos ({totalImages}/{maxImages})
+                </p>
+
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full sm:w-auto px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm text-gray-700 dark:text-gray-300 transition-colors"
+                  >
+                    Choisir des fichiers
+                  </button>
+
+                  <span className="text-xs text-gray-400">ou</span>
+
+                  <button
+                    type="button"
+                    onClick={handleCameraClick}
+                    className="flex items-center gap-2 w-full sm:w-auto px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm text-gray-700 dark:text-gray-300 transition-colors"
+                  >
+                    <Camera className="w-4 h-4" />
+                    Prendre une photo
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       )}
 
-      {localUrls.length > 0 && (
-        <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
-          {localUrls.map((url, index) => (
+      {/* Galerie d'images */}
+      {uploadedUrls.length > 0 && (
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+          {uploadedUrls.map((url, index) => (
             <div
-              key={url}
-              className="relative aspect-square rounded-lg overflow-hidden group"
+              key={index}
+              className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 group"
             >
-              <img src={url} className="w-full h-full object-cover" />
+              <img
+                src={url}
+                alt={`Image ${index + 1}`}
+                className="w-full h-full object-cover"
+              />
 
               {index === 0 && (
-                <span className="absolute top-1 left-1 bg-yellow-500 text-white text-[10px] px-2 py-0.5 rounded">
+                <div className="absolute top-1 left-1 bg-[#F4B400] text-white text-[10px] font-bold px-2 py-0.5 rounded">
                   Principale
-                </span>
+                </div>
               )}
 
               <button
                 type="button"
                 onClick={() => handleRemove(index)}
-                className="absolute top-1 right-1 bg-red-500 text-white w-6 h-6 rounded-full opacity-0 group-hover:opacity-100"
+                className="absolute top-1 right-1 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
               >
-                <X size={14} />
+                <X className="w-4 h-4" />
               </button>
             </div>
           ))}
         </div>
       )}
 
+      {/* Message d'erreur */}
       {error && (
-        <p className="text-sm text-red-600 bg-red-50 p-2 rounded">{error}</p>
+        <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+          <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
+        </div>
       )}
     </div>
   );
