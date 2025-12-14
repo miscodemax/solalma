@@ -3,7 +3,6 @@ import { createServerClient } from "@supabase/ssr";
 import { supabaseUrl, supabaseKey } from "@/lib/supabase";
 import AuthModal from "@/app/composants/auth-modal";
 import AddProductForm from "./add-product-form";
-import PushInit from "@/app/composants/pushInit";
 
 export const dynamic = "force-dynamic";
 
@@ -108,7 +107,6 @@ export default async function AddProductPage() {
         </div>
       </div>
       {/* Contenu principal - Le formulaire prend maintenant tout l'espace */}
-      <PushInit userId={user.id} />
       <AddProductForm userId={user.id} />
       {/* Footer d'aide - Seulement sur desktop */}
       <div className="hidden md:block bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-8">

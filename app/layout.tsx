@@ -9,6 +9,7 @@ import { Suspense } from "react";
 import { ThemeProvider } from "./composants/theme-provider";
 import { createClient } from "@/lib/supabase";
 import SimplePWAInstall from "./composants/pwaInstallPrompt";
+import ClientPushGate from "./composants/ClientPushGate";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -71,7 +72,6 @@ export const metadata: Metadata = {
   },
 };
 
-
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -96,25 +96,18 @@ export default async function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
+            <ClientPushGate />
             <Navbar products={products} />
-
             {/* Main avec padding bottom */}
             <main className="flex-grow pb-10 md:pb-0">
               {children}
               <Toaster />
             </main>
-
             <SimplePWAInstall />
-
-
             <BottomNavbar />
-
             <Footer />
-
           </ThemeProvider>
         </Suspense>
-
-
       </body>
     </html>
   );
