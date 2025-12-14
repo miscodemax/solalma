@@ -93,7 +93,7 @@ export default function ImageUploader({
 
     for (const file of toUpload) {
       try {
-        if (!file.type || !file.type.startsWith("image/")) {
+        if (!file.type.startsWith("image/")) {
           throw new Error("Fichier non supporté");
         }
 
