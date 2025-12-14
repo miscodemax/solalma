@@ -295,7 +295,7 @@ export default function AddProductForm({ userId }: Props) {
 
             <ImageUploader
               onUpload={handleAddImages}
-              maxImages={5}
+              maxImages={10}
               currentImageCount={images.length}
             />
 
