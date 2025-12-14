@@ -14,7 +14,7 @@ interface ImageUploaderProps {
 
 export default function ImageUploader({
   onUpload,
-  maxImages = 5,
+  maxImages = 10,
   currentImageCount = 0,
 }: ImageUploaderProps) {
   const [localUrls, setLocalUrls] = useState<string[]>([]);

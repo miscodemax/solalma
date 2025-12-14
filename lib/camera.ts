@@ -1,7 +1,7 @@
 import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
 import { Capacitor } from "@capacitor/core";
 
-export async function takePhoto() {
+export async function takePhotoAsFile() {
   if (!Capacitor.isNativePlatform()) {
     return null; // fallback web géré ailleurs
   }
