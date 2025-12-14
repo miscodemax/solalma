@@ -1,23 +1,24 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase";
 import Image from "next/image";
 import ImageUploader from "./imageuploader";
-import { ChevronLeft, MapPin } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, Camera, MapPin, Smartphone, Info } from "lucide-react";
 
 type Props = { userId: string };
 
 const categories = [
-  { value: "vetement", label: "Vêtements" },
-  { value: "soins_et_astuces", label: "Soins & Astuces" },
-  { value: "maquillage", label: "Maquillage" },
-  { value: "artisanat", label: "Artisanat" },
-  { value: "electronique", label: "Électronique" },
-  { value: "accessoire", label: "Accessoires" },
-  { value: "chaussure", label: "Chaussures" },
-  { value: "otaku", label: "Otaku" },
+  { value: "vetement", label: "Vêtements", icon: "👗" },
+  { value: "soins_et_astuces", label: "Soins", icon: "🧴" },
+  { value: "maquillage", label: "Maquillage", icon: "💋" },
+  { value: "artisanat", label: "Artisanat", icon: "🧶" },
+  { value: "electronique", label: "Électronique", icon: "💻" },
+  { value: "accessoire", label: "Accessoires", icon: "🕶️" },
+  { value: "chaussure", label: "Chaussures", icon: "👠" },
+  { value: "otaku", label: "Otaku", icon: "🎌" },
 ];
 
 const SENEGAL_LOCATIONS = [
@@ -48,26 +49,53 @@ const SENEGAL_LOCATIONS = [
 ];
 
 export default function AddProductForm({ userId }: Props) {
+  const router = useRouter();
+  const supabase = createClient();
+
   const [form, setForm] = useState({
     title: "",
     price: "",
     description: "",
     whatsappNumber: "",
     category: "",
-    zone: "",
+    zone: SENEGAL_LOCATIONS[0].name,
     hasWholesale: false,
     wholesalePrice: "",
     minWholesaleQty: "",
   });
-  const [useAutoLocation, setUseAutoLocation] = useState(false);
-  const [detectingLocation, setDetectingLocation] = useState(false);
+
   const [images, setImages] = useState<string[]>([]);
+  const [useAutoLocation, setUseAutoLocation] = useState(false);
+  const [userCoords, setUserCoords] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
 
-  const router = useRouter();
-  const supabase = createClient();
+  // Gestion de la localisation automatique
+  const toggleAutoLocation = () => {
+    if (!useAutoLocation) {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            setUserCoords({
+              lat: pos.coords.latitude,
+              lng: pos.coords.longitude,
+            });
+            setUseAutoLocation(true);
+          },
+          () =>
+            alert(
+              "Impossible d'accéder à votre position. Veuillez choisir manuellement."
+            )
+        );
+      }
+    } else {
+      setUseAutoLocation(false);
+      setUserCoords(null);
+    }
+  };
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -75,155 +103,39 @@ export default function AddProductForm({ userId }: Props) {
     >
   ) => {
     const { name, value, type } = e.target;
-    if (type === "checkbox") {
-      const checked = (e.target as HTMLInputElement).checked;
-      setForm((prev) => ({ ...prev, [name]: checked }));
-    } else {
-      setForm((prev) => ({ ...prev, [name]: value }));
-    }
-  };
-
-  const handleWhatsappChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value.replace(/\D/g, "");
-    setForm((prev) => ({ ...prev, whatsappNumber: val }));
-  };
-
-  const handleAddImages = (urls: string[]) =>
-    setImages((prev) => [...prev, ...urls].slice(0, 5));
-
-  const handleRemoveImage = (index: number) =>
-    setImages((prev) => prev.filter((_, i) => i !== index));
-
-  const handleSetMainImage = (index: number) => {
-    setImages((prev) => {
-      const newImages = [...prev];
-      const [selected] = newImages.splice(index, 1);
-      return [selected, ...newImages];
-    });
-  };
-
-  const findNearestLocation = (lat: number, lng: number) => {
-    let nearest = SENEGAL_LOCATIONS[0];
-    let minDistance = Infinity;
-
-    SENEGAL_LOCATIONS.forEach((loc) => {
-      const distance = Math.sqrt(
-        Math.pow(loc.lat - lat, 2) + Math.pow(loc.lng - lng, 2)
-      );
-      if (distance < minDistance) {
-        minDistance = distance;
-        nearest = loc;
-      }
-    });
-
-    return nearest;
-  };
-
-  const handleDetectLocation = () => {
-    if (!navigator.geolocation) {
-      setError("Géolocalisation non disponible");
-      return;
-    }
-
-    setDetectingLocation(true);
-    setError("");
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const coords = {
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        };
-        const nearest = findNearestLocation(coords.lat, coords.lng);
-        setForm((prev) => ({ ...prev, zone: nearest.name }));
-        setUseAutoLocation(true);
-        setDetectingLocation(false);
-      },
-      () => {
-        setError("Impossible de détecter votre position");
-        setDetectingLocation(false);
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-    );
+    const val =
+      type === "checkbox" ? (e.target as HTMLInputElement).checked : value;
+    setForm((prev) => ({ ...prev, [name]: val }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
-    setSuccess(false);
-
-    // Validation
-    if (images.length === 0) {
-      setError("Ajoutez au moins une photo");
+    if (!form.title || !form.price || images.length === 0 || !form.category) {
+      setError(
+        "Remplis les champs obligatoires (Photos, Titre, Catégorie, Prix)"
+      );
       return;
-    }
-    if (!form.title.trim()) {
-      setError("Le titre est requis");
-      return;
-    }
-    if (!form.description.trim()) {
-      setError("La description est requise");
-      return;
-    }
-    if (!form.category) {
-      setError("Sélectionnez une catégorie");
-      return;
-    }
-    if (!form.zone) {
-      setError("Sélectionnez une zone");
-      return;
-    }
-    if (!form.price || parseFloat(form.price) <= 0) {
-      setError("Prix invalide");
-      return;
-    }
-    if (form.whatsappNumber.length < 8) {
-      setError("Numéro WhatsApp invalide");
-      return;
-    }
-
-    const fullNumber = "+221" + form.whatsappNumber.trim();
-    if (!/^\+221\d{8,9}$/.test(fullNumber)) {
-      setError("Numéro WhatsApp invalide");
-      return;
-    }
-
-    if (form.hasWholesale) {
-      if (
-        !form.wholesalePrice ||
-        parseFloat(form.wholesalePrice) >= parseFloat(form.price)
-      ) {
-        setError("Le prix de gros doit être inférieur au prix unitaire");
-        return;
-      }
-      if (!form.minWholesaleQty || parseInt(form.minWholesaleQty) < 2) {
-        setError("Quantité minimum : 2 unités");
-        return;
-      }
     }
 
     setLoading(true);
     try {
-      const selectedZone = SENEGAL_LOCATIONS.find(
-        (loc) => loc.name === form.zone
-      );
-      const finalCoords = selectedZone
-        ? { lat: selectedZone.lat, lng: selectedZone.lng }
-        : { lat: SENEGAL_LOCATIONS[0].lat, lng: SENEGAL_LOCATIONS[0].lng };
+      const selectedZone = SENEGAL_LOCATIONS.find((l) => l.name === form.zone);
+      const finalLat = userCoords?.lat || selectedZone?.lat || 14.6928;
+      const finalLng = userCoords?.lng || selectedZone?.lng || -17.4467;
 
-      const { data: productData, error: productError } = await supabase
+      const { data: product, error: pErr } = await supabase
         .from("product")
         .insert({
-          title: form.title.trim(),
+          title: form.title,
           price: parseFloat(form.price),
-          description: form.description.trim(),
+          description: form.description,
           image_url: images[0],
           user_id: userId,
-          whatsapp_number: fullNumber,
+          whatsapp_number: "+221" + form.whatsappNumber,
           category: form.category,
-          zone: form.zone,
-          latitude: finalCoords.lat,
-          longitude: finalCoords.lng,
+          zone: useAutoLocation ? "Ma position actuelle" : form.zone,
+          latitude: finalLat,
+          longitude: finalLng,
           has_wholesale: form.hasWholesale,
           wholesale_price: form.hasWholesale
             ? parseFloat(form.wholesalePrice)
@@ -235,344 +147,265 @@ export default function AddProductForm({ userId }: Props) {
         .select()
         .single();
 
-      if (productError) throw productError;
+      if (pErr) throw pErr;
 
       if (images.length > 1) {
-        const additionalImages = images.slice(1).map((imageUrl) => ({
-          product_id: productData.id,
-          image_url: imageUrl,
-        }));
-        const { error: imagesError } = await supabase
+        await supabase
           .from("product_images")
-          .insert(additionalImages);
-        if (imagesError) throw imagesError;
+          .insert(
+            images
+              .slice(1)
+              .map((url) => ({ product_id: product.id, image_url: url }))
+          );
       }
 
-      setSuccess(true);
-      setTimeout(() => router.push("/dashboard/products"), 1500);
+      router.push("/dashboard/products");
     } catch (err: any) {
-      setError(err.message || "Erreur lors de la création");
+      setError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Header */}
-      <div className="sticky top-0 z-40 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <div className="px-4 py-3 flex items-center max-w-4xl mx-auto">
-          <button
-            onClick={() => router.back()}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-          >
-            <ChevronLeft
-              size={24}
-              className="text-gray-700 dark:text-gray-300"
-            />
+    <div className="min-h-screen bg-[#EBEDEE] pb-20">
+      {/* Header simple style Vinted */}
+      <div className="bg-white border-b sticky top-0 z-50">
+        <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
+          <button onClick={() => router.back()}>
+            <ChevronLeft size={24} />
           </button>
-          <h1 className="flex-1 text-center text-lg font-semibold text-gray-900 dark:text-white">
-            Vends ton article
-          </h1>
-          <div className="w-10" />
+          <h1 className="text-lg font-semibold">Vends ton article</h1>
+          <div className="w-6" />
         </div>
       </div>
 
-      {/* Contenu */}
-      <div className="max-w-4xl mx-auto px-4 py-6 pb-24">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Messages */}
-          {error && (
-            <div className="p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
-              <p className="text-sm text-red-700 dark:text-red-200">{error}</p>
-            </div>
-          )}
-
-          {success && (
-            <div className="p-4 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
-              <p className="text-sm text-green-700 dark:text-green-200">
-                ✅ Produit publié avec succès !
-              </p>
-            </div>
-          )}
-
-          {/* Photos */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-              Attire l'œil des acheteurs : utilise des photos de qualité
-            </p>
-
-            <ImageUploader
-              onUpload={handleAddImages}
-              maxImages={5}
-              currentImageCount={images.length}
-            />
-
-            {images.length > 0 && (
-              <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 mt-4">
-                {images.map((img, idx) => (
-                  <div
-                    key={idx}
-                    className="relative aspect-square rounded-lg overflow-hidden border-2 border-gray-200 dark:border-gray-600"
+      <form onSubmit={handleSubmit} className="max-w-2xl mx-auto p-4 space-y-4">
+        {/* SECTION PHOTOS */}
+        <div className="bg-white p-6 rounded-sm shadow-sm">
+          <h2 className="text-gray-500 text-sm font-medium mb-4 uppercase tracking-wider">
+            Photos
+          </h2>
+          <ImageUploader
+            onUpload={(urls) => setImages((prev) => [...prev, ...urls])}
+            maxImages={5}
+            currentImageCount={images.length}
+          />
+          {images.length > 0 && (
+            <div className="flex gap-2 mt-4 overflow-x-auto pb-2">
+              {images.map((img, i) => (
+                <div
+                  key={i}
+                  className="relative w-20 h-20 flex-shrink-0 border rounded-md overflow-hidden"
+                >
+                  <Image
+                    src={img}
+                    alt="preview"
+                    fill
+                    className="object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setImages(images.filter((_, idx) => idx !== i))
+                    }
+                    className="absolute top-0 right-0 bg-black/50 text-white text-xs p-1"
                   >
-                    <Image
-                      src={img}
-                      alt={`Photo ${idx + 1}`}
-                      fill
-                      className="object-cover"
-                    />
-                    {idx === 0 && (
-                      <div className="absolute top-1 left-1 bg-[#F4B400] text-white text-[10px] font-bold px-2 py-0.5 rounded">
-                        Principale
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-black/0 hover:bg-black/50 transition-colors flex items-center justify-center gap-1">
-                      {idx !== 0 && (
-                        <button
-                          type="button"
-                          onClick={() => handleSetMainImage(idx)}
-                          className="opacity-0 hover:opacity-100 bg-white text-gray-900 text-xs px-2 py-1 rounded"
-                        >
-                          ★
-                        </button>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveImage(idx)}
-                        className="opacity-0 hover:opacity-100 bg-red-500 text-white text-xs px-2 py-1 rounded"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
-          {/* Titre */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
-            <label className="block">
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
-                Titre
-              </span>
-              <input
-                type="text"
-                name="title"
-                placeholder="Ex: Robe Wax taille M"
-                value={form.title}
-                onChange={handleChange}
-                maxLength={60}
-                className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-[#F4B400] bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              />
-              <p className="text-xs text-gray-500 mt-1 text-right">
-                {form.title.length}/60
-              </p>
-            </label>
+        {/* SECTION TITRE & DESCRIPTION */}
+        <div className="bg-white p-6 rounded-sm shadow-sm space-y-4">
+          <div>
+            <label className="text-sm text-gray-500">Titre</label>
+            <input
+              name="title"
+              value={form.title}
+              onChange={handleChange}
+              placeholder="ex: Chemise en soie"
+              className="w-full border-b py-2 outline-none focus:border-[#F4B400] transition-colors"
+            />
           </div>
-
-          {/* Description */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
-            <label className="block">
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
-                Décris ton article
-              </span>
-              <textarea
-                name="description"
-                value={form.description}
-                onChange={handleChange}
-                placeholder="État, taille, matière, couleur, défauts éventuels..."
-                maxLength={500}
-                rows={6}
-                className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-[#F4B400] bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none"
-              />
-              <p className="text-xs text-gray-500 mt-1 text-right">
-                {form.description.length}/500
-              </p>
-            </label>
+          <div>
+            <label className="text-sm text-gray-500">Décris ton article</label>
+            <textarea
+              name="description"
+              value={form.description}
+              onChange={handleChange}
+              placeholder="ex: porté quelques fois, taille correctement"
+              rows={4}
+              className="w-full border rounded-md p-3 mt-2 outline-none focus:border-[#F4B400]"
+            />
           </div>
+        </div>
 
-          {/* Catégorie */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
-            <label className="block">
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
-                Catégorie *
-              </span>
-              <select
-                name="category"
-                value={form.category}
-                onChange={handleChange}
-                className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-[#F4B400] bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+        {/* SECTION CATEGORIE */}
+        <div className="bg-white p-6 rounded-sm shadow-sm">
+          <label className="text-sm text-gray-500 block mb-3">Catégorie</label>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {categories.map((cat) => (
+              <button
+                key={cat.value}
+                type="button"
+                onClick={() => setForm((p) => ({ ...p, category: cat.value }))}
+                className={`flex flex-col items-center p-3 border rounded-md transition-all ${
+                  form.category === cat.value
+                    ? "border-[#F4B400] bg-[#F4B400]/5"
+                    : "border-gray-100"
+                }`}
               >
-                <option value="">Sélectionner une catégorie</option>
-                {categories.map((cat) => (
-                  <option key={cat.value} value={cat.value}>
-                    {cat.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-
-          {/* Localisation */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
-            <div className="flex items-start justify-between mb-3">
-              <label className="flex-1">
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
-                  Zone *
+                <span className="text-2xl mb-1">{cat.icon}</span>
+                <span className="text-[10px] font-medium uppercase text-center">
+                  {cat.label}
                 </span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* SECTION LOCALISATION (Le choix hybride) */}
+        <div className="bg-white p-6 rounded-sm shadow-sm">
+          <h2 className="text-gray-500 text-sm font-medium mb-4 uppercase tracking-wider">
+            Emplacement
+          </h2>
+          <div className="flex flex-col gap-4">
+            <div
+              onClick={toggleAutoLocation}
+              className={`flex items-center gap-3 p-4 border rounded-md cursor-pointer transition-all ${
+                useAutoLocation
+                  ? "border-[#F4B400] bg-[#F4B400]/5"
+                  : "bg-gray-50"
+              }`}
+            >
+              <MapPin
+                className={useAutoLocation ? "text-[#F4B400]" : "text-gray-400"}
+              />
+              <div className="flex-1">
+                <p className="text-sm font-semibold">
+                  Utiliser ma position actuelle
+                </p>
+                <p className="text-xs text-gray-500">
+                  {useAutoLocation
+                    ? "Position activée"
+                    : "Clique pour détecter"}
+                </p>
+              </div>
+              <div
+                className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                  useAutoLocation ? "border-[#F4B400]" : "border-gray-300"
+                }`}
+              >
+                {useAutoLocation && (
+                  <div className="w-2.5 h-2.5 bg-[#F4B400] rounded-full" />
+                )}
+              </div>
+            </div>
+
+            {!useAutoLocation && (
+              <div className="space-y-2">
+                <label className="text-xs text-gray-400">
+                  Ou choisis manuellement :
+                </label>
                 <select
                   name="zone"
                   value={form.zone}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-[#F4B400] bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full p-3 border rounded-md bg-white outline-none"
                 >
-                  <option value="">Choisir manuellement</option>
-                  {SENEGAL_LOCATIONS.map((loc) => (
-                    <option key={loc.name} value={loc.name}>
-                      {loc.name}
+                  {SENEGAL_LOCATIONS.map((l) => (
+                    <option key={l.name} value={l.name}>
+                      {l.name}
                     </option>
                   ))}
                 </select>
-              </label>
-            </div>
-
-            <button
-              type="button"
-              onClick={handleDetectLocation}
-              disabled={detectingLocation}
-              className="w-full mt-3 px-4 py-2.5 rounded-lg border border-[#F4B400] text-[#F4B400] hover:bg-[#F4B400]/10 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
-            >
-              <MapPin size={18} />
-              {detectingLocation
-                ? "Détection..."
-                : "Utiliser ma position actuelle"}
-            </button>
-
-            {useAutoLocation && form.zone && (
-              <p className="text-xs text-green-600 dark:text-green-400 mt-2 flex items-center gap-1">
-                <span>✓</span>
-                Position détectée : {form.zone}
-              </p>
+              </div>
             )}
           </div>
+        </div>
 
-          {/* Prix */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
-            <label className="block mb-4">
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
-                Prix (FCFA)
-              </span>
+        {/* SECTION PRIX & WHATSAPP */}
+        <div className="bg-white p-6 rounded-sm shadow-sm space-y-6">
+          <div className="flex items-center justify-between border-b pb-4">
+            <label className="font-medium">Prix</label>
+            <div className="flex items-center gap-2">
               <input
                 type="number"
                 name="price"
-                placeholder="25000"
                 value={form.price}
                 onChange={handleChange}
-                min={0}
-                className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-[#F4B400] bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                placeholder="0.00"
+                className="text-right font-bold text-lg outline-none w-24"
               />
-            </label>
-
-            {/* Prix de gros */}
-            <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  name="hasWholesale"
-                  checked={form.hasWholesale}
-                  onChange={handleChange}
-                  className="w-5 h-5 rounded border-gray-300 text-[#F4B400] focus:ring-[#F4B400]"
-                />
-                <div>
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Proposer un prix de gros
-                  </span>
-                  <p className="text-xs text-gray-500">
-                    Pour les achats en volume
-                  </p>
-                </div>
-              </label>
-
-              {form.hasWholesale && (
-                <div className="grid grid-cols-2 gap-3 mt-4">
-                  <div>
-                    <label className="text-xs text-gray-600 dark:text-gray-400 mb-1 block">
-                      Prix gros (FCFA)
-                    </label>
-                    <input
-                      type="number"
-                      name="wholesalePrice"
-                      placeholder="20000"
-                      value={form.wholesalePrice}
-                      onChange={handleChange}
-                      min={0}
-                      className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-[#F4B400] bg-white dark:bg-gray-700 text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs text-gray-600 dark:text-gray-400 mb-1 block">
-                      Quantité min.
-                    </label>
-                    <input
-                      type="number"
-                      name="minWholesaleQty"
-                      placeholder="10"
-                      value={form.minWholesaleQty}
-                      onChange={handleChange}
-                      min={2}
-                      className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-[#F4B400] bg-white dark:bg-gray-700 text-sm"
-                    />
-                  </div>
-                </div>
-              )}
+              <span className="font-bold">FCFA</span>
             </div>
           </div>
 
-          {/* WhatsApp */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
-            <label className="block">
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
-                WhatsApp
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Smartphone size={20} className="text-gray-400" />
+              <label className="text-sm font-medium">WhatsApp</label>
+            </div>
+            <div className="flex items-center border rounded-md overflow-hidden">
+              <span className="bg-gray-100 px-2 py-2 text-sm text-gray-500 border-r">
+                +221
               </span>
-              <div className="flex items-center border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-[#F4B400]">
-                <span className="px-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium">
-                  +221
-                </span>
+              <input
+                name="whatsappNumber"
+                value={form.whatsappNumber}
+                onChange={handleChange}
+                placeholder="77..."
+                className="px-2 py-2 w-32 outline-none text-sm"
+              />
+            </div>
+          </div>
+
+          <div className="pt-4 border-t">
+            <div className="flex items-center justify-between">
+              <span className="text-sm">Vendre en gros ?</span>
+              <input
+                type="checkbox"
+                name="hasWholesale"
+                checked={form.hasWholesale}
+                onChange={handleChange}
+                className="w-5 h-5 accent-[#F4B400]"
+              />
+            </div>
+            {form.hasWholesale && (
+              <div className="grid grid-cols-2 gap-4 mt-4 animate-in fade-in slide-in-from-top-2">
                 <input
-                  type="tel"
-                  name="whatsappNumber"
-                  placeholder="771234567"
-                  value={form.whatsappNumber}
-                  onChange={handleWhatsappChange}
-                  maxLength={9}
-                  className="flex-1 px-4 py-3 bg-white dark:bg-gray-800 text-gray-900 dark:text-white outline-none"
+                  name="wholesalePrice"
+                  value={form.wholesalePrice}
+                  onChange={handleChange}
+                  placeholder="Prix de gros"
+                  className="border p-2 rounded text-sm"
+                />
+                <input
+                  name="minWholesaleQty"
+                  value={form.minWholesaleQty}
+                  onChange={handleChange}
+                  placeholder="Qté min."
+                  className="border p-2 rounded text-sm"
                 />
               </div>
-            </label>
-          </div>
-        </form>
-      </div>
-
-      {/* Bouton de soumission fixe */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 z-40">
-        <div className="max-w-4xl mx-auto">
-          <button
-            onClick={handleSubmit}
-            disabled={loading}
-            className="w-full px-6 py-3.5 rounded-lg bg-[#F4B400] hover:bg-[#E9961A] text-white font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-          >
-            {loading ? (
-              <>
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                <span>Publication...</span>
-              </>
-            ) : (
-              "Publier mon article"
             )}
-          </button>
+          </div>
         </div>
-      </div>
+
+        {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+
+        {/* BOUTON FINAL */}
+        <Button
+          disabled={loading}
+          className="w-full py-6 bg-[#F4B400] hover:bg-[#E9961A] text-white font-bold text-lg rounded-sm shadow-md"
+        >
+          {loading ? "Publication en cours..." : "Ajouter l'article"}
+        </Button>
+      </form>
     </div>
   );
 }
