@@ -90,17 +90,30 @@ export default function AddProductForm({ userId }: Props) {
   };
 
   const handleAddImages = (urls: string[]) => {
-    setImages(urls.slice(0, 10)); // ou 5 selon ton max
+    console.log("🟢 handleAddImages appelé");
+    console.log("📦 URLs reçues :", urls);
+    console.log("📦 Nombre :", urls.length);
+
+    setImages(urls.slice(0, 10));
   };
 
-  const handleRemoveImage = (index: number) =>
-    setImages((prev) => prev.filter((_, i) => i !== index));
+  const handleRemoveImage = (index: number) => {
+    console.log("🔴 handleRemoveImage index =", index);
+    setImages((prev) => {
+      const next = prev.filter((_, i) => i !== index);
+      console.log("📦 images après suppression :", next);
+      return next;
+    });
+  };
 
   const handleSetMainImage = (index: number) => {
+    console.log("⭐ handleSetMainImage index =", index);
     setImages((prev) => {
-      const newImages = [...prev];
-      const [selected] = newImages.splice(index, 1);
-      return [selected, ...newImages];
+      const next = [...prev];
+      const [selected] = next.splice(index, 1);
+      const result = [selected, ...next];
+      console.log("📦 images après reorder :", result);
+      return result;
     });
   };
 

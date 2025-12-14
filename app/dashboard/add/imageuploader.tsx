@@ -132,7 +132,8 @@ export default function ImageUploader({
     }
 
     if (newUrls.length > 0) {
-      const allUrls = [...uploadedUrls, ...newUrls];
+      const allUrls = Array.from(new Set([...uploadedUrls, ...newUrls]));
+
       setUploadedUrls(allUrls);
       onUpload(allUrls);
     }
