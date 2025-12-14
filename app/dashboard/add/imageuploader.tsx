@@ -92,8 +92,11 @@ export default function ImageUploader({
     const newUrls: string[] = [];
 
     for (const file of toUpload) {
+      const isImage =
+        file.type?.startsWith("image/") ||
+        file.name.match(/\.(jpg|jpeg|png|webp)$/i);
       try {
-        if (!file.type.startsWith("image/")) {
+        if (!isImage) {
           throw new Error("Fichier non supporté");
         }
 
