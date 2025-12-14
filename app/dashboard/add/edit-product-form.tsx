@@ -1,804 +1,637 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase'
-import Image from 'next/image'
-import { Loader2, X, Upload, Edit3, Check, AlertCircle, Save, Undo2, Star, Plus, Camera, Sparkles } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase";
+import Image from "next/image";
+import { ChevronLeft, X } from "lucide-react";
 
 type Props = {
   product: {
-    id: number
-    title: string
-    price: number
-    description: string
-    images: string[]
-    whatsapp_number?: string
-    category?: string
-    zone?: string
-  }
-}
-
-type ImageItem = {
-  url: string
-  isOriginal: boolean
-  isUploading?: boolean
-  uploadProgress?: number
-  file?: File
-}
+    id: number;
+    title: string;
+    price: number;
+    description: string;
+    images: string[];
+    whatsapp_number?: string;
+    category?: string;
+    zone?: string;
+    has_wholesale?: boolean;
+    wholesale_price?: number;
+    min_wholesale_qty?: number;
+  };
+};
 
 const categories = [
-  { value: 'vetement', label: 'Vêtement', icon: '👗', color: 'from-pink-400 to-rose-500' },
-  { value: 'soins_et_astuces', label: 'Soins et astuces', icon: '💄', color: 'from-purple-400 to-pink-500' },
-  { value: 'maquillage', label: 'Maquillage', icon: '💋', color: 'from-red-400 to-pink-500' },
-  { value: 'artisanat', label: 'Artisanat', icon: '🎨', color: 'from-blue-400 to-purple-500' },
-  { value: 'electronique', label: 'Electronique', icon: '📱', color: 'from-cyan-400 to-blue-500' },
-  { value: 'accessoire', label: 'Accessoire', icon: '👜', color: 'from-amber-400 to-orange-500' },
-]
+  { value: "vetement", label: "Vêtements" },
+  { value: "soins_et_astuces", label: "Soins & Astuces" },
+  { value: "maquillage", label: "Maquillage" },
+  { value: "artisanat", label: "Artisanat" },
+  { value: "electronique", label: "Électronique" },
+  { value: "accessoire", label: "Accessoires" },
+  { value: "chaussure", label: "Chaussures" },
+  { value: "otaku", label: "Otaku" },
+];
 
 const SENEGAL_LOCATIONS = [
-  "Dakar", "Plateau", "Médina", "Yoff", "Sacré-Coeur", "Almadies", "Ngor", "Ouakam",
-  "Point E", "Mermoz", "Fann", "Liberté", "HLM", "Grand Dakar", "Pikine", "Guédiawaye",
-  "Parcelles Assainies", "Rufisque", "Thiès", "Kaolack", "Saint-Louis", "Mbour",
-  "Diourbel", "Ziguinchor"
-]
+  "Dakar",
+  "Plateau",
+  "Médina",
+  "Yoff",
+  "Sacré-Coeur",
+  "Almadies",
+  "Ngor",
+  "Ouakam",
+  "Point E",
+  "Mermoz",
+  "Fann",
+  "Liberté",
+  "HLM",
+  "Grand Dakar",
+  "Pikine",
+  "Guédiawaye",
+  "Parcelles Assainies",
+  "Rufisque",
+  "Thiès",
+  "Kaolack",
+  "Saint-Louis",
+  "Mbour",
+  "Diourbel",
+  "Ziguinchor",
+];
 
 export default function EditProductForm({ product }: Props) {
   const [form, setForm] = useState({
     title: product.title,
     price: product.price.toString(),
     description: product.description,
-    whatsappNumber: product.whatsapp_number?.replace('+221', '') || '',
-    category: product.category || categories[0].value,
-    zone: product.zone || SENEGAL_LOCATIONS[0],
-  })
+    whatsappNumber: product.whatsapp_number?.replace("+221", "") || "",
+    category: product.category || "",
+    zone: product.zone || "",
+    hasWholesale: product.has_wholesale || false,
+    wholesalePrice: product.wholesale_price?.toString() || "",
+    minWholesaleQty: product.min_wholesale_qty?.toString() || "",
+  });
 
-  const [images, setImages] = useState<ImageItem[]>(
-    (product.images || []).map(url => ({ url, isOriginal: true }))
-  )
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [successMessage, setSuccessMessage] = useState('')
-  const [hasChanges, setHasChanges] = useState(false)
-  const [draggedOver, setDraggedOver] = useState(false)
-  const [autoSaving, setAutoSaving] = useState(false)
+  const [images, setImages] = useState<string[]>(product.images || []);
+  const [newImageFiles, setNewImageFiles] = useState<File[]>([]);
+  const [uploadingImages, setUploadingImages] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
 
-  const router = useRouter()
-  const supabase = createClient()
+  const router = useRouter();
+  const supabase = createClient();
 
-  // Détection des changements
-  useEffect(() => {
-    const changed = (
-      form.title !== product.title ||
-      form.price !== product.price.toString() ||
-      form.description !== product.description ||
-      form.whatsappNumber !== (product.whatsapp_number?.replace('+221', '') || '') ||
-      form.category !== (product.category || categories[0].value) ||
-      form.zone !== (product.zone || SENEGAL_LOCATIONS[0]) ||
-      images.length !== (product.images || []).length ||
-      images.some((img, i) => img.url !== (product.images || [])[i])
-    )
-    setHasChanges(changed)
-  }, [form, images, product])
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
+  ) => {
+    const { name, value, type } = e.target;
+    if (type === "checkbox") {
+      const checked = (e.target as HTMLInputElement).checked;
+      setForm((prev) => ({ ...prev, [name]: checked }));
+    } else {
+      setForm((prev) => ({ ...prev, [name]: value }));
+    }
+  };
 
-  const handleInputChange = (field: string, value: string) => {
-    setForm(prev => ({ ...prev, [field]: value }))
-    setError('')
-  }
+  const handleWhatsappChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.replace(/\D/g, "");
+    setForm((prev) => ({ ...prev, whatsappNumber: val }));
+  };
 
-  const handleWhatsappChange = (value: string) => {
-    const cleaned = value.replace(/\D/g, '')
-    setForm(prev => ({ ...prev, whatsappNumber: cleaned }))
-  }
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault()
-    setDraggedOver(true)
-  }
-
-  const handleDragLeave = () => {
-    setDraggedOver(false)
-  }
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault()
-    setDraggedOver(false)
-    const files = Array.from(e.dataTransfer.files)
-    handleFileUpload(files)
-  }
-
-  const handleFileUpload = async (files: File[] | FileList, replaceIndex?: number) => {
-    setError('')
-    setSuccessMessage('')
-
-    for (const file of files) {
+    const validFiles: File[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
       if (file.size > 10 * 1024 * 1024) {
-        setError(`${file.name} est trop volumineux (max 10MB).`)
-        continue
+        setError("Une ou plusieurs images sont trop volumineuses (max 10MB)");
+        continue;
       }
-      if (!file.type.startsWith('image/')) {
-        setError(`${file.name} n'est pas une image valide.`)
-        continue
+      if (!file.type.startsWith("image/")) {
+        setError("Seules les images sont acceptées");
+        continue;
       }
-
-      const tempImageItem: ImageItem = {
-        url: URL.createObjectURL(file),
-        isOriginal: false,
-        isUploading: true,
-        uploadProgress: 0,
-        file
-      }
-
-      if (replaceIndex !== undefined) {
-        setImages(prev => {
-          const newImages = [...prev]
-          newImages[replaceIndex] = tempImageItem
-          return newImages
-        })
-      } else {
-        setImages(prev => [...prev, tempImageItem])
-      }
-
-      // Simulation de progression d'upload
-      const progressInterval = setInterval(() => {
-        setImages(prev => prev.map(img =>
-          img.file === file && img.isUploading
-            ? { ...img, uploadProgress: Math.min((img.uploadProgress || 0) + 10, 90) }
-            : img
-        ))
-      }, 100)
-
-      try {
-        const fileExt = file.name.split('.').pop()
-        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`
-
-        const { error: uploadError } = await supabase.storage
-          .from('product')
-          .upload(fileName, file)
-
-        clearInterval(progressInterval)
-
-        if (uploadError) {
-          setError(uploadError.message)
-          if (replaceIndex !== undefined) {
-            setImages(prev => prev.filter((_, i) => i !== replaceIndex))
-          } else {
-            setImages(prev => prev.filter(img => img.file !== file))
-          }
-          continue
-        }
-
-        const { data } = supabase.storage.from('product').getPublicUrl(fileName)
-
-        const finalImageItem: ImageItem = {
-          url: data.publicUrl,
-          isOriginal: false,
-          isUploading: false
-        }
-
-        if (replaceIndex !== undefined) {
-          setImages(prev => {
-            const newImages = [...prev]
-            newImages[replaceIndex] = finalImageItem
-            return newImages
-          })
-        } else {
-          setImages(prev => prev.map(img =>
-            img.file === file ? finalImageItem : img
-          ))
-        }
-
-        setSuccessMessage('Image uploadée avec succès ! ✨')
-        setTimeout(() => setSuccessMessage(''), 3000)
-
-      } catch (err) {
-        clearInterval(progressInterval)
-        setError('Erreur lors de l\'upload')
-        if (replaceIndex !== undefined) {
-          setImages(prev => prev.filter((_, i) => i !== replaceIndex))
-        } else {
-          setImages(prev => prev.filter(img => img.file !== file))
-        }
-      }
-    }
-  }
-
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, replaceIndex?: number) => {
-    const files = e.target.files
-    if (!files || files.length === 0) return
-
-    await handleFileUpload(files, replaceIndex)
-    e.target.value = ''
-  }
-
-  const handleRemoveImage = (idx: number) => {
-    setImages(prev => prev.filter((_, i) => i !== idx))
-    setSuccessMessage('Image supprimée 🗑️')
-    setTimeout(() => setSuccessMessage(''), 2000)
-  }
-
-  const handleSetMainImage = (idx: number) => {
-    setImages(prev => {
-      const newImages = [...prev]
-      const [selected] = newImages.splice(idx, 1)
-      return [selected, ...newImages]
-    })
-    setSuccessMessage('Image principale définie ! ⭐')
-    setTimeout(() => setSuccessMessage(''), 2000)
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    await saveChanges()
-  }
-
-  const saveChanges = async () => {
-    if (!hasChanges) return
-
-    setError('')
-    setSuccessMessage('')
-
-    // Validations
-    if (!form.title.trim()) {
-      setError('Le titre est requis.')
-      return
-    }
-    if (!form.price || isNaN(Number(form.price)) || Number(form.price) <= 0) {
-      setError('Prix invalide.')
-      return
-    }
-    if (!form.description.trim()) {
-      setError('La description est requise.')
-      return
-    }
-    const fullNumber = '+221' + form.whatsappNumber.trim()
-    if (!/^\+221\d{8,9}$/.test(fullNumber)) {
-      setError('Numéro WhatsApp invalide (ex: 771234567).')
-      return
-    }
-    if (images.length === 0) {
-      setError('Ajoutez au moins une image.')
-      return
-    }
-    if (images.some(img => img.isUploading)) {
-      setError('Attendez que tous les uploads soient terminés.')
-      return
+      validFiles.push(file);
     }
 
-    setLoading(true)
+    setNewImageFiles((prev) =>
+      [...prev, ...validFiles].slice(0, 5 - images.length)
+    );
+    e.target.value = "";
+  };
+
+  const handleRemoveExistingImage = (index: number) => {
+    setImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleRemoveNewImage = (index: number) => {
+    setNewImageFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSetMainImage = (index: number) => {
+    setImages((prev) => {
+      const newImages = [...prev];
+      const [selected] = newImages.splice(index, 1);
+      return [selected, ...newImages];
+    });
+  };
+
+  const uploadNewImages = async (): Promise<string[]> => {
+    if (newImageFiles.length === 0) return [];
+
+    setUploadingImages(true);
+    const uploadedUrls: string[] = [];
 
     try {
-      const { error } = await supabase
-        .from('product')
+      for (const file of newImageFiles) {
+        const fileExt = file.name.split(".").pop();
+        const fileName = `${Date.now()}-${Math.random()
+          .toString(36)
+          .substring(2, 8)}.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("product")
+          .upload(fileName, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data } = supabase.storage
+          .from("product")
+          .getPublicUrl(fileName);
+        uploadedUrls.push(data.publicUrl);
+      }
+
+      return uploadedUrls;
+    } catch (err) {
+      throw new Error("Erreur lors de l'upload des images");
+    } finally {
+      setUploadingImages(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setSuccess(false);
+
+    // Validation
+    if (images.length === 0 && newImageFiles.length === 0) {
+      setError("Ajoutez au moins une photo");
+      return;
+    }
+    if (!form.title.trim()) {
+      setError("Le titre est requis");
+      return;
+    }
+    if (!form.description.trim()) {
+      setError("La description est requise");
+      return;
+    }
+    if (!form.category) {
+      setError("Sélectionnez une catégorie");
+      return;
+    }
+    if (!form.zone) {
+      setError("Sélectionnez une zone");
+      return;
+    }
+    if (!form.price || parseFloat(form.price) <= 0) {
+      setError("Prix invalide");
+      return;
+    }
+    if (form.whatsappNumber.length < 8) {
+      setError("Numéro WhatsApp invalide");
+      return;
+    }
+
+    const fullNumber = "+221" + form.whatsappNumber.trim();
+    if (!/^\+221\d{8,9}$/.test(fullNumber)) {
+      setError("Numéro WhatsApp invalide");
+      return;
+    }
+
+    if (form.hasWholesale) {
+      if (
+        !form.wholesalePrice ||
+        parseFloat(form.wholesalePrice) >= parseFloat(form.price)
+      ) {
+        setError("Le prix de gros doit être inférieur au prix unitaire");
+        return;
+      }
+      if (!form.minWholesaleQty || parseInt(form.minWholesaleQty) < 2) {
+        setError("Quantité minimum : 2 unités");
+        return;
+      }
+    }
+
+    setLoading(true);
+
+    try {
+      // Upload des nouvelles images
+      const newUploadedUrls = await uploadNewImages();
+      const allImages = [...images, ...newUploadedUrls];
+
+      if (allImages.length === 0) {
+        setError("Aucune image disponible");
+        setLoading(false);
+        return;
+      }
+
+      // Mise à jour du produit
+      const { error: updateError } = await supabase
+        .from("product")
         .update({
           title: form.title.trim(),
           price: parseFloat(form.price),
           description: form.description.trim(),
-          image_url: images[0]?.url,
+          image_url: allImages[0],
           whatsapp_number: fullNumber,
           category: form.category,
           zone: form.zone,
+          has_wholesale: form.hasWholesale,
+          wholesale_price: form.hasWholesale
+            ? parseFloat(form.wholesalePrice)
+            : null,
+          min_wholesale_qty: form.hasWholesale
+            ? parseInt(form.minWholesaleQty)
+            : null,
         })
-        .eq('id', product.id)
+        .eq("id", product.id);
 
-      if (error) throw error
+      if (updateError) throw updateError;
 
-      // Mise à jour des images supplémentaires si nécessaire
-      if (images.length > 1) {
-        await supabase
-          .from('product_images')
-          .delete()
-          .eq('product_id', product.id)
+      // Mise à jour des images supplémentaires
+      await supabase
+        .from("product_images")
+        .delete()
+        .eq("product_id", product.id);
 
-        const additionalImages = images.slice(1).map(img => ({
+      if (allImages.length > 1) {
+        const additionalImages = allImages.slice(1).map((imageUrl) => ({
           product_id: product.id,
-          image_url: img.url
-        }))
+          image_url: imageUrl,
+        }));
 
-        if (additionalImages.length > 0) {
-          await supabase
-            .from('product_images')
-            .insert(additionalImages)
-        }
+        const { error: imagesError } = await supabase
+          .from("product_images")
+          .insert(additionalImages);
+
+        if (imagesError) throw imagesError;
       }
 
-      setSuccessMessage('🎉 Produit modifié avec succès ! Redirection...')
-      setTimeout(() => {
-        router.push('/dashboard/products')
-      }, 2000)
-
+      setSuccess(true);
+      setTimeout(() => router.push("/dashboard/products"), 1500);
     } catch (err: any) {
-      setError(err.message || 'Une erreur est survenue')
+      setError(err.message || "Erreur lors de la modification");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  const resetChanges = () => {
-    setForm({
-      title: product.title,
-      price: product.price.toString(),
-      description: product.description,
-      whatsappNumber: product.whatsapp_number?.replace('+221', '') || '',
-      category: product.category || categories[0].value,
-      zone: product.zone || SENEGAL_LOCATIONS[0],
-    })
-    setImages((product.images || []).map(url => ({ url, isOriginal: true })))
-    setError('')
-    setSuccessMessage('Modifications annulées ↩️')
-    setTimeout(() => setSuccessMessage(''), 2000)
-  }
-
-  const selectedCategory = categories.find(cat => cat.value === form.category) || categories[0]
+  const totalImages = images.length + newImageFiles.length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#FAF9F6] via-white to-[#F4C430]/5 dark:bg-gradient-to-br dark:from-[#1a1a1a] dark:via-[#222] dark:to-[#2a2a2a] py-6 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto">
-        {/* Header avec statut de sauvegarde */}
-        <div className="flex items-center justify-between mb-8">
-          <Button
-            variant="outline"
-            size="lg"
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Header */}
+      <div className="sticky top-0 z-40 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <div className="px-4 py-3 flex items-center max-w-4xl mx-auto">
+          <button
             onClick={() => router.back()}
-            className="border-[#E9961A] text-[#E9961A] font-semibold hover:bg-[#E9961A]/10 hover:dark:bg-[#E9961A]/20 transition-all duration-200 px-6 py-3"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
-            ← Retour
-          </Button>
-
-          <div className="flex items-center gap-4">
-            {hasChanges && (
-              <div className="flex items-center gap-2 text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20 px-4 py-2 rounded-xl">
-                <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
-                <span className="text-sm font-medium">Modifications non sauvées</span>
-              </div>
-            )}
-
-            {autoSaving && (
-              <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-4 py-2 rounded-xl">
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span className="text-sm font-medium">Sauvegarde...</span>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="text-center mb-8">
-          <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-[#F4C430] via-[#E9961A] to-[#F4C430] bg-clip-text text-transparent mb-4">
-            ✏️ Modifier votre produit
+            <ChevronLeft
+              size={24}
+              className="text-gray-700 dark:text-gray-300"
+            />
+          </button>
+          <h1 className="flex-1 text-center text-lg font-semibold text-gray-900 dark:text-white">
+            Modifier ton article
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 text-lg">
-            Apportez vos modifications en toute simplicité
-          </p>
+          <div className="w-10" />
         </div>
+      </div>
 
-        {/* Messages */}
-        {error && (
-          <div className="mb-6 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-4 rounded-r-xl animate-in slide-in-from-left-4 duration-300">
-            <div className="flex items-center">
-              <AlertCircle className="w-5 h-5 text-red-500 mr-3" />
-              <p className="text-red-700 dark:text-red-400 font-medium">{error}</p>
-            </div>
-          </div>
-        )}
-
-        {successMessage && (
-          <div className="mb-6 bg-green-50 dark:bg-green-900/20 border-l-4 border-green-500 p-4 rounded-r-xl animate-in slide-in-from-left-4 duration-300">
-            <div className="flex items-center">
-              <Check className="w-5 h-5 text-green-500 mr-3" />
-              <p className="text-green-700 dark:text-green-400 font-medium">{successMessage}</p>
-            </div>
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Section Images avec drag & drop */}
-          <div className="bg-white/80 dark:bg-[#2a2a2a]/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-[#F4C430]/20 dark:border-gray-600 p-8">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 bg-gradient-to-r from-[#F4C430] to-[#E9961A] rounded-xl">
-                <Camera className="w-6 h-6 text-white" />
-              </div>
-              <h2 className="text-xl font-bold text-gray-800 dark:text-white">Images du produit</h2>
-              <div className="bg-gradient-to-r from-[#F4C430]/20 to-[#E9961A]/20 px-3 py-1 rounded-full">
-                <span className="text-sm font-medium text-[#E9961A]">{images.length}/6</span>
-              </div>
-            </div>
-
-            {/* Zone de drop */}
-            <div
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-              className={`border-2 border-dashed rounded-2xl p-8 mb-6 transition-all duration-300 ${draggedOver
-                  ? 'border-[#F4C430] bg-[#F4C430]/10'
-                  : 'border-gray-300 dark:border-gray-600'
-                }`}
-            >
-              <div className="text-center">
-                <Upload className={`w-12 h-12 mx-auto mb-4 transition-colors ${draggedOver ? 'text-[#F4C430]' : 'text-gray-400'
-                  }`} />
-                <p className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Glissez vos images ici ou cliquez pour parcourir
-                </p>
-                <p className="text-sm text-gray-500">JPG, PNG jusqu'à 10MB chacune</p>
-                <label className="inline-block mt-4 cursor-pointer bg-gradient-to-r from-[#F4C430] to-[#E9961A] text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all duration-300">
-                  <Plus className="w-4 h-4 inline mr-2" />
-                  Parcourir les fichiers
-                  <input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={(e) => handleImageUpload(e)}
-                    className="hidden"
-                  />
-                </label>
-              </div>
-            </div>
-
-            {/* Grille d'images */}
-            {images.length > 0 && (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                {images.map((imageItem, idx) => (
-                  <div
-                    key={idx}
-                    className="relative group aspect-square rounded-2xl overflow-hidden border-2 border-gray-200 dark:border-gray-600 hover:border-[#F4C430] transition-all duration-300 shadow-lg hover:shadow-xl"
-                  >
-                    <Image
-                      src={imageItem.url}
-                      alt={`Image ${idx + 1}`}
-                      fill
-                      className="object-cover"
-                    />
-
-                    {/* Overlay de progression */}
-                    {imageItem.isUploading && (
-                      <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center">
-                        <Loader2 className="animate-spin w-8 h-8 text-white mb-2" />
-                        <div className="w-3/4 bg-gray-700 rounded-full h-2 mb-2">
-                          <div
-                            className="bg-[#F4C430] h-2 rounded-full transition-all duration-300"
-                            style={{ width: `${imageItem.uploadProgress || 0}%` }}
-                          ></div>
-                        </div>
-                        <p className="text-white text-xs">Upload {imageItem.uploadProgress || 0}%</p>
-                      </div>
-                    )}
-
-                    {/* Badges */}
-                    <div className="absolute top-2 left-2 flex gap-1">
-                      {idx === 0 && (
-                        <div className="bg-gradient-to-r from-[#F4C430] to-[#E9961A] text-white text-xs px-2 py-1 rounded-full font-medium flex items-center gap-1">
-                          <Star className="w-3 h-3" />
-                          Principale
-                        </div>
-                      )}
-                      {imageItem.isOriginal ? (
-                        <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">Original</span>
-                      ) : (
-                        <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
-                          <Sparkles className="w-3 h-3" />
-                          Nouvelle
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Boutons d'action */}
-                    {!imageItem.isUploading && (
-                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center gap-2">
-                        {idx !== 0 && (
-                          <button
-                            type="button"
-                            onClick={() => handleSetMainImage(idx)}
-                            className="bg-yellow-500 hover:bg-yellow-600 text-white p-2 rounded-full transition-all duration-200 hover:scale-110"
-                            title="Définir comme image principale"
-                          >
-                            <Star className="w-4 h-4" />
-                          </button>
-                        )}
-                        <label
-                          htmlFor={`replace-${idx}`}
-                          className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-full cursor-pointer transition-all duration-200 hover:scale-110"
-                          title="Remplacer cette image"
-                        >
-                          <Edit3 className="w-4 h-4" />
-                          <input
-                            id={`replace-${idx}`}
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => handleImageUpload(e, idx)}
-                            className="hidden"
-                          />
-                        </label>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveImage(idx)}
-                          className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-full transition-all duration-200 hover:scale-110"
-                          title="Supprimer cette image"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Informations du produit */}
-          <div className="bg-white/80 dark:bg-[#2a2a2a]/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-[#F4C430]/20 dark:border-gray-600 p-8 space-y-6">
-            <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-6">📝 Informations du produit</h2>
-
-            {/* Titre */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                ✨ Titre du produit
-              </label>
-              <input
-                type="text"
-                placeholder="Ex: Robe Wax taille M, comme neuve"
-                value={form.title}
-                onChange={(e) => handleInputChange('title', e.target.value)}
-                className="w-full px-4 py-4 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E9961A] focus:border-[#F4C430] bg-white dark:bg-gray-800 transition-all duration-300 text-lg"
-                required
-              />
-              <div className="text-right text-sm text-gray-500 mt-1">
-                {form.title.length}/60 caractères
-              </div>
-            </div>
-
-            {/* Catégorie */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                🏷️ Catégorie
-              </label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {categories.map((cat) => (
-                  <button
-                    key={cat.value}
-                    type="button"
-                    onClick={() => handleInputChange('category', cat.value)}
-                    className={`relative p-4 rounded-xl border-2 transition-all duration-300 ${form.category === cat.value
-                        ? 'border-[#F4C430] bg-gradient-to-br ' + cat.color + ' text-white shadow-lg scale-105'
-                        : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-[#F4C430]/50 hover:scale-102'
-                      }`}
-                  >
-                    <div className="text-2xl mb-2">{cat.icon}</div>
-                    <h3 className="font-medium text-sm">{cat.label}</h3>
-                    {form.category === cat.value && (
-                      <div className="absolute -top-1 -right-1 bg-white text-[#F4C430] rounded-full p-1">
-                        <Check className="w-4 h-4" />
-                      </div>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Prix et localisation */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                  💵 Prix en FCFA
-                </label>
-                <input
-                  type="number"
-                  placeholder="Ex: 25000"
-                  value={form.price}
-                  onChange={(e) => handleInputChange('price', e.target.value)}
-                  className="w-full px-4 py-4 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E9961A] focus:border-[#F4C430] bg-white dark:bg-gray-800 transition-all duration-300 text-lg"
-                  required
-                  min={0}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                  📍 Zone
-                </label>
-                <select
-                  value={form.zone}
-                  onChange={(e) => handleInputChange('zone', e.target.value)}
-                  className="w-full px-4 py-4 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E9961A] focus:border-[#F4C430] bg-white dark:bg-gray-800 transition-all duration-300"
-                >
-                  {SENEGAL_LOCATIONS.map((location) => (
-                    <option key={location} value={location}>{location}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Description */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                📝 Description détaillée
-              </label>
-              <textarea
-                placeholder="Décrivez votre produit : état, taille, couleur, matière..."
-                value={form.description}
-                onChange={(e) => handleInputChange('description', e.target.value)}
-                className="w-full px-4 py-4 border-2 border-gray-200 dark:border-gray-700 rounded-xl h-32 resize-none focus:outline-none focus:ring-2 focus:ring-[#E9961A] focus:border-[#F4C430] bg-white dark:bg-gray-800 transition-all duration-300"
-                required
-              />
-              <div className="text-right text-sm text-gray-500 mt-1">
-                {form.description.length}/500 caractères
-              </div>
-            </div>
-
-            {/* WhatsApp */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                📱 Numéro WhatsApp
-              </label>
-              <div className="flex border-2 border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-[#E9961A] focus-within:border-[#F4C430] transition-all duration-300">
-                <div className="px-4 py-4 bg-gradient-to-r from-[#F4C430]/20 to-[#E9961A]/20 text-gray-700 dark:text-gray-300 font-medium">
-                  +221
-                </div>
-                <input
-                  type="tel"
-                  placeholder="771234567"
-                  value={form.whatsappNumber}
-                  onChange={(e) => handleWhatsappChange(e.target.value)}
-                  className="flex-1 px-4 py-4 focus:outline-none bg-white dark:bg-gray-800 text-lg"
-                  maxLength={9}
-                  required
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Actions flottantes */}
-          <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
-            <div className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-[#F4C430]/20 p-4">
-              <div className="flex items-center gap-4">
-                {/* Bouton Reset */}
-                {hasChanges && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={resetChanges}
-                    className="flex items-center gap-2 border-gray-300 text-gray-600 hover:bg-gray-50 transition-all duration-300"
-                  >
-                    <Undo2 className="w-4 h-4" />
-                    Annuler
-                  </Button>
-                )}
-
-                {/* Indicateur de statut */}
-                <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-50 dark:bg-gray-800">
-                  <div className={`w-2 h-2 rounded-full ${hasChanges
-                      ? 'bg-orange-500 animate-pulse'
-                      : 'bg-green-500'
-                    }`}></div>
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    {hasChanges ? 'Modifications en attente' : 'Tout est sauvé'}
-                  </span>
-                </div>
-
-                {/* Bouton Sauvegarder */}
-                <Button
-                  type="submit"
-                  disabled={loading || images.some(img => img.isUploading) || !hasChanges}
-                  className={`flex items-center gap-2 px-6 py-3 text-lg font-bold transition-all duration-300 ${hasChanges
-                      ? 'bg-gradient-to-r from-[#F4C430] to-[#E9961A] hover:from-[#E9961A] hover:to-[#F4C430] text-white shadow-lg hover:shadow-xl scale-100 hover:scale-105'
-                      : 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                    }`}
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                      Sauvegarde...
-                    </>
-                  ) : hasChanges ? (
-                    <>
-                      <Save className="w-5 h-5" />
-                      Sauvegarder les modifications
-                    </>
-                  ) : (
-                    <>
-                      <Check className="w-5 h-5" />
-                      Aucune modification
-                    </>
-                  )}
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          {/* Section conseils */}
-          {hasChanges && (
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl p-6 animate-in slide-in-from-bottom-4 duration-500">
-              <div className="flex items-start gap-4">
-                <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-xl">
-                  <Sparkles className="w-6 h-6 text-blue-600" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-blue-800 dark:text-blue-200 mb-2">
-                    💡 Conseils pour optimiser votre produit
-                  </h3>
-                  <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
-                    <li>• Des photos de qualité augmentent vos ventes de 70%</li>
-                    <li>• Une description détaillée inspire confiance</li>
-                    <li>• Un prix juste attire plus d'acheteurs</li>
-                    <li>• Répondez rapidement aux messages WhatsApp</li>
-                  </ul>
-                </div>
-              </div>
+      {/* Contenu */}
+      <div className="max-w-4xl mx-auto px-4 py-6 pb-24">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Messages */}
+          {error && (
+            <div className="p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+              <p className="text-sm text-red-700 dark:text-red-200">{error}</p>
             </div>
           )}
 
-          {/* Statistiques du produit */}
-          <div className="bg-gradient-to-r from-[#F4C430]/10 to-[#E9961A]/10 rounded-2xl p-6 border border-[#F4C430]/20">
-            <h3 className="font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
-              <div className="p-2 bg-[#F4C430] rounded-xl">
-                <Sparkles className="w-4 h-4 text-white" />
-              </div>
-              Aperçu de votre produit
-            </h3>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-[#E9961A]">{images.length}</div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">Images</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-[#E9961A]">{form.title.length}</div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">Caract. titre</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-[#E9961A]">{form.description.length}</div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">Caract. desc.</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-[#E9961A]">{selectedCategory.icon}</div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">{selectedCategory.label}</div>
-              </div>
+          {success && (
+            <div className="p-4 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
+              <p className="text-sm text-green-700 dark:text-green-200">
+                ✅ Produit modifié avec succès !
+              </p>
             </div>
-          </div>
+          )}
 
-          {/* Preview du produit */}
-          <div className="bg-white/80 dark:bg-[#2a2a2a]/80 backdrop-blur-xl rounded-2xl shadow-lg border border-[#F4C430]/20 dark:border-gray-600 p-6">
-            <h3 className="font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
-              👁️ Aperçu public de votre produit
-            </h3>
-            <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4">
-              <div className="flex gap-4">
-                {images[0] && (
-                  <div className="w-20 h-20 relative rounded-lg overflow-hidden flex-shrink-0">
+          {/* Photos */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              Modifie tes photos ({totalImages}/5)
+            </p>
+
+            {/* Images existantes */}
+            {(images.length > 0 || newImageFiles.length > 0) && (
+              <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 mb-4">
+                {images.map((img, idx) => (
+                  <div
+                    key={`existing-${idx}`}
+                    className="relative aspect-square rounded-lg overflow-hidden border-2 border-gray-200 dark:border-gray-600"
+                  >
                     <Image
-                      src={images[0].url}
-                      alt="Aperçu"
+                      src={img}
+                      alt={`Photo ${idx + 1}`}
                       fill
                       className="object-cover"
                     />
+                    {idx === 0 && (
+                      <div className="absolute top-1 left-1 bg-[#F4B400] text-white text-[10px] font-bold px-2 py-0.5 rounded">
+                        Principale
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/0 hover:bg-black/50 transition-colors flex items-center justify-center gap-1">
+                      {idx !== 0 && (
+                        <button
+                          type="button"
+                          onClick={() => handleSetMainImage(idx)}
+                          className="opacity-0 hover:opacity-100 bg-white text-gray-900 text-xs px-2 py-1 rounded"
+                        >
+                          ★
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveExistingImage(idx)}
+                        className="opacity-0 hover:opacity-100 bg-red-500 text-white text-xs px-2 py-1 rounded"
+                      >
+                        ×
+                      </button>
+                    </div>
                   </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-bold text-gray-900 dark:text-white truncate">
-                    {form.title || 'Titre du produit...'}
-                  </h4>
-                  <p className="text-[#E9961A] font-bold text-lg">
-                    {form.price ? `${parseFloat(form.price).toLocaleString()} FCFA` : 'Prix...'}
+                ))}
+
+                {newImageFiles.map((file, idx) => (
+                  <div
+                    key={`new-${idx}`}
+                    className="relative aspect-square rounded-lg overflow-hidden border-2 border-green-400 dark:border-green-600"
+                  >
+                    <Image
+                      src={URL.createObjectURL(file)}
+                      alt={`Nouvelle ${idx + 1}`}
+                      fill
+                      className="object-cover"
+                    />
+                    <div className="absolute top-1 left-1 bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded">
+                      Nouvelle
+                    </div>
+                    <div className="absolute inset-0 bg-black/0 hover:bg-black/50 transition-colors flex items-center justify-center">
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveNewImage(idx)}
+                        className="opacity-0 hover:opacity-100 bg-red-500 text-white p-2 rounded-full"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Bouton ajouter des images */}
+            {totalImages < 5 && (
+              <label className="block w-full cursor-pointer">
+                <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 hover:border-[#F4B400] hover:bg-[#F4B400]/5 transition-colors text-center">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    + Ajouter des photos ({5 - totalImages} restantes)
                   </p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
-                    {form.description || 'Description du produit...'}
+                </div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleImageSelect}
+                  className="hidden"
+                />
+              </label>
+            )}
+          </div>
+
+          {/* Titre */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+            <label className="block">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                Titre
+              </span>
+              <input
+                type="text"
+                name="title"
+                placeholder="Ex: Robe Wax taille M"
+                value={form.title}
+                onChange={handleChange}
+                maxLength={60}
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-[#F4B400] bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              />
+              <p className="text-xs text-gray-500 mt-1 text-right">
+                {form.title.length}/60
+              </p>
+            </label>
+          </div>
+
+          {/* Description */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+            <label className="block">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                Description
+              </span>
+              <textarea
+                name="description"
+                value={form.description}
+                onChange={handleChange}
+                placeholder="État, taille, matière, couleur, défauts éventuels..."
+                maxLength={500}
+                rows={6}
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-[#F4B400] bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none"
+              />
+              <p className="text-xs text-gray-500 mt-1 text-right">
+                {form.description.length}/500
+              </p>
+            </label>
+          </div>
+
+          {/* Catégorie */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+            <label className="block">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                Catégorie *
+              </span>
+              <select
+                name="category"
+                value={form.category}
+                onChange={handleChange}
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-[#F4B400] bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              >
+                <option value="">Sélectionner une catégorie</option>
+                {categories.map((cat) => (
+                  <option key={cat.value} value={cat.value}>
+                    {cat.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          {/* Zone */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+            <label className="block">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                Zone *
+              </span>
+              <select
+                name="zone"
+                value={form.zone}
+                onChange={handleChange}
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-[#F4B400] bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              >
+                <option value="">Sélectionner une zone</option>
+                {SENEGAL_LOCATIONS.map((loc) => (
+                  <option key={loc} value={loc}>
+                    {loc}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          {/* Prix */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+            <label className="block mb-4">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                Prix (FCFA)
+              </span>
+              <input
+                type="number"
+                name="price"
+                placeholder="25000"
+                value={form.price}
+                onChange={handleChange}
+                min={0}
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-[#F4B400] bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              />
+            </label>
+
+            {/* Prix de gros */}
+            <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  name="hasWholesale"
+                  checked={form.hasWholesale}
+                  onChange={handleChange}
+                  className="w-5 h-5 rounded border-gray-300 text-[#F4B400] focus:ring-[#F4B400]"
+                />
+                <div>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Proposer un prix de gros
+                  </span>
+                  <p className="text-xs text-gray-500">
+                    Pour les achats en volume
                   </p>
-                  <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
-                    <span className="bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded-full">
-                      {selectedCategory.icon} {selectedCategory.label}
-                    </span>
-                    <span className="bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded-full">
-                      📍 {form.zone}
-                    </span>
+                </div>
+              </label>
+
+              {form.hasWholesale && (
+                <div className="grid grid-cols-2 gap-3 mt-4">
+                  <div>
+                    <label className="text-xs text-gray-600 dark:text-gray-400 mb-1 block">
+                      Prix gros (FCFA)
+                    </label>
+                    <input
+                      type="number"
+                      name="wholesalePrice"
+                      placeholder="20000"
+                      value={form.wholesalePrice}
+                      onChange={handleChange}
+                      min={0}
+                      className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-[#F4B400] bg-white dark:bg-gray-700 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-600 dark:text-gray-400 mb-1 block">
+                      Quantité min.
+                    </label>
+                    <input
+                      type="number"
+                      name="minWholesaleQty"
+                      placeholder="10"
+                      value={form.minWholesaleQty}
+                      onChange={handleChange}
+                      min={2}
+                      className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-[#F4B400] bg-white dark:bg-gray-700 text-sm"
+                    />
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
 
-          {/* Espace pour le bouton flottant */}
-          <div className="h-20"></div>
+          {/* WhatsApp */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+            <label className="block">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                WhatsApp
+              </span>
+              <div className="flex items-center border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-[#F4B400]">
+                <span className="px-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium">
+                  +221
+                </span>
+                <input
+                  type="tel"
+                  name="whatsappNumber"
+                  placeholder="771234567"
+                  value={form.whatsappNumber}
+                  onChange={handleWhatsappChange}
+                  maxLength={9}
+                  className="flex-1 px-4 py-3 bg-white dark:bg-gray-800 text-gray-900 dark:text-white outline-none"
+                />
+              </div>
+            </label>
+          </div>
         </form>
       </div>
+
+      {/* Bouton de soumission fixe */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 z-40">
+        <div className="max-w-4xl mx-auto">
+          <button
+            onClick={handleSubmit}
+            disabled={loading || uploadingImages}
+            className="w-full px-6 py-3.5 rounded-lg bg-[#F4B400] hover:bg-[#E9961A] text-white font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            {loading || uploadingImages ? (
+              <>
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>
+                  {uploadingImages ? "Upload en cours..." : "Modification..."}
+                </span>
+              </>
+            ) : (
+              "Sauvegarder les modifications"
+            )}
+          </button>
+        </div>
+      </div>
     </div>
-  )
+  );
 }
