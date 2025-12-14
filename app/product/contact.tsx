@@ -1,513 +1,326 @@
-'use client'
+"use client";
 
-import { useState, useMemo } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { MessageCircle, MapPin, Loader2, AlertTriangle, Phone, ShoppingCart, User, Package, Hash, CheckCircle2 } from "lucide-react"
+import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import {
+  MessageCircle,
+  Loader2,
+  AlertTriangle,
+  Phone,
+  ShoppingCart,
+  User,
+  Package,
+  Hash,
+  CheckCircle2,
+} from "lucide-react";
 
 interface ProductContactProps {
-    product: {
-        id: number
-        title: string
-        category: "vetement" | "chaussure" | "autre"
-        price: number
-        whatsapp_number?: string
-        phone_number?: string
-        image_url?: string
-        has_wholesale?: boolean
-        wholesale_price?: number
-        min_wholesale_qty?: number
-    }
-    customerName?: string
-    className?: string
+  product: {
+    id: string;
+    title: string;
+    user_id: string; // vendeur
+    category: "vetement" | "chaussure" | "autre";
+    price: number;
+    image_url?: string;
+    has_wholesale?: boolean;
+    wholesale_price?: number;
+    min_wholesale_qty?: number;
+  };
+  customerName?: string;
+  className?: string;
 }
 
-export default function ProductContact({ product, customerName, className = "" }: ProductContactProps) {
-    const [isLoadingLocation, setIsLoadingLocation] = useState(false)
-    const [locationError, setLocationError] = useState<string | null>(null)
-    const [isPopupOpen, setIsPopupOpen] = useState(false)
-    const [isConfirmOpen, setIsConfirmOpen] = useState(false) // <-- confirmation popup state
-    const [step, setStep] = useState(0)
-    const [customData, setCustomData] = useState({
-        taillePointure: "",
-        quantite: 1,
-        phone: "",
-        name: ""
-    })
+export default function ProductContact({
+  product,
+  customerName,
+  className = "",
+}: ProductContactProps) {
+  const supabase = createClient();
+  const router = useRouter();
 
-    const clientDisplayName = customerName && customerName.trim() !== "" ? customerName : "ClientSangse"
-    const isClothing = product.category === 'vetement'
-    const isShoes = product.category === 'chaussure'
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [step, setStep] = useState(0);
 
-    const taillesVetements = ["XS", "S", "M", "L", "XL", "XXL"]
-    const pointuresChaussures = ["36", "37", "38", "39", "40", "41", "42", "43", "44"]
+  const [customData, setCustomData] = useState({
+    taillePointure: "",
+    quantite: 1,
+    phone: "",
+    name: "",
+  });
 
-    const { prixTotal, prixUnitaireApplicable, isWholesaleApplied } = useMemo(() => {
-        const isWholesalePossible = product.has_wholesale && product.wholesale_price != null && product.min_wholesale_qty != null
-        const isWholesaleApplied = isWholesalePossible && customData.quantite >= product.min_wholesale_qty!
-        const prixUnitaire = isWholesaleApplied ? product.wholesale_price! : product.price
-        const total = prixUnitaire * customData.quantite
+  const clientDisplayName =
+    customerName && customerName.trim() !== "" ? customerName : "Client Sangse";
 
-        return {
-            prixTotal: total,
-            prixUnitaireApplicable: prixUnitaire,
-            isWholesaleApplied: isWholesaleApplied
-        }
-    }, [customData.quantite, product])
+  const isClothing = product.category === "vetement";
+  const isShoes = product.category === "chaussure";
 
-    // LOCALISATION RAPIDE - Une seule tentative optimisée
-    const getCurrentLocation = (): Promise<{ lat: number; lng: number }> => {
-        return new Promise((resolve, reject) => {
-            if (!navigator.geolocation) {
-                return reject(new Error("Géolocalisation non supportée"))
-            }
+  const taillesVetements = ["XS", "S", "M", "L", "XL", "XXL"];
+  const pointuresChaussures = [
+    "36",
+    "37",
+    "38",
+    "39",
+    "40",
+    "41",
+    "42",
+    "43",
+    "44",
+  ];
 
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    resolve({
-                        lat: position.coords.latitude,
-                        lng: position.coords.longitude
-                    })
-                },
-                (err) => {
-                    let errorMessage = "Erreur de géolocalisation"
-                    switch (err.code) {
-                        case err.PERMISSION_DENIED: 
-                            errorMessage = "Activez la localisation dans les paramètres"
-                            break
-                        case err.POSITION_UNAVAILABLE: 
-                            errorMessage = "Position indisponible"
-                            break
-                        case err.TIMEOUT: 
-                            errorMessage = "Timeout - Réessayez"
-                            break
-                    }
-                    reject(new Error(errorMessage))
-                },
-                {
-                    enableHighAccuracy: true,
-                    timeout: 8000,  // 8 secondes max
-                    maximumAge: 30000  // Cache de 30s acceptable
-                }
-            )
+  const { prixTotal, prixUnitaireApplicable, isWholesaleApplied } =
+    useMemo(() => {
+      const isWholesalePossible =
+        product.has_wholesale &&
+        product.wholesale_price != null &&
+        product.min_wholesale_qty != null;
+
+      const applied =
+        isWholesalePossible &&
+        customData.quantite >= product.min_wholesale_qty!;
+
+      const unit = applied ? product.wholesale_price! : product.price;
+
+      return {
+        prixTotal: unit * customData.quantite,
+        prixUnitaireApplicable: unit,
+        isWholesaleApplied: applied,
+      };
+    }, [customData.quantite, product]);
+
+  /* ============================
+     MESSAGE PRÉ-ÉCRIT
+  ============================ */
+  const buildInitialMessage = () => {
+    return `Bonjour 👋  
+Je suis intéressé par votre produit :
+
+📦 Produit : ${product.title}
+${customData.taillePointure ? `📏 Option : ${customData.taillePointure}\n` : ""}
+🔢 Quantité : ${customData.quantite}
+💰 Budget estimé : ${prixTotal.toLocaleString()} FCFA
+
+Pouvez-vous me confirmer la disponibilité ?`;
+  };
+
+  /* ============================
+     OUVERTURE CHAT INTERNE
+  ============================ */
+  const openInternalChat = async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      alert("Vous devez être connecté pour contacter le vendeur");
+      return;
+    }
+
+    // 1. Cherche conversation existante
+    const { data: existing } = await supabase
+      .from("conversations")
+      .select("id")
+      .eq("product_id", product.id)
+      .eq("buyer_id", user.id)
+      .single();
+
+    let conversationId = existing?.id;
+
+    // 2. Sinon créer
+    if (!conversationId) {
+      const { data: created, error } = await supabase
+        .from("conversations")
+        .insert({
+          product_id: product.id,
+          buyer_id: user.id,
+          seller_id: product.user_id,
         })
+        .select("id")
+        .single();
+
+      if (error || !created) {
+        alert("Erreur lors de la création du chat");
+        return;
+      }
+
+      conversationId = created.id;
+
+      // 3. Premier message
+      await supabase.from("messages").insert({
+        conversation_id: conversationId,
+        content: buildInitialMessage(),
+      });
     }
 
-    // Lien Google Maps direct (comme Yango) - Simple et efficace
-    const createGoogleMapsLink = (lat: number, lng: number) => {
-        return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`
-    }
+    router.push(`/chat/${conversationId}`);
+  };
 
-    const createWhatsAppMessage = (mapsLink?: string, extraData?: typeof customData) => {
-        const data = extraData || customData
-        const total = prixUnitaireApplicable * data.quantite
+  /* ============================
+     FORM STEPS
+  ============================ */
+  const formSteps: any[] = [];
 
-        let message = `🛍️ *Nouvelle commande SangseShop*
-
-📦 *Produit :* ${product.title}
-${data.taillePointure ? `🎯 *${isClothing ? 'Taille' : 'Pointure'} :* ${data.taillePointure}\n` : ""}
-🔢 *Quantité :* ${data.quantite}
-💰 *Prix total :* ${total.toLocaleString()} FCFA
-_(${prixUnitaireApplicable.toLocaleString()} FCFA / unité${isWholesaleApplied ? ", prix de gros appliqué" : ""})_
-
-🙋 *Client :* ${data.name || clientDisplayName}
-📞 *Téléphone :* ${data.phone || "non fourni"}
-
-🔗 *Voir le produit :*
-https://sangse.shop/product/${product.id}
-`
-
-        if (mapsLink) {
-            message += `
-📍 *Itinéraire vers le client :*
-${mapsLink}
-
-👉 *Dispo ou bien ?*`
-        } else {
-            message += `
-📍 *Livraison :* Adresse à confirmer
-
-👉 *Dispo ou bien ?*`
-        }
-
-        const whatsappClean = product.whatsapp_number?.replace(/\D/g, "")
-        return whatsappClean ? `https://wa.me/${whatsappClean}?text=${encodeURIComponent(message)}` : null
-    }
-
-    const generateWhatsAppLink = async (withLocation: boolean, extraData?: typeof customData): Promise<string | null> => {
-        if (!withLocation) {
-            return createWhatsAppMessage(undefined, extraData)
-        }
-
-        try {
-            setIsLoadingLocation(true)
-            setLocationError(null)
-            
-            const location = await getCurrentLocation()
-            const mapsLink = createGoogleMapsLink(location.lat, location.lng)
-            
-            return createWhatsAppMessage(mapsLink, extraData)
-        } catch (error: any) {
-            setLocationError(error.message)
-            return createWhatsAppMessage(undefined, extraData)
-        } finally {
-            setIsLoadingLocation(false)
-        }
-    }
-
-    const handleContactClick = () => {
-        setStep(0)
-        setIsPopupOpen(true)
-    }
-
-    const handleNextStep = () => setStep(step + 1)
-    const handlePrevStep = () => { if (step > 0) setStep(step - 1) }
-
-    // When the user confirms in the confirmation popup -> proceed to generate link and redirect
-    const handleConfirmContinue = async () => {
-        setIsConfirmOpen(false)
-        const whatsappLink = await generateWhatsAppLink(true, customData)
-        if (whatsappLink) window.open(whatsappLink, "_blank")
-    }
-
-    // If user cancels confirmation we re-open the form popup so they can edit
-    const handleConfirmCancel = () => {
-        setIsConfirmOpen(false)
-        setIsPopupOpen(true)
-    }
-
-    // Original behaviour for "Passer" button (sends with default data)
-    const handlePopupCancel = async () => {
-        setIsPopupOpen(false)
-        const defaultData = { ...customData, quantite: 1, taillePointure: "", phone: "", name: "" }
-        const whatsappLink = await generateWhatsAppLink(true, defaultData)
-        if (whatsappLink) window.open(whatsappLink, "_blank")
-    }
-
-    const handleContactWithoutLocation = async () => {
-        const whatsappLink = await generateWhatsAppLink(false)
-        if (whatsappLink) window.open(whatsappLink, "_blank")
-    }
-
-    const handleCallSeller = () => {
-        const phoneClean = product.whatsapp_number?.replace(/\D/g, "")
-        if (phoneClean) window.open(`tel:${phoneClean}`)
-        else alert("Numéro de téléphone non disponible")
-    }
-
-    const formSteps = []
-
-    if (isClothing || isShoes) {
-        formSteps.push({
-            key: "size",
-            title: isClothing ? "Choisissez votre taille" : "Choisissez votre pointure",
-            icon: <Package className="w-5 h-5" />,
-            content: (
-                <div className="space-y-4">
-                    <p className="text-gray-600 text-sm">{isClothing ? "Sélectionnez la taille qui vous convient" : "Sélectionnez votre pointure"}</p>
-                    <div className="grid grid-cols-3 gap-2">
-                        {(isClothing ? taillesVetements : pointuresChaussures).map(size => (
-                            <button 
-                                key={size}
-                                onClick={() => setCustomData({ ...customData, taillePointure: size })} 
-                                className={`px-4 py-3 rounded-xl font-medium transition-all ${
-                                    customData.taillePointure === size 
-                                        ? "bg-gradient-to-r from-yellow-400 to-yellow-500 text-white shadow-lg border-2 border-yellow-300" 
-                                        : "bg-white hover:bg-yellow-50 text-gray-700 border-2 border-gray-200 hover:border-yellow-300"
-                                }`}
-                            >
-                                {size}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            )
-        })
-    }
-
+  if (isClothing || isShoes) {
     formSteps.push({
-        key: "quantity",
-        title: "Quantité souhaitée",
-        icon: <Hash className="w-5 h-5" />,
-        content: (
-            <div className="space-y-4">
-                <p className="text-gray-600 text-sm">Combien d'articles souhaitez-vous ?</p>
-                <div className="flex items-center space-x-4">
-                    <button 
-                        onClick={() => customData.quantite > 1 && setCustomData({ ...customData, quantite: customData.quantite - 1 })} 
-                        className="w-12 h-12 rounded-full bg-gray-100 hover:bg-yellow-100 text-gray-700 font-bold text-xl transition"
-                    >
-                        −
-                    </button>
-                    <div className="flex-1 text-center">
-                        <div className="text-3xl font-bold text-yellow-600">{customData.quantite}</div>
-                        <div className="text-sm text-gray-500">article{customData.quantite > 1 ? 's' : ''}</div>
-                    </div>
-                    <button 
-                        onClick={() => setCustomData({ ...customData, quantite: customData.quantite + 1 })} 
-                        className="w-12 h-12 rounded-full bg-gray-100 hover:bg-yellow-100 text-gray-700 font-bold text-xl transition"
-                    >
-                        +
-                    </button>
-                </div>
-                <div className="mt-6 text-center bg-yellow-50 p-4 rounded-xl border-2 border-yellow-200">
-                    <p className="text-sm text-yellow-700">Prix total estimé</p>
-                    <p className="text-2xl font-bold text-yellow-900 mt-1">{prixTotal.toLocaleString()} FCFA</p>
-                    {isWholesaleApplied && (
-                        <div className="flex items-center justify-center gap-1 text-xs text-green-600 font-semibold mt-1">
-                            <CheckCircle2 size={14}/> Prix de gros appliqué !
-                        </div>
-                    )}
-                </div>
-            </div>
-        )
-    })
+      title: isClothing
+        ? "Choisissez votre taille"
+        : "Choisissez votre pointure",
+      icon: <Package className="w-5 h-5" />,
+      content: (
+        <div className="grid grid-cols-3 gap-2">
+          {(isClothing ? taillesVetements : pointuresChaussures).map((v) => (
+            <button
+              key={v}
+              onClick={() =>
+                setCustomData({ ...customData, taillePointure: v })
+              }
+              className={`px-4 py-3 rounded-xl border-2 ${
+                customData.taillePointure === v
+                  ? "bg-yellow-400 text-white border-yellow-400"
+                  : "border-gray-200"
+              }`}
+            >
+              {v}
+            </button>
+          ))}
+        </div>
+      ),
+    });
+  }
 
-    if (!customerName) {
-        formSteps.push({
-            key: "name",
-            title: "Votre nom",
-            icon: <User className="w-5 h-5" />,
-            content: (
-                <div className="space-y-4">
-                    <p className="text-gray-600 text-sm">Comment souhaitez-vous être appelé ?</p>
-                    <input 
-                        placeholder="Entrez votre nom" 
-                        value={customData.name} 
-                        onChange={(e) => setCustomData({ ...customData, name: e.target.value })} 
-                        className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-yellow-400 focus:outline-none transition text-gray-800 placeholder-gray-400" 
-                    />
-                </div>
-            )
-        })
-    }
+  formSteps.push({
+    title: "Quantité",
+    icon: <Hash className="w-5 h-5" />,
+    content: (
+      <div className="flex items-center justify-center gap-6">
+        <button
+          onClick={() =>
+            customData.quantite > 1 &&
+            setCustomData({ ...customData, quantite: customData.quantite - 1 })
+          }
+          className="w-10 h-10 rounded-full bg-gray-100"
+        >
+          −
+        </button>
+        <div className="text-2xl font-bold">{customData.quantite}</div>
+        <button
+          onClick={() =>
+            setCustomData({ ...customData, quantite: customData.quantite + 1 })
+          }
+          className="w-10 h-10 rounded-full bg-gray-100"
+        >
+          +
+        </button>
+      </div>
+    ),
+  });
 
+  if (!customerName) {
     formSteps.push({
-        key: "phone",
-        title: "Votre numéro",
-        icon: <Phone className="w-5 h-5" />,
-        content: (
-            <div className="space-y-4">
-                <p className="text-gray-600 text-sm">Pour vous contacter concernant la livraison</p>
-                <input 
-                    type="tel" 
-                    placeholder="Ex: 77 123 45 67" 
-                    value={customData.phone} 
-                    onChange={(e) => setCustomData({ ...customData, phone: e.target.value })} 
-                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-yellow-400 focus:outline-none transition text-gray-800 placeholder-gray-400" 
-                />
-            </div>
-        )
-    })
+      title: "Votre nom",
+      icon: <User className="w-5 h-5" />,
+      content: (
+        <input
+          value={customData.name}
+          onChange={(e) =>
+            setCustomData({ ...customData, name: e.target.value })
+          }
+          placeholder="Votre nom"
+          className="w-full px-4 py-3 border rounded-xl"
+        />
+      ),
+    });
+  }
 
-    const currentStepData = formSteps[step]
-    const isLastStep = step === formSteps.length - 1
+  const currentStep = formSteps[step];
+  const isLastStep = step === formSteps.length - 1;
 
-    return (
-        <div className={`space-y-3 ${className}`}>
-            {product.whatsapp_number && (
-                <button 
-                    onClick={handleContactClick} 
-                    disabled={isLoadingLocation} 
-                    className={`w-full relative overflow-hidden rounded-2xl shadow-xl transition-all hover:scale-[1.02] active:scale-95 ${
-                        isLoadingLocation 
-                            ? "bg-gradient-to-r from-gray-400 to-gray-500" 
-                            : "bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700"
-                    } text-white font-bold py-5 px-6 disabled:cursor-not-allowed`}
-                >
-                    <div className="flex items-center justify-center gap-3">
-                        {isLoadingLocation ? (
-                            <>
-                                <Loader2 className="animate-spin" size={24} /> 
-                                <div className="text-left">
-                                    <div className="text-lg font-bold">Localisation GPS...</div>
-                                    <div className="text-xs opacity-90">Veuillez patienter</div>
-                                </div>
-                            </>
-                        ) : (
-                            <>
-                                <MapPin size={24} />
-                                <div className="text-left">
-                                    <div className="text-lg font-bold">Commander maintenant</div>
-                                    <div className="text-sm opacity-90">Avec itinéraire GPS</div>
-                                </div>
-                            </>
-                        )}
-                    </div>
-                </button>
+  /* ============================
+     RENDER
+  ============================ */
+  return (
+    <div className={className}>
+      <button
+        onClick={() => {
+          setStep(0);
+          setIsPopupOpen(true);
+        }}
+        className="w-full bg-yellow-500 text-white py-4 rounded-2xl font-bold"
+      >
+        Contacter le vendeur
+      </button>
+
+      {/* FORM POPUP */}
+      <Dialog open={isPopupOpen} onOpenChange={setIsPopupOpen}>
+        <DialogContent className="rounded-3xl">
+          <DialogHeader>
+            <DialogTitle>{currentStep?.title}</DialogTitle>
+          </DialogHeader>
+
+          {currentStep?.content}
+
+          <DialogFooter className="flex justify-between">
+            <Button
+              variant="outline"
+              onClick={() => step > 0 && setStep(step - 1)}
+            >
+              Précédent
+            </Button>
+
+            {isLastStep ? (
+              <Button
+                onClick={() => {
+                  setIsPopupOpen(false);
+                  setIsConfirmOpen(true);
+                }}
+                className="bg-yellow-500 text-black"
+              >
+                <ShoppingCart className="w-4 h-4 mr-2" />
+                Continuer
+              </Button>
+            ) : (
+              <Button onClick={() => setStep(step + 1)}>Suivant</Button>
             )}
-            <div className="grid grid-cols-2 gap-3">
-                {product.whatsapp_number && (
-                    <button 
-                        onClick={handleContactWithoutLocation} 
-                        className="bg-white hover:bg-yellow-50 text-gray-700 font-medium py-3 px-4 rounded-xl border-2 border-gray-200 hover:border-yellow-300 transition text-sm hover:scale-[1.02] active:scale-95"
-                    >
-                        <MessageCircle size={16} className="mx-auto mb-1" />
-                        Sans GPS
-                    </button>
-                )}
-                {product.whatsapp_number && (
-                    <button 
-                        onClick={handleCallSeller} 
-                        className="bg-white hover:bg-yellow-50 text-gray-700 font-medium py-3 px-4 rounded-xl border-2 border-gray-200 hover:border-yellow-300 transition text-sm hover:scale-[1.02] active:scale-95"
-                    >
-                        <Phone size={16} className="mx-auto mb-1" />
-                        Appeler
-                    </button>
-                )}
-            </div>
-            {locationError && (
-                <div className="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-xl p-4">
-                    <div className="flex items-start gap-3">
-                        <AlertTriangle className="text-orange-500 flex-shrink-0 mt-0.5" size={20} />
-                        <div>
-                            <p className="text-sm text-orange-700 font-medium">Erreur GPS</p>
-                            <p className="text-xs text-orange-600 mt-1">{locationError}</p>
-                        </div>
-                    </div>
-                </div>
-            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-            {/* FORM POPUP */}
-            <Dialog open={isPopupOpen} onOpenChange={setIsPopupOpen}>
-                <DialogContent className="sm:max-w-[450px] rounded-3xl border-0 shadow-2xl p-0 overflow-hidden">
-                    <div className="bg-gradient-to-r from-yellow-400 to-yellow-500 p-6 text-white">
-                        <div className="flex items-center gap-3">
-                            {currentStepData?.icon}
-                            <div>
-                                <DialogTitle className="text-xl font-bold text-white">{currentStepData?.title}</DialogTitle>
-                                <p className="text-yellow-100 text-sm mt-1">Étape {step + 1} sur {formSteps.length}</p>
-                            </div>
-                        </div>
-                        <div className="mt-4 bg-yellow-300/30 rounded-full h-2">
-                            <div 
-                                className="bg-white rounded-full h-2 transition-all duration-300" 
-                                style={{ width: `${((step + 1) / formSteps.length) * 100}%` }}
-                            />
-                        </div>
-                    </div>
-                    <div className="p-6">
-                        {currentStepData?.content}
-                    </div>
-                    <DialogFooter className="p-6 pt-0 flex justify-between">
-                        <div className="flex gap-2">
-                            {step > 0 && (
-                                <Button variant="outline" onClick={handlePrevStep} className="rounded-xl border-gray-300 hover:bg-gray-50">
-                                    Précédent
-                                </Button>
-                            )}
-                            <Button variant="outline" onClick={handlePopupCancel} className="rounded-xl border-gray-300 hover:bg-gray-50">
-                                Passer
-                            </Button>
-                        </div>
+      {/* CONFIRMATION */}
+      <Dialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
+        <DialogContent className="rounded-3xl">
+          <h3 className="font-bold text-lg mb-4">
+            Confirmer la prise de contact
+          </h3>
 
-                        {isLastStep ? (
-                            // Instead of directly sending, open a confirmation popup
-                            <Button onClick={() => { setIsPopupOpen(false); setIsConfirmOpen(true); }} className="bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-white rounded-xl px-8 shadow-lg hover:scale-105 active:scale-95 transition">
-                                <ShoppingCart className="w-4 h-4 mr-2" />
-                                Commander
-                            </Button>
-                        ) : (
-                            <Button onClick={handleNextStep} className="bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-white rounded-xl px-6 hover:scale-105 active:scale-95 transition">
-                                Suivant
-                            </Button>
-                        )}
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-
-           {/* CONFIRMATION POPUP (Sangse style – warm & elegant) */}
-<Dialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
-  <DialogContent className="sm:max-w-[480px] rounded-3xl border-0 shadow-2xl p-0 overflow-hidden">
-    {/* HEADER SECTION */}
-    <div className="bg-[#111] p-6 text-white">
-      <div className="flex items-center gap-4">
-        {product.image_url ? (
-          <img
-            src={product.image_url}
-            alt={product.title}
-            className="w-16 h-16 object-cover rounded-lg border border-[#F5B301]/30"
-          />
-        ) : (
-          <div className="w-16 h-16 bg-[#222] rounded-lg flex items-center justify-center text-gray-400 text-sm">
-            Image
-          </div>
-        )}
-        <div>
-          <h3 className="text-lg font-bold text-[#F5B301]">{product.title}</h3>
-          <p className="text-sm text-gray-400">
-            {isClothing ? "Vêtement" : isShoes ? "Chaussure" : "Produit"}
+          <p className="text-sm text-gray-600 mb-6 whitespace-pre-line">
+            {buildInitialMessage()}
           </p>
-        </div>
-      </div>
 
-      {/* GRID SUMMARY */}
-      <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-        <div className="bg-[#F5B301]/10 p-3 rounded-lg">
-          <div className="text-xs text-gray-400">Quantité</div>
-          <div className="font-semibold text-white">{customData.quantite}</div>
-        </div>
-        <div className="bg-[#F5B301]/10 p-3 rounded-lg">
-          <div className="text-xs text-gray-400">
-            {isClothing ? "Taille" : isShoes ? "Pointure" : "Option"}
+          <div className="flex justify-between">
+            <Button variant="outline" onClick={() => setIsConfirmOpen(false)}>
+              Annuler
+            </Button>
+            <Button
+              onClick={async () => {
+                setIsConfirmOpen(false);
+                await openInternalChat();
+              }}
+              className="bg-yellow-500 text-black"
+            >
+              Continuer
+            </Button>
           </div>
-          <div className="font-semibold text-white">
-            {customData.taillePointure || "—"}
-          </div>
-        </div>
-        <div className="bg-[#F5B301]/10 p-3 rounded-lg">
-          <div className="text-xs text-gray-400">Prix unitaire</div>
-          <div className="font-semibold text-white">
-            {prixUnitaireApplicable.toLocaleString()} FCFA
-          </div>
-        </div>
-        <div className="bg-[#F5B301]/10 p-3 rounded-lg">
-          <div className="text-xs text-gray-400">Prix total</div>
-          <div className="font-semibold text-[#F5B301]">
-            {prixTotal.toLocaleString()} FCFA
-          </div>
-        </div>
-      </div>
-
-      {/* CLIENT INFO */}
-      <div className="mt-4 p-4 bg-[#F5B301]/10 rounded-lg">
-        <div className="text-xs text-gray-400">Client</div>
-        <div className="font-semibold text-white">
-          {customData.name || clientDisplayName}
-        </div>
-        <div className="text-xs text-gray-400 mt-2">Téléphone</div>
-        <div className="font-medium text-white">
-          {customData.phone || "Non fourni"}
-        </div>
-      </div>
-
-      {/* LOCATION ERROR */}
-      {locationError && (
-        <div className="mt-3 bg-[#F5B301]/10 rounded-lg p-3 text-xs text-[#F5B301]">
-          ⚠️ Note : {locationError}
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
     </div>
-
-    {/* ACTION BUTTONS */}
-    <div className="p-6 flex justify-between items-center bg-white">
-      <Button
-        variant="ghost"
-        onClick={handleConfirmCancel}
-        className="rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50"
-      >
-        Annuler
-      </Button>
-      <Button
-        onClick={handleConfirmContinue}
-        className="bg-[#F5B301] text-black font-semibold rounded-xl px-6 shadow-md hover:bg-[#f7c32a] hover:scale-105 active:scale-95 transition"
-      >
-        Continuer
-      </Button>
-    </div>
-  </DialogContent>
-</Dialog>
-
-        </div>
-    )
+  );
 }
