@@ -1,4 +1,6 @@
-import { createClient } from "@/lib/supabase";
+import { cookies } from "next/headers";
+import { createServerClient } from "@supabase/ssr";
+import { supabaseUrl, supabaseKey } from "@/lib/supabase";
 import AuthModal from "@/app/composants/auth-modal";
 import AddProductForm from "./add-product-form";
 
@@ -10,8 +12,15 @@ export const metadata = {
 };
 
 export default async function AddProductPage() {
+  // Récupère le store des cookies une seule fois
+  const cookieStore = await cookies();
   // Crée le client Supabase en mode serveur avec gestion sécurisée des cookies
-  const supabase = createClient();
+  const supabase = createServerClient(supabaseUrl, supabaseKey, {
+    cookies: {
+      get: (name: string) => cookieStore.get(name)?.value,
+    },
+  });
+
   // Récupère l'utilisateur connecté
   const {
     data: { user },
