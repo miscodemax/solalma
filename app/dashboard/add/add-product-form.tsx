@@ -89,8 +89,9 @@ export default function AddProductForm({ userId }: Props) {
     setForm((prev) => ({ ...prev, whatsappNumber: val }));
   };
 
-  const handleAddImages = (urls: string[]) =>
-    setImages((prev) => [...prev, ...urls].slice(0, 5));
+  const handleAddImages = (urls: string[]) => {
+    setImages(urls.slice(0, 10)); // ou 5 selon ton max
+  };
 
   const handleRemoveImage = (index: number) =>
     setImages((prev) => prev.filter((_, i) => i !== index));
