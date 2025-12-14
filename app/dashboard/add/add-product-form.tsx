@@ -4,6 +4,7 @@ import { getCurrentPositionSafe } from "@/lib/location";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase";
+import Image from "next/image";
 import ImageUploader from "./imageuploader";
 import { ChevronLeft, MapPin } from "lucide-react";
 
@@ -88,9 +89,19 @@ export default function AddProductForm({ userId }: Props) {
     setForm((prev) => ({ ...prev, whatsappNumber: val }));
   };
 
-  // 🔥 Cette fonction reçoit TOUTES les URLs depuis l'ImageUploader
   const handleAddImages = (urls: string[]) => {
-    setImages(urls);
+    setImages(urls.slice(0, 10)); // ou 5 selon ton max
+  };
+
+  const handleRemoveImage = (index: number) =>
+    setImages((prev) => prev.filter((_, i) => i !== index));
+
+  const handleSetMainImage = (index: number) => {
+    setImages((prev) => {
+      const newImages = [...prev];
+      const [selected] = newImages.splice(index, 1);
+      return [selected, ...newImages];
+    });
   };
 
   const findNearestLocation = (lat: number, lng: number) => {
@@ -277,7 +288,7 @@ export default function AddProductForm({ userId }: Props) {
             </div>
           )}
 
-          {/* Photos - 🔥 L'ImageUploader gère TOUT l'affichage */}
+          {/* Photos */}
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
               Attire l'œil des acheteurs : utilise des photos de qualité
@@ -286,8 +297,49 @@ export default function AddProductForm({ userId }: Props) {
             <ImageUploader
               onUpload={handleAddImages}
               maxImages={10}
-              currentImageCount={0}
+              currentImageCount={images.length}
             />
+
+            {images.length > 0 && (
+              <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 mt-4">
+                {images.map((img, idx) => (
+                  <div
+                    key={idx}
+                    className="relative aspect-square rounded-lg overflow-hidden border-2 border-gray-200 dark:border-gray-600"
+                  >
+                    <Image
+                      src={img}
+                      alt={`Photo ${idx + 1}`}
+                      fill
+                      className="object-cover"
+                    />
+                    {idx === 0 && (
+                      <div className="absolute top-1 left-1 bg-[#F4B400] text-white text-[10px] font-bold px-2 py-0.5 rounded">
+                        Principale
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/0 hover:bg-black/50 transition-colors flex items-center justify-center gap-1">
+                      {idx !== 0 && (
+                        <button
+                          type="button"
+                          onClick={() => handleSetMainImage(idx)}
+                          className="opacity-0 hover:opacity-100 bg-white text-gray-900 text-xs px-2 py-1 rounded"
+                        >
+                          ★
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveImage(idx)}
+                        className="opacity-0 hover:opacity-100 bg-red-500 text-white text-xs px-2 py-1 rounded"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Titre */}
