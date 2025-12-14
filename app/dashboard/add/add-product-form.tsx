@@ -97,26 +97,6 @@ export default function AddProductForm({ userId }: Props) {
     setImages(urls.slice(0, 10));
   };
 
-  const handleRemoveImage = (index: number) => {
-    console.log("🔴 handleRemoveImage index =", index);
-    setImages((prev) => {
-      const next = prev.filter((_, i) => i !== index);
-      console.log("📦 images après suppression :", next);
-      return next;
-    });
-  };
-
-  const handleSetMainImage = (index: number) => {
-    console.log("⭐ handleSetMainImage index =", index);
-    setImages((prev) => {
-      const next = [...prev];
-      const [selected] = next.splice(index, 1);
-      const result = [selected, ...next];
-      console.log("📦 images après reorder :", result);
-      return result;
-    });
-  };
-
   const findNearestLocation = (lat: number, lng: number) => {
     let nearest = SENEGAL_LOCATIONS[0];
     let minDistance = Infinity;
@@ -312,47 +292,6 @@ export default function AddProductForm({ userId }: Props) {
               maxImages={10}
               currentImageCount={images.length}
             />
-
-            {images.length > 0 && (
-              <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 mt-4">
-                {images.map((img, idx) => (
-                  <div
-                    key={idx}
-                    className="relative aspect-square rounded-lg overflow-hidden border-2 border-gray-200 dark:border-gray-600"
-                  >
-                    <Image
-                      src={img}
-                      alt={`Photo ${idx + 1}`}
-                      fill
-                      className="object-cover"
-                    />
-                    {idx === 0 && (
-                      <div className="absolute top-1 left-1 bg-[#F4B400] text-white text-[10px] font-bold px-2 py-0.5 rounded">
-                        Principale
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-black/0 hover:bg-black/50 transition-colors flex items-center justify-center gap-1">
-                      {idx !== 0 && (
-                        <button
-                          type="button"
-                          onClick={() => handleSetMainImage(idx)}
-                          className="opacity-0 hover:opacity-100 bg-white text-gray-900 text-xs px-2 py-1 rounded"
-                        >
-                          ★
-                        </button>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveImage(idx)}
-                        className="opacity-0 hover:opacity-100 bg-red-500 text-white text-xs px-2 py-1 rounded"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
 
           {/* Titre */}
