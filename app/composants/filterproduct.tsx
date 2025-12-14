@@ -13,7 +13,6 @@ import BackToTopButton from "./BackToTopButton"
 import {
   ProductCardSkeletonGrid
 } from './skeletonComponents'
-import PopularProductsCarousel from "./popularProductsCaroussel"
 import PriceFilter from "./pricefilter"
 import ShareAllSocialButton from "./shareAllSocialButton"
 
@@ -53,20 +52,20 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
   const [locationFilterOpen, setLocationFilterOpen] = useState(false)
   const [selectedLocation, setSelectedLocation] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [visibleCount, setVisibleCount] = useState(10) // Réduit pour mobile
+  const [visibleCount, setVisibleCount] = useState(12)
   const [scrollY, setScrollY] = useState(0)
   const [searchTerm, setSearchTerm] = useState("")
 
-  // États pour la géolocalisation
+  // États pour la géolocalisation (OPTIONNELLE)
   const [userPosition, setUserPosition] = useState(null)
   const [userLocationName, setUserLocationName] = useState("")
-  const [locationLoading, setLocationLoading] = useState(true)
+  const [locationLoading, setLocationLoading] = useState(false)
   const [locationError, setLocationError] = useState(null)
-  const [locationPermissionDenied, setLocationPermissionDenied] = useState(false)
+  const [locationEnabled, setLocationEnabled] = useState(false)
 
   // Fonction pour calculer la distance entre deux points GPS (formule Haversine)
   const calculateDistance = useCallback((lat1, lng1, lat2, lng2) => {
-    const R = 6371 // Rayon de la Terre en km
+    const R = 6371
     const dLat = (lat2 - lat1) * Math.PI / 180
     const dLng = (lng2 - lng1) * Math.PI / 180
     const a =
@@ -117,11 +116,10 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
     })
   }
 
-  // Fonction pour détecter la localisation GPS de l'utilisateur
+  // Fonction pour détecter la localisation GPS de l'utilisateur (ACTIVÉE PAR L'UTILISATEUR)
   const detectUserLocation = useCallback(async () => {
     setLocationLoading(true)
     setLocationError(null)
-    setLocationPermissionDenied(false)
 
     try {
       const position = await getCurrentPosition()
@@ -131,12 +129,12 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
       setUserPosition({ lat, lng })
       const nearestLocation = findNearestLocation(lat, lng)
       setUserLocationName(nearestLocation)
+      setLocationEnabled(true)
 
     } catch (error) {
       console.error('Erreur de géolocalisation:', error)
 
       if (error.code === 1) {
-        setLocationPermissionDenied(true)
         setLocationError('Permission refusée')
       } else if (error.code === 2) {
         setLocationError('Position indisponible')
@@ -146,15 +144,13 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
         setLocationError('Erreur de géolocalisation')
       }
 
-      // Valeur par défaut (centre de Dakar)
-      setUserPosition({ lat: 14.6928, lng: -17.4467 })
-      setUserLocationName('Dakar')
+      setLocationEnabled(false)
     } finally {
       setLocationLoading(false)
     }
   }, [findNearestLocation])
 
-  // Tri intelligent des produits par proximité
+  // Tri intelligent des produits par proximité (SI GPS ACTIVÉ)
   const sortedProducts = useMemo(() => {
     let filtered = products.filter(p => {
       const matchesSearch = !searchTerm ||
@@ -182,17 +178,16 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
             p.latitude,
             p.longitude
           )
-          return distance <= 5 // 5km de rayon
+          return distance <= 5
         })
       } else {
         filtered = filtered.filter(p => p.zone === selectedLocation)
       }
     }
 
-    // Tri par proximité GPS si position utilisateur disponible
-    if (userPosition) {
+    // Tri par proximité GPS si position utilisateur disponible ET activée
+    if (locationEnabled && userPosition) {
       filtered.sort((a, b) => {
-        // Calcul des distances
         const aDistance = (a.latitude && a.longitude) ?
           calculateDistance(userPosition.lat, userPosition.lng, a.latitude, a.longitude) :
           Infinity
@@ -200,30 +195,26 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
           calculateDistance(userPosition.lat, userPosition.lng, b.latitude, b.longitude) :
           Infinity
 
-        // Priorité pour les produits très proches (< 2km)
         const aVeryClose = aDistance <= 2
         const bVeryClose = bDistance <= 2
 
         if (aVeryClose && !bVeryClose) return -1
         if (!aVeryClose && bVeryClose) return 1
 
-        // Priorité pour les produits proches (< 10km)
         const aClose = aDistance <= 10
         const bClose = bDistance <= 10
 
         if (aClose && !bClose) return -1
         if (!aClose && bClose) return 1
 
-        // Si même catégorie de distance, trier par distance exacte
         if (aDistance !== bDistance) return aDistance - bDistance
 
-        // Si même distance, trier par popularité ou date
         return (b.popularity || 0) - (a.popularity || 0)
       })
     }
 
     return filtered
-  }, [products, searchTerm, priceRange, selectedLocation, userPosition, calculateDistance])
+  }, [products, searchTerm, priceRange, selectedLocation, userPosition, locationEnabled, calculateDistance])
 
   // Compter les produits par zone
   const getLocationCount = useCallback((locationName) => {
@@ -251,7 +242,7 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
 
   // Compter les produits près de l'utilisateur
   const nearbyProductsCount = useMemo(() => {
-    if (!userPosition) return 0
+    if (!locationEnabled || !userPosition) return 0
 
     return products.filter(p => {
       if (!p.latitude || !p.longitude) return false
@@ -264,7 +255,7 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
       )
       return distance <= 5
     }).length
-  }, [products, userPosition, calculateDistance])
+  }, [products, userPosition, locationEnabled, calculateDistance])
 
   // Zones avec des produits disponibles
   const availableZones = useMemo(() => {
@@ -272,7 +263,6 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
     products.forEach(p => {
       if (p.zone) zones.add(p.zone)
 
-      // Ajouter aussi les zones basées sur les coordonnées GPS
       if (p.latitude && p.longitude) {
         const nearestZone = findNearestLocation(p.latitude, p.longitude)
         zones.add(nearestZone)
@@ -287,26 +277,41 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
 
   // Effects
   useEffect(() => {
-    detectUserLocation()
-  }, [detectUserLocation])
-
-  useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY)
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 1000)
+    const timer = setTimeout(() => setLoading(false), 800)
     return () => clearTimeout(timer)
   }, [])
 
+  // Infinite scroll avec intersection observer
+  useEffect(() => {
+    if (loading || visibleCount >= sortedProducts.length) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setVisibleCount(prev => Math.min(prev + 12, sortedProducts.length))
+        }
+      },
+      { threshold: 0.5, rootMargin: '200px' }
+    )
+
+    const sentinel = document.getElementById('scroll-sentinel')
+    if (sentinel) observer.observe(sentinel)
+
+    return () => observer.disconnect()
+  }, [loading, visibleCount, sortedProducts.length])
+
   const productsToShow = sortedProducts.slice(0, visibleCount)
 
-  // Composant pour le filtre de localisation amélioré
+  // Composant pour le filtre de localisation
   const LocationFilter = () => (
     <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-3xl max-h-[80vh] overflow-y-auto">
-      <div className="flex items-center justify-between mb-4 sm:mb-6 sticky top-0 bg-white dark:bg-gray-800 pb-2">
+      <div className="flex items-center justify-between mb-4 sm:mb-6 sticky top-0 bg-white dark:bg-gray-800 pb-2 z-10">
         <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">
           Choisir une zone
         </h3>
@@ -338,11 +343,56 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
         </span>
       </button>
 
+      {/* Bouton activer GPS */}
+      {!locationEnabled && (
+        <div className="mb-4 p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
+          <div className="flex items-start gap-3 mb-3">
+            <div className="p-2 bg-blue-500 rounded-full">
+              <Navigation size={16} className="text-white" />
+            </div>
+            <div className="flex-1">
+              <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-1">
+                Activer la géolocalisation
+              </h4>
+              <p className="text-xs text-gray-600 dark:text-gray-400">
+                Trouvez les produits les plus proches de vous
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => {
+              detectUserLocation()
+            }}
+            disabled={locationLoading}
+            className="w-full py-2.5 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-medium rounded-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            {locationLoading ? (
+              <>
+                <Loader2 size={16} className="animate-spin" />
+                <span>Détection en cours...</span>
+              </>
+            ) : (
+              <>
+                <Crosshair size={16} />
+                <span>Activer mon GPS</span>
+              </>
+            )}
+          </button>
+          {locationError && (
+            <p className="text-xs text-red-600 dark:text-red-400 mt-2 text-center">
+              {locationError === 'Permission refusée' && 'Veuillez autoriser la géolocalisation dans les paramètres'}
+              {locationError !== 'Permission refusée' && locationError}
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Zone actuelle de l'utilisateur */}
-      {userPosition && userLocationName && !locationLoading && (
+      {locationEnabled && userPosition && userLocationName && (
         <div className="mb-4">
-          <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-2 px-2 font-medium">
-            🎯 Votre zone (GPS)
+          <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-2 px-2 font-medium flex items-center gap-2">
+            <Crosshair size={14} className="text-green-500" />
+            <span>Votre position GPS</span>
           </p>
           <button
             onClick={() => {
@@ -355,18 +405,30 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
               }`}
           >
             <div className="flex items-center gap-3">
-              <Crosshair size={18} className="text-green-600" />
+              <div className="relative">
+                <Crosshair size={18} className="text-green-600" />
+                <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+              </div>
               <div className="text-left">
                 <span className="font-medium block">{userLocationName}</span>
                 <span className="text-xs opacity-70">Rayon de 5km</span>
               </div>
             </div>
             <div className="text-right">
-              <span className="text-sm bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 px-2 py-1 rounded-full">
+              <span className="text-sm bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 px-2 py-1 rounded-full font-medium">
                 {nearbyProductsCount}
               </span>
-              <div className="text-xs text-green-600 mt-1">GPS</div>
             </div>
+          </button>
+          <button
+            onClick={() => {
+              setLocationEnabled(false)
+              setUserPosition(null)
+              setUserLocationName("")
+            }}
+            className="w-full text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors py-2"
+          >
+            Désactiver le GPS
           </button>
         </div>
       )}
@@ -379,7 +441,7 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
           </p>
           {availableZones
             .filter(zone => zone.name !== userLocationName)
-            .slice(0, 10) // Limiter l'affichage sur mobile
+            .slice(0, 10)
             .map((zone) => (
               <button
                 key={zone.name}
@@ -412,72 +474,32 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#F8F9FB] via-white to-[#F8F9FB] dark:from-[#111827] dark:via-[#1C2B49] dark:to-[#111827]">
 
-      {/* Header mobile-first avec effet parallax */}
+      {/* Header mobile-first épuré */}
       <div
         className="sticky top-0 z-40 bg-white/90 dark:bg-[#1C2B49]/90 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 shadow-sm"
         style={{ transform: `translateY(${Math.min(scrollY * 0.05, 10)}px)` }}
       >
         <div className="px-3 sm:px-4 py-3 sm:py-4 max-w-7xl mx-auto">
 
-          {/* Stats compactes pour mobile */}
-          <div className="flex items-center justify-center gap-2 sm:gap-4 mb-3 text-xs text-gray-600 dark:text-gray-400">
-            <div className="flex items-center gap-1">
-              <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full animate-pulse" />
-              <span className="hidden sm:inline">{products.length} produits</span>
-              <span className="sm:hidden">{products.length}</span>
+          {/* Stats compactes */}
+          <div className="flex items-center justify-center gap-3 sm:gap-4 mb-3 text-xs text-gray-600 dark:text-gray-400">
+            <div className="flex items-center gap-1.5">
+              <ShoppingBag size={14} className="text-[#F6C445]" />
+              <span>{sortedProducts.length} produits</span>
             </div>
 
-            <div className="w-1 h-1 bg-gray-400 rounded-full hidden sm:block" />
-
-            <div className="flex items-center gap-1">
-              {locationLoading ? (
-                <Loader2 className="w-3 h-3 animate-spin text-[#F6C445]" />
-              ) : locationPermissionDenied ? (
-                <AlertTriangle className="w-3 h-3 text-orange-500" />
-              ) : (
-                <Crosshair className="w-3 h-3 text-[#F6C445]" />
-              )}
-              <span className="hidden sm:inline">
-                {locationLoading ? 'Localisation...' :
-                  locationPermissionDenied ? 'GPS requis' :
-                    locationError ? 'GPS off' :
-                      `${nearbyProductsCount} près (${userLocationName})`}
-              </span>
-              <span className="sm:hidden">
-                {locationLoading ? 'GPS...' :
-                  locationPermissionDenied ? 'GPS?' :
-                    `${nearbyProductsCount}`}
-              </span>
-            </div>
-
-            <div className="w-1 h-1 bg-gray-400 rounded-full hidden sm:block" />
-
-            <div className="flex items-center gap-1">
-              <Truck className="w-3 h-3 text-[#F6C445]" />
-              <span className="hidden sm:inline">Livraison rapide</span>
-              <span className="sm:hidden">🚀</span>
-            </div>
+            {locationEnabled && userPosition && nearbyProductsCount > 0 && (
+              <>
+                <div className="w-1 h-1 bg-gray-400 rounded-full" />
+                <div className="flex items-center gap-1.5">
+                  <Crosshair size={14} className="text-green-500" />
+                  <span>{nearbyProductsCount} près de vous</span>
+                </div>
+              </>
+            )}
           </div>
 
-
-
-          {/* Alerte permission mobile-optimized */}
-          {locationPermissionDenied && (
-            <div className="mb-3 p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-xl">
-              <div className="flex items-center gap-2 text-xs sm:text-sm text-orange-700 dark:text-orange-300">
-                <AlertTriangle size={16} className="flex-shrink-0" />
-                <span className="flex-1">Activez le GPS pour les produits près de vous</span>
-                <button
-                  onClick={detectUserLocation}
-                  className="text-[#F6C445] hover:text-[#E2AE32] font-medium px-2 py-1 bg-white dark:bg-gray-800 rounded-lg transition-colors touch-manipulation"
-                >
-                  GPS
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Actions horizontales optimisées mobile */}
+          {/* Actions horizontales */}
           <div className="flex items-center gap-2 sm:gap-3">
 
             {/* Filtre prix */}
@@ -503,13 +525,13 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
             >
               <MapPin size={16} className="flex-shrink-0" />
               <span className="truncate">
-                {selectedLocation || (locationLoading ? "..." : "Zone")}
+                {selectedLocation || "Zone"}
               </span>
               <ChevronDown size={14} className="flex-shrink-0 opacity-70" />
               {selectedLocation && <div className="w-1.5 h-1.5 bg-[#F6C445] rounded-full animate-pulse flex-shrink-0" />}
             </button>
 
-            {/* Bouton partage compact */}
+            {/* Bouton partage */}
             <ShareAllSocialButton className="p-2 sm:p-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-white/90 dark:bg-gray-800/90 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300 hover:scale-105 active:scale-95 shadow-sm">
               <Heart size={16} />
             </ShareAllSocialButton>
@@ -520,19 +542,10 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
       {/* Content */}
       <div className="px-3 sm:px-4 max-w-7xl mx-auto pt-4 sm:pt-6">
         {loading ? (
-          <div className="space-y-6 sm:space-y-8">
-            {/* Skeleton carrousel */}
-            <div className="h-24 sm:h-32 bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 rounded-2xl animate-pulse" />
-            <ProductCardSkeletonGrid count={4} />
-          </div>
+          <ProductCardSkeletonGrid count={12} />
         ) : (
           <>
-            {/* Carrousel des produits populaires */}
-            <div className="mb-6">
-              <PopularProductsCarousel products={products} />
-            </div>
-
-            {/* Section principale avec header amélioré */}
+            {/* Section principale avec header */}
             <div className="mb-4 sm:mb-6">
               <div className="flex items-start justify-between mb-4 gap-4">
                 <div className="min-w-0 flex-1">
@@ -542,10 +555,10 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
                         <MapPin size={20} className="text-[#F6C445] flex-shrink-0" />
                         <span className="truncate">{selectedLocation}</span>
                       </span>
-                    ) : userPosition ? (
+                    ) : locationEnabled && userPosition ? (
                       <span className="flex items-center gap-2">
                         <Crosshair size={20} className="text-[#F6C445] flex-shrink-0" />
-                        <span className="truncate">Près de {userLocationName}</span>
+                        <span className="truncate">Près de vous</span>
                       </span>
                     ) : (
                       <span className="flex items-center gap-2">
@@ -557,29 +570,20 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
 
                   {/* Sous-titre informatif */}
                   <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                    <span>{sortedProducts.length} produit{sortedProducts.length > 1 ? 's' : ''}</span>
-                    {!selectedLocation && userPosition && !locationLoading && (
+                    <span>{sortedProducts.length} article{sortedProducts.length > 1 ? 's' : ''}</span>
+                    {!selectedLocation && locationEnabled && userPosition && (
                       <>
                         <span>•</span>
                         <span className="flex items-center gap-1">
                           <Navigation size={12} />
-                          <span>Par proximité GPS</span>
-                        </span>
-                      </>
-                    )}
-                    {searchTerm && (
-                      <>
-                        <span>•</span>
-                        <span className="flex items-center gap-1">
-                          <Search size={12} />
-                          <span className="truncate max-w-20">{searchTerm}</span>
+                          <span>Triés par proximité</span>
                         </span>
                       </>
                     )}
                   </div>
                 </div>
 
-                {/* Bouton clear filters compact */}
+                {/* Bouton clear filters */}
                 {(priceRange || selectedLocation || searchTerm) && (
                   <button
                     onClick={() => {
@@ -596,86 +600,44 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
               </div>
             </div>
 
-            {/* Indicateurs de statut des produits */}
-            {sortedProducts.length > 0 && userPosition && !locationLoading && (
-              <div className="flex flex-wrap gap-2 mb-4 sm:mb-6">
-                {nearbyProductsCount > 0 && (
-                  <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 rounded-full text-xs border border-green-200 dark:border-green-800">
-                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                    <span>{nearbyProductsCount} près de vous (≤5km)</span>
-                  </div>
-                )}
-
-                {sortedProducts.some(p => !p.latitude || !p.longitude) && (
-                  <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-full text-xs border border-blue-200 dark:border-blue-800">
-                    <Clock size={12} />
-                    <span>Livraison express disponible</span>
-                  </div>
-                )}
-              </div>
-            )}
-
             {sortedProducts.length === 0 ? (
-              /* État vide amélioré */
-              <div className="flex flex-col items-center justify-center py-12 sm:py-20 text-center px-4">
+              /* État vide */}
+              <div className="flex flex-col items-center justify-center py-16 sm:py-24 text-center px-4">
                 <div className="relative mb-6">
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 rounded-2xl flex items-center justify-center mb-4">
-                    <ShoppingBag size={24} className="text-gray-400" />
-                  </div>
-                  <div className="absolute -top-1 -right-1 w-6 h-6 bg-[#F6C445] rounded-full flex items-center justify-center">
-                    <X size={12} className="text-white" />
+                  <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
+                    <ShoppingBag size={32} className="text-gray-400" />
                   </div>
                 </div>
 
-                <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-                  {selectedLocation ?
-                    `Aucun produit à ${selectedLocation}` :
-                    searchTerm ?
-                      "Aucun résultat trouvé" :
-                      "Aucun produit disponible"
-                  }
+                <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+                  Aucun produit trouvé
                 </h3>
 
-                <p className="text-gray-600 dark:text-gray-400 text-sm mb-6 max-w-sm leading-relaxed">
+                <p className="text-gray-600 dark:text-gray-400 text-sm mb-6 max-w-sm">
                   {selectedLocation ?
-                    "Essayez une autre zone ou élargissez votre recherche. De nouveaux vendeurs rejoignent chaque jour !" :
-                    searchTerm ?
-                      "Vérifiez l'orthographe ou essayez d'autres mots-clés." :
-                      "Revenez bientôt, nous ajoutons régulièrement de nouveaux produits."
+                    `Aucun produit disponible à ${selectedLocation} pour le moment.` :
+                    "Essayez d'ajuster vos filtres ou revenez plus tard."
                   }
                 </p>
 
-                <div className="flex flex-col sm:flex-row gap-3 w-full max-w-sm">
-                  <button
-                    onClick={() => {
-                      setPriceRange(null)
-                      setSelectedLocation(null)
-                      setSearchTerm("")
-                      setSelectedIndex(0)
-                    }}
-                    className="flex-1 px-6 py-3 bg-gradient-to-r from-[#F6C445] to-[#FFD700] text-[#1C2B49] font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 touch-manipulation"
-                  >
-                    Voir tous les produits
-                  </button>
-
-                  {selectedLocation && availableZones.length > 0 && (
-                    <button
-                      onClick={() => setLocationFilterOpen(true)}
-                      className="flex-1 px-6 py-3 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium rounded-xl border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300 touch-manipulation"
-                    >
-                      Autres zones
-                    </button>
-                  )}
-                </div>
+                <button
+                  onClick={() => {
+                    setPriceRange(null)
+                    setSelectedLocation(null)
+                    setSearchTerm("")
+                  }}
+                  className="px-6 py-3 bg-[#F6C445] text-[#1C2B49] font-semibold rounded-xl hover:bg-[#E2AE32] transition-all duration-300 hover:scale-105"
+                >
+                  Réinitialiser les filtres
+                </button>
               </div>
             ) : (
               <>
-                {/* Grille de produits optimisée mobile */}
-                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 pb-8">
+                {/* Grille de produits optimisée */}
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
                   {productsToShow.map((product, index) => {
-                    // Calcul de la distance pour affichage
                     let distance = null
-                    if (userPosition && product.latitude && product.longitude) {
+                    if (locationEnabled && userPosition && product.latitude && product.longitude) {
                       distance = calculateDistance(
                         userPosition.lat,
                         userPosition.lng,
@@ -687,27 +649,16 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
                     return (
                       <div
                         key={product.id}
-                        className="animate-fade-in-up relative group"
+                        className="animate-fade-in-up"
                         style={{
-                          animationDelay: `${index * 50}ms`,
+                          animationDelay: `${(index % 12) * 30}ms`,
                           animationFillMode: 'both'
                         }}
                       >
-                        {/* Badge de proximité */}
                         {distance !== null && distance <= 2 && (
-                          <div className="absolute -top-1 -right-1 z-10 bg-green-500 text-white text-xs px-2 py-0.5 rounded-full shadow-lg flex items-center gap-1">
-                            <Crosshair size={8} />
-                            <span className="hidden sm:inline">{distance.toFixed(1)}km</span>
-                            <span className="sm:hidden">Près</span>
-                          </div>
-                        )}
-
-                        {/* Badge nouveauté */}
-                        {index < 3 && !selectedLocation && !searchTerm && (
-                          <div className="absolute top-2 left-2 z-10 bg-[#F6C445] text-[#1C2B49] text-xs px-2 py-1 rounded-full shadow-lg font-bold flex items-center gap-1">
-                            <Star size={8} className="fill-current" />
-                            <span className="hidden sm:inline">Top</span>
-                            <span className="sm:hidden">⭐</span>
+                          <div className="absolute top-2 right-2 z-10 bg-green-500 text-white text-xs px-2 py-0.5 rounded-full shadow-md flex items-center gap-1">
+                            <Crosshair size={10} />
+                            <span>{distance.toFixed(1)}km</span>
                           </div>
                         )}
 
@@ -723,44 +674,18 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
                   })}
                 </div>
 
-                {/* Bouton "Voir plus" amélioré avec progression */}
+                {/* Sentinel pour infinite scroll + skeleton */}
                 {visibleCount < sortedProducts.length && (
-                  <div className="flex flex-col items-center pb-8 sm:pb-12">
-                    <div className="text-center mb-4 w-full max-w-md">
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                        <span className="font-medium">{visibleCount}</span> sur <span className="font-medium">{sortedProducts.length}</span> produits
-                      </p>
+                  <div id="scroll-sentinel" className="py-8">
+                    <ProductCardSkeletonGrid count={4} />
+                  </div>
+                )}
 
-                      {/* Barre de progression */}
-                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-4">
-                        <div
-                          className="h-2 bg-gradient-to-r from-[#F6C445] to-[#FFD700] rounded-full transition-all duration-500 relative overflow-hidden"
-                          style={{ width: `${(visibleCount / sortedProducts.length) * 100}%` }}
-                        >
-                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
-                        </div>
-                      </div>
-                    </div>
-
-                    <button
-                      onClick={() => setVisibleCount(visibleCount + 8)}
-                      className="group relative px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-[#F6C445] to-[#FFD700] text-[#1C2B49] font-bold rounded-2xl shadow-lg hover:shadow-2xl hover:shadow-[#F6C445]/20 transition-all duration-300 hover:scale-105 active:scale-95 overflow-hidden touch-manipulation"
-                    >
-                      <span className="relative z-10 flex items-center gap-2">
-                        <span className="hidden sm:inline">Découvrir plus de produits</span>
-                        <span className="sm:hidden">Voir plus</span>
-                        <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-[#1C2B49] border-t-transparent rounded-full animate-spin group-hover:animate-none transition-all" />
-                      </span>
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-                    </button>
-
-                    {/* Indicateur de fin proche */}
-                    {sortedProducts.length - visibleCount <= 8 && (
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 flex items-center gap-1">
-                        <Sparkles size={10} />
-                        Plus que {sortedProducts.length - visibleCount} produits !
-                      </p>
-                    )}
+                {/* Message fin de liste */}
+                {visibleCount >= sortedProducts.length && sortedProducts.length > 12 && (
+                  <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                    <CheckCircle size={24} className="mx-auto mb-2 text-[#F6C445]" />
+                    <p className="text-sm">Vous avez vu tous les produits</p>
                   </div>
                 )}
               </>
@@ -769,9 +694,9 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
         )}
       </div>
 
-      {/* Dialogs améliorés */}
+      {/* Dialogs */}
 
-      {/* Filtre prix dialog */}
+      {/* Filtre prix */}
       <Dialog open={filterOpen} onOpenChange={setFilterOpen}>
         <DialogContent className="w-[95vw] max-w-md mx-auto rounded-3xl p-0 overflow-hidden border-0 shadow-2xl">
           <PriceFilter
@@ -786,17 +711,17 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
         </DialogContent>
       </Dialog>
 
-      {/* Filtre localisation dialog */}
+      {/* Filtre localisation */}
       <Dialog open={locationFilterOpen} onOpenChange={setLocationFilterOpen}>
         <DialogContent className="w-[95vw] max-w-md mx-auto rounded-3xl p-0 overflow-hidden border-0 shadow-2xl max-h-[90vh]">
           <LocationFilter />
         </DialogContent>
       </Dialog>
 
-      {/* Back to top button */}
+      {/* Back to top */}
       <BackToTopButton />
 
-      {/* Styles CSS améliorés */}
+      {/* Styles CSS */}
       <style jsx>{`
         @keyframes shimmer {
           0% { transform: translateX(-100%); }
@@ -814,15 +739,6 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
           }
         }
         
-        @keyframes pulse-glow {
-          0%, 100% {
-            box-shadow: 0 0 5px rgba(246, 196, 69, 0.3);
-          }
-          50% {
-            box-shadow: 0 0 20px rgba(246, 196, 69, 0.6), 0 0 30px rgba(246, 196, 69, 0.4);
-          }
-        }
-        
         .animate-shimmer {
           animation: shimmer 2s infinite;
         }
@@ -831,17 +747,11 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
           animation: fade-in-up 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         }
         
-        .animate-pulse-glow {
-          animation: pulse-glow 2s infinite;
-        }
-        
-        /* Optimisations tactiles */
         .touch-manipulation {
           touch-action: manipulation;
           -webkit-tap-highlight-color: transparent;
         }
         
-        /* Scrollbar personnalisé */
         .overflow-y-auto::-webkit-scrollbar {
           width: 4px;
         }
@@ -860,7 +770,6 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
           background: #E2AE32;
         }
         
-        /* Amélioration des interactions sur mobile */
         @media (max-width: 640px) {
           .hover\\:scale-105:hover {
             transform: none;
@@ -870,42 +779,11 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
             transform: scale(0.98);
           }
           
-          /* Augmenter la taille des zones tactiles */
           button {
             min-height: 44px;
           }
-          
-          /* Améliorer la lisibilité sur petits écrans */
-          .text-xs {
-            font-size: 0.75rem;
-            line-height: 1.2;
-          }
         }
         
-        /* Animation pour les badges de proximité */
-        @keyframes bounce-in {
-          0% {
-            opacity: 0;
-            transform: scale(0.3);
-          }
-          50% {
-            opacity: 1;
-            transform: scale(1.05);
-          }
-          70% {
-            transform: scale(0.9);
-          }
-          100% {
-            opacity: 1;
-            transform: scale(1);
-          }
-        }
-        
-        .animate-bounce-in {
-          animation: bounce-in 0.6s ease-out;
-        }
-        
-        /* Focus visible pour l'accessibilité */
         button:focus-visible {
           outline: 2px solid #F6C445;
           outline-offset: 2px;
@@ -916,20 +794,10 @@ export default function FilteredProducts({ products = [], userId = "demo" }) {
           outline-offset: 2px;
         }
         
-        /* Transition fluide pour le dark mode */
         * {
           transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
           transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
           transition-duration: 150ms;
-        }
-        
-        /* Optimisation des performances */
-        .will-change-transform {
-          will-change: transform;
-        }
-        
-        .will-change-scroll {
-          will-change: scroll-position;
         }
       `}</style>
     </div>
