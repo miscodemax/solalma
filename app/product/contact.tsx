@@ -79,10 +79,7 @@ export default function ProductContact({
   /* ============================
      LIEN PRODUIT
   ============================ */
-  const productUrl =
-    typeof window !== "undefined"
-      ? `${window.location.origin}/products/${product.id}`
-      : `/products/${product.id}`;
+  const productUrl = `/product/${product.id}`;
 
   /* ============================
      IMAGE PRINCIPALE
