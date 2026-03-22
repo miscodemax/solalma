@@ -6,6 +6,14 @@ import AuthModal from "../composants/auth-modal";
 import Link from "next/link";
 import FollowButton from "../composants/FollowButton";
 import {
+  computeSellerRank,
+  computeSellerBadges,
+  rankLabel,
+  rankColor,
+  nextRankThreshold,
+  type SellerStats,
+} from "@/lib/sellerRank";
+import {
   FaHeart,
   FaStore,
   FaShoppingBag,
@@ -27,9 +35,7 @@ import {
 export default async function FavoritesPage() {
   const cookieStore = await cookies();
   const supabase = createServerClient(supabaseUrl, supabaseKey, {
-    cookies: {
-      get: (name) => cookieStore.get(name)?.value,
-    },
+    cookies: { get: (name) => cookieStore.get(name)?.value },
   });
 
   const {
@@ -44,17 +50,14 @@ export default async function FavoritesPage() {
     );
   }
 
-  // Récupère les likes
   const { data: likes } = await supabase
     .from("product_like")
     .select("*")
     .eq("user_id", user.id);
+  const productIds = likes?.map((l) => l.product_id) ?? [];
 
-  const productIds = likes?.map((like) => like.product_id);
-
-  // Récupère les produits likés
   let products: any[] = [];
-  if (productIds && productIds.length > 0) {
+  if (productIds.length > 0) {
     const { data } = await supabase
       .from("product")
       .select("*")
@@ -62,31 +65,26 @@ export default async function FavoritesPage() {
     products = data || [];
   }
 
-  // Récupère les vendeurs uniques des produits likés
   const sellerIds = [
     ...new Set(products.map((p) => p.user_id).filter(Boolean)),
   ];
 
-  // Profils des vendeurs
   const { data: sellerProfiles } =
     sellerIds.length > 0
       ? await supabase
           .from("profiles")
-          .select("id, username, avatar_url, full_name")
+          .select("id, username, avatar_url, full_name, is_verified")
           .in("id", sellerIds)
       : { data: [] };
 
-  // Abonnements actuels de l'utilisateur
   const { data: currentFollows } = await supabase
     .from("follows")
     .select("following_id")
     .eq("follower_id", user.id);
-
   const followedIds = new Set(
     (currentFollows ?? []).map((f) => f.following_id),
   );
 
-  // Nombre d'abonnés par vendeur
   const { data: followerCounts } =
     sellerIds.length > 0
       ? await supabase
@@ -94,27 +92,63 @@ export default async function FavoritesPage() {
           .select("following_id")
           .in("following_id", sellerIds)
       : { data: [] };
-
   const followerCountMap: Record<string, number> = {};
   (followerCounts ?? []).forEach(({ following_id }) => {
     followerCountMap[following_id] = (followerCountMap[following_id] ?? 0) + 1;
   });
 
-  // Map vendeur_id → profil enrichi
+  // ── Avis par vendeur ────────────────────────────────────────────────────────
+  const { data: allRatings } =
+    sellerIds.length > 0
+      ? await supabase
+          .from("seller_ratings")
+          .select("seller_id, rating")
+          .in("seller_id", sellerIds)
+      : { data: [] };
+
+  const ratingMap: Record<string, { sum: number; count: number }> = {};
+  (allRatings ?? []).forEach(({ seller_id, rating }) => {
+    if (!ratingMap[seller_id]) ratingMap[seller_id] = { sum: 0, count: 0 };
+    ratingMap[seller_id].sum += rating;
+    ratingMap[seller_id].count++;
+  });
+
   const sellerMap = Object.fromEntries(
-    (sellerProfiles ?? []).map((s) => [
-      s.id,
-      {
-        ...s,
-        isFollowed: followedIds.has(s.id),
-        followerCount: followerCountMap[s.id] ?? 0,
-      },
-    ]),
+    (sellerProfiles ?? []).map((s: any) => {
+      const rd = ratingMap[s.id] ?? { sum: 0, count: 0 };
+      const avgRating = rd.count > 0 ? rd.sum / rd.count : 0;
+      const stats: SellerStats = {
+        reviewCount: rd.count,
+        avgRating,
+        totalSales: rd.count,
+        responseRateH24: false,
+        fastDelivery: false,
+        fairPricing: false,
+        isAdminVerified: s.is_verified ?? false,
+      };
+      const rank = computeSellerRank(stats);
+      const badges = computeSellerBadges(stats);
+      const colors = rankColor(rank);
+      const next = nextRankThreshold(rank);
+      return [
+        s.id,
+        {
+          ...s,
+          isFollowed: followedIds.has(s.id),
+          followerCount: followerCountMap[s.id] ?? 0,
+          reviewCount: rd.count,
+          avgRating,
+          rank,
+          rankLabel: rankLabel(rank),
+          badges,
+          colors,
+          nextThreshold: next,
+        },
+      ];
+    }),
   );
 
   const id = user?.id || null;
-
-  // Statistiques
   const totalValue = products.reduce((sum, p) => sum + (p.price || 0), 0);
   const categories = [...new Set(products.map((p) => p.category))].length;
   const avgPrice = products.length > 0 ? totalValue / products.length : 0;
@@ -122,13 +156,11 @@ export default async function FavoritesPage() {
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-[#F9F9F9] via-white to-[#F3F4F6] dark:from-[#1C1C1C] dark:via-[#2a2a2a] dark:to-[#1C1C1C] relative overflow-hidden pt-9">
-      {/* Background Pattern */}
       <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05]">
         <div
           className="absolute inset-0"
           style={{
-            backgroundImage: `radial-gradient(circle at 25% 25%, #F4B400 1px, transparent 1px), 
-                             radial-gradient(circle at 75% 75%, #FFD766 1px, transparent 1px)`,
+            backgroundImage: `radial-gradient(circle at 25% 25%, #F4B400 1px, transparent 1px), radial-gradient(circle at 75% 75%, #FFD766 1px, transparent 1px)`,
             backgroundSize: "24px 24px",
           }}
         />
@@ -151,7 +183,6 @@ export default async function FavoritesPage() {
                   </div>
                 )}
               </div>
-
               <p className="text-lg text-[#1C1C1C] dark:text-gray-300 font-light max-w-2xl leading-relaxed">
                 Collection personnelle de tes articles préférés sur Sangse
                 Marketplace
@@ -159,7 +190,6 @@ export default async function FavoritesPage() {
 
               {products.length > 0 && (
                 <div className="flex flex-wrap gap-4">
-                  {/* Stat valeur */}
                   <div className="group relative">
                     <div className="backdrop-blur-xl bg-white/90 dark:bg-[#2a2a2a]/90 border border-gray-200 dark:border-gray-600 px-6 py-4 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105 hover:border-[#F4B400]/30">
                       <div className="flex items-center gap-3">
@@ -189,7 +219,7 @@ export default async function FavoritesPage() {
                             <h4 className="font-bold text-[#1C1C1C] dark:text-white">
                               Analyse de collection
                             </h4>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                            <p className="text-sm text-gray-500">
                               Insights détaillés
                             </p>
                           </div>
@@ -231,7 +261,6 @@ export default async function FavoritesPage() {
                     </div>
                   </div>
 
-                  {/* Stat catégories */}
                   <div className="group relative">
                     <div className="backdrop-blur-xl bg-white/90 dark:bg-[#2a2a2a]/90 border border-gray-200 dark:border-gray-600 px-6 py-4 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105">
                       <div className="flex items-center gap-3">
@@ -273,9 +302,6 @@ export default async function FavoritesPage() {
                               const count = products.filter(
                                 (p) => p.category === cat,
                               ).length;
-                              const pct = Math.round(
-                                (count / products.length) * 100,
-                              );
                               return (
                                 <div key={idx} className="space-y-1">
                                   <div className="flex items-center justify-between">
@@ -289,7 +315,9 @@ export default async function FavoritesPage() {
                                   <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-1.5">
                                     <div
                                       className="bg-gradient-to-r from-[#F4B400] to-[#FFD766] h-1.5 rounded-full"
-                                      style={{ width: `${pct}%` }}
+                                      style={{
+                                        width: `${Math.round((count / products.length) * 100)}%`,
+                                      }}
                                     />
                                   </div>
                                 </div>
@@ -301,7 +329,7 @@ export default async function FavoritesPage() {
                   </div>
 
                   {premiumItems > 0 && (
-                    <div className="backdrop-blur-xl bg-[#8B5E34]/10 border border-[#8B5E34]/40 px-6 py-4 rounded-2xl shadow-lg hover:scale-105 transition-all duration-300 cursor-default">
+                    <div className="backdrop-blur-xl bg-[#8B5E34]/10 border border-[#8B5E34]/40 px-6 py-4 rounded-2xl shadow-lg hover:scale-105 transition-all duration-300">
                       <div className="flex items-center gap-3">
                         <div className="p-2 bg-[#8B5E34] rounded-xl">
                           <FaCrown className="text-white text-sm" />
@@ -340,7 +368,7 @@ export default async function FavoritesPage() {
           </div>
         </section>
 
-        {/* ── SECTION VENDEURS LIKÉS ─────────────────────────────────────────── */}
+        {/* ── VENDEURS avec rangs & badges ────────────────────────────────────── */}
         {products.length > 0 && sellerIds.length > 0 && (
           <section className="space-y-5">
             <div className="flex items-center gap-3">
@@ -353,25 +381,29 @@ export default async function FavoritesPage() {
               </span>
             </div>
 
-            <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+            <div
+              className="flex gap-4 overflow-x-auto pb-3"
+              style={{ scrollbarWidth: "none" }}
+            >
               {sellerIds.map((sellerId) => {
                 const seller = sellerMap[sellerId];
                 if (!seller) return null;
                 const sellerProductCount = products.filter(
                   (p) => p.user_id === sellerId,
                 ).length;
+                const c = seller.colors;
 
                 return (
                   <div
                     key={sellerId}
-                    className="flex-shrink-0 w-56 bg-white dark:bg-[#2a2a2a] border border-gray-200 dark:border-gray-700 rounded-2xl p-4 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+                    className="flex-shrink-0 w-60 bg-white dark:bg-[#2a2a2a] border border-gray-200 dark:border-gray-700 rounded-2xl p-4 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 flex flex-col gap-3"
                   >
                     {/* Avatar + nom */}
                     <Link
                       href={`/seller/${sellerId}`}
-                      className="flex items-center gap-3 mb-4 group"
+                      className="flex items-center gap-3 group"
                     >
-                      <div className="relative">
+                      <div className="relative flex-shrink-0">
                         {seller.avatar_url ? (
                           <img
                             src={seller.avatar_url}
@@ -387,7 +419,10 @@ export default async function FavoritesPage() {
                             </span>
                           </div>
                         )}
-                        <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white dark:border-[#2a2a2a]" />
+                        {/* Point coloré = rang */}
+                        <div
+                          className={`absolute -bottom-1 -right-1 w-4 h-4 ${c.dot} rounded-full border-2 border-white dark:border-[#2a2a2a]`}
+                        />
                       </div>
                       <div className="min-w-0">
                         <p className="font-bold text-sm text-[#1C1C1C] dark:text-white truncate group-hover:text-[#F4B400] transition-colors">
@@ -399,8 +434,98 @@ export default async function FavoritesPage() {
                       </div>
                     </Link>
 
+                    {/* Pill de rang */}
+                    <div
+                      className={`inline-flex items-center gap-1.5 self-start px-2.5 py-1 rounded-full text-xs font-bold border ${c.bg} ${c.text} ${c.border}`}
+                    >
+                      <span className="text-[10px]">
+                        {seller.rank === "verifie"
+                          ? "✅"
+                          : seller.rank === "elite"
+                            ? "👑"
+                            : seller.rank === "expert"
+                              ? "⭐"
+                              : seller.rank === "fiable"
+                                ? "🛡️"
+                                : seller.rank === "actif"
+                                  ? "🟢"
+                                  : "🔘"}
+                      </span>
+                      {seller.rankLabel}
+                    </div>
+
+                    {/* Note — masquée si < 5 avis */}
+                    {seller.reviewCount >= 5 ? (
+                      <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                        <div className="flex items-center gap-0.5">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <svg
+                              key={star}
+                              className={`w-3 h-3 ${star <= Math.round(seller.avgRating) ? "text-[#F4B400]" : "text-gray-300 dark:text-gray-600"}`}
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                            </svg>
+                          ))}
+                        </div>
+                        <span className="font-medium">
+                          {seller.avgRating.toFixed(1)}
+                        </span>
+                        <span>({seller.reviewCount} avis)</span>
+                      </div>
+                    ) : (
+                      <p className="text-[10px] text-gray-400 italic">
+                        {seller.reviewCount === 0
+                          ? "Pas encore d'avis"
+                          : `${seller.reviewCount} avis — note non publiée`}
+                      </p>
+                    )}
+
+                    {/* Badges */}
+                    {seller.badges.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {seller.badges.slice(0, 3).map((badge: any) => (
+                          <span
+                            key={badge.id}
+                            title={badge.description}
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-600 cursor-help"
+                          >
+                            <span>{badge.icon}</span>
+                            {badge.label}
+                          </span>
+                        ))}
+                        {seller.badges.length > 3 && (
+                          <span className="text-[10px] text-gray-400 self-center">
+                            +{seller.badges.length - 3}
+                          </span>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Progression rang — seulement si nouveau et pas encore à 5 avis */}
+                    {seller.rank === "nouveau" && seller.nextThreshold && (
+                      <div className="text-[10px] text-gray-400 bg-gray-50 dark:bg-gray-800 rounded-xl px-2.5 py-2 space-y-1">
+                        <p className="font-medium text-gray-500">
+                          Prochain rang : {rankLabel(seller.nextThreshold.rank)}
+                        </p>
+                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1">
+                          <div
+                            className="bg-[#F4B400] h-1 rounded-full transition-all"
+                            style={{
+                              width: `${Math.min(100, (seller.reviewCount / seller.nextThreshold.minReviews) * 100)}%`,
+                            }}
+                          />
+                        </div>
+                        <p>
+                          {seller.nextThreshold.minReviews - seller.reviewCount}{" "}
+                          avis manquants
+                        </p>
+                      </div>
+                    )}
+
                     {/* Stats */}
-                    <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-4">
+                    <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
                       <span className="flex items-center gap-1">
                         <FaShoppingBag className="text-[#F4B400]" />
                         {sellerProductCount} favori
@@ -413,7 +538,6 @@ export default async function FavoritesPage() {
                       </span>
                     </div>
 
-                    {/* Bouton abonnement */}
                     <FollowButton
                       followerId={user.id}
                       followingId={sellerId}
@@ -468,7 +592,7 @@ export default async function FavoritesPage() {
           </section>
         )}
 
-        {/* Grille produits / état vide */}
+        {/* Grille / état vide */}
         {products.length === 0 ? (
           <div className="text-center py-20 space-y-12">
             <div className="relative w-40 h-40 mx-auto">
@@ -488,94 +612,20 @@ export default async function FavoritesPage() {
                 cliquant sur le cœur ❤️
               </p>
             </div>
-            <div className="space-y-8">
-              <Link
-                href="/"
-                className="group inline-flex items-center gap-4 bg-[#1C1C1C] dark:bg-gray-700 text-white font-bold px-10 py-5 rounded-3xl shadow-2xl hover:scale-105 hover:-translate-y-1 transition-all duration-500"
-              >
-                <div className="p-3 bg-white/10 rounded-2xl group-hover:bg-white/20 transition-colors">
-                  <FaSearch className="text-xl" />
-                </div>
-                <div>
-                  <div className="text-lg font-black">
-                    Découvrir les articles
-                  </div>
-                  <div className="text-sm opacity-80">
-                    +50 produits disponibles
-                  </div>
-                </div>
-              </Link>
-              <div className="mt-20 max-w-4xl mx-auto">
-                <div className="relative bg-gradient-to-r from-[#F4B400] via-[#FFD766] to-[#F4B400] p-1 rounded-3xl shadow-2xl">
-                  <div className="bg-white dark:bg-[#2a2a2a] p-10 rounded-3xl text-center space-y-8">
-                    <div className="relative w-20 h-20 mx-auto">
-                      <div className="w-20 h-20 bg-gradient-to-r from-[#F4B400] to-[#FFD766] rounded-3xl flex items-center justify-center shadow-lg">
-                        <FaCrown className="text-3xl text-white" />
-                      </div>
-                      <div className="absolute -top-2 -right-2 w-8 h-8 bg-[#8B5E34] rounded-full flex items-center justify-center">
-                        <span className="text-xs text-white">✨</span>
-                      </div>
-                    </div>
-                    <div>
-                      <h3 className="text-3xl font-black bg-gradient-to-r from-[#F4B400] to-[#FFD766] bg-clip-text text-transparent mb-3">
-                        Deviens vendeur Sangse
-                      </h3>
-                      <p className="text-lg text-gray-500 max-w-2xl mx-auto">
-                        Transforme tes objets en revenus ! Rejoins notre
-                        communauté de vendeurs.
-                      </p>
-                    </div>
-                    <div className="grid sm:grid-cols-3 gap-6">
-                      {[
-                        {
-                          icon: FaGift,
-                          label: "Gratuit",
-                          desc: "Inscription sans frais",
-                          bg: "from-[#F4B400] to-[#F4B400]",
-                        },
-                        {
-                          icon: FaUsers,
-                          label: "Communauté",
-                          desc: "Milliers d'acheteurs",
-                          bg: "from-[#FFD766] to-[#FFD766]",
-                        },
-                        {
-                          icon: FaShieldAlt,
-                          label: "Sécurisé",
-                          desc: "Transactions protégées",
-                          bg: "from-[#8B5E34] to-[#8B5E34]",
-                        },
-                      ].map((f, i) => (
-                        <div key={i} className="space-y-3">
-                          <div
-                            className={`w-16 h-16 bg-gradient-to-r ${f.bg} rounded-2xl flex items-center justify-center mx-auto`}
-                          >
-                            <f.icon className="text-2xl text-white" />
-                          </div>
-                          <div>
-                            <p className="font-bold text-[#1C1C1C] dark:text-white">
-                              {f.label}
-                            </p>
-                            <p className="text-sm text-gray-400">{f.desc}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    <Link
-                      href="/dashboard/add"
-                      className="inline-flex items-center gap-4 bg-gradient-to-r from-[#F4B400] to-[#FFD766] text-white font-bold px-10 py-5 rounded-3xl shadow-xl hover:scale-105 transition-all"
-                    >
-                      <FaStore className="text-xl" />
-                      <span>Commencer à vendre</span>
-                    </Link>
-                    <p className="text-sm text-gray-400">
-                      <strong className="text-[#F4B400]">+2000</strong> vendeurs
-                      actifs nous font confiance
-                    </p>
-                  </div>
+            <Link
+              href="/"
+              className="group inline-flex items-center gap-4 bg-[#1C1C1C] dark:bg-gray-700 text-white font-bold px-10 py-5 rounded-3xl shadow-2xl hover:scale-105 hover:-translate-y-1 transition-all duration-500"
+            >
+              <div className="p-3 bg-white/10 rounded-2xl group-hover:bg-white/20 transition-colors">
+                <FaSearch className="text-xl" />
+              </div>
+              <div>
+                <div className="text-lg font-black">Découvrir les articles</div>
+                <div className="text-sm opacity-80">
+                  +50 produits disponibles
                 </div>
               </div>
-            </div>
+            </Link>
           </div>
         ) : (
           <div className="space-y-8">
