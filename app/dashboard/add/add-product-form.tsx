@@ -673,7 +673,7 @@ export default function AddProductForm({ userId }: Props) {
         <div
           style={{
             position: "fixed",
-            bottom: 40,
+            bottom: 70,
             left: 0,
             right: 0,
             zIndex: 9999,
