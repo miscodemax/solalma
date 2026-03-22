@@ -102,7 +102,7 @@ export default function ProductContact({
       `🔢 Quantité : *${customData.quantite}*`,
       `💰 Budget estimé : *${prixTotal.toLocaleString()} FCFA*${isWholesaleApplied ? " _(prix gros)_" : ""}`,
       ``,
-      `🔗 Voir le produit : ${productUrl}`,
+      `🔗 Voir le produit : https://sangse.shop${productUrl}`,
       mainImage ? `🖼️ Photo : ${mainImage}` : "",
       ``,
       `Pouvez-vous confirmer la disponibilité ? Merci !`,
