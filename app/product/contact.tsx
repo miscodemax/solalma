@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase";
 import {
   Dialog,
   DialogContent,
@@ -11,26 +9,18 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import {
-  MessageCircle,
-  Loader2,
-  AlertTriangle,
-  Phone,
-  ShoppingCart,
-  User,
-  Package,
-  Hash,
-  CheckCircle2,
-} from "lucide-react";
+import { ShoppingCart, Package, Hash } from "lucide-react";
 
 interface ProductContactProps {
   product: {
-    id: string;
+    id: string | number;
     title: string;
-    user_id: string; // vendeur
+    user_id: string;
     category: "vetement" | "chaussure" | "autre";
     price: number;
     image_url?: string;
+    images?: string[];
+    whatsapp_number?: string;
     has_wholesale?: boolean;
     wholesale_price?: number;
     min_wholesale_qty?: number;
@@ -44,9 +34,6 @@ export default function ProductContact({
   customerName,
   className = "",
 }: ProductContactProps) {
-  const supabase = createClient();
-  const router = useRouter();
-
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [step, setStep] = useState(0);
@@ -54,12 +41,7 @@ export default function ProductContact({
   const [customData, setCustomData] = useState({
     taillePointure: "",
     quantite: 1,
-    phone: "",
-    name: "",
   });
-
-  const clientDisplayName =
-    customerName && customerName.trim() !== "" ? customerName : "Client Sangse";
 
   const isClothing = product.category === "vetement";
   const isShoes = product.category === "chaussure";
@@ -77,97 +59,86 @@ export default function ProductContact({
     "44",
   ];
 
-  const { prixTotal, prixUnitaireApplicable, isWholesaleApplied } =
-    useMemo(() => {
-      const isWholesalePossible =
-        product.has_wholesale &&
-        product.wholesale_price != null &&
-        product.min_wholesale_qty != null;
+  const { prixTotal, isWholesaleApplied } = useMemo(() => {
+    const isWholesalePossible =
+      product.has_wholesale &&
+      product.wholesale_price != null &&
+      product.min_wholesale_qty != null;
 
-      const applied =
-        isWholesalePossible &&
-        customData.quantite >= product.min_wholesale_qty!;
+    const applied =
+      isWholesalePossible && customData.quantite >= product.min_wholesale_qty!;
 
-      const unit = applied ? product.wholesale_price! : product.price;
+    const unit = applied ? product.wholesale_price! : product.price;
 
-      return {
-        prixTotal: unit * customData.quantite,
-        prixUnitaireApplicable: unit,
-        isWholesaleApplied: applied,
-      };
-    }, [customData.quantite, product]);
+    return {
+      prixTotal: unit * customData.quantite,
+      isWholesaleApplied: applied,
+    };
+  }, [customData.quantite, product]);
 
   /* ============================
-     MESSAGE PRÉ-ÉCRIT
+     LIEN PRODUIT
   ============================ */
-  const buildInitialMessage = () => {
-    return `Bonjour 👋  
-Je suis intéressé par votre produit :
+  const productUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}/products/${product.id}`
+      : `/products/${product.id}`;
 
-📦 Produit : ${product.title}
-${customData.taillePointure ? `📏 Option : ${customData.taillePointure}\n` : ""}
-🔢 Quantité : ${customData.quantite}
-💰 Budget estimé : ${prixTotal.toLocaleString()} FCFA
+  /* ============================
+     IMAGE PRINCIPALE
+  ============================ */
+  const mainImage =
+    product.image_url ||
+    (product.images && product.images.length > 0 ? product.images[0] : null);
 
-Pouvez-vous me confirmer la disponibilité ?`;
+  /* ============================
+     MESSAGE WHATSAPP
+  ============================ */
+  const buildWhatsAppMessage = () => {
+    const lines = [
+      `Bonjour 👋 Je suis intéressé par votre article :`,
+      ``,
+      `🛍️ *${product.title}*`,
+      customData.taillePointure
+        ? `📏 ${isClothing ? "Taille" : "Pointure"} : *${customData.taillePointure}*`
+        : "",
+      `🔢 Quantité : *${customData.quantite}*`,
+      `💰 Budget estimé : *${prixTotal.toLocaleString()} FCFA*${isWholesaleApplied ? " _(prix gros)_" : ""}`,
+      ``,
+      `🔗 Voir le produit : ${productUrl}`,
+      mainImage ? `🖼️ Photo : ${mainImage}` : "",
+      ``,
+      `Pouvez-vous confirmer la disponibilité ? Merci !`,
+    ];
+
+    return lines.filter((l) => l !== "").join("\n");
   };
 
   /* ============================
-     OUVERTURE CHAT INTERNE
+     REDIRECTION WHATSAPP
   ============================ */
-  const openInternalChat = async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+  const openWhatsApp = () => {
+    const rawNumber = product.whatsapp_number?.replace(/\D/g, "") ?? "";
 
-    if (!user) {
-      alert("Vous devez être connecté pour contacter le vendeur");
+    if (!rawNumber) {
+      alert("Le vendeur n'a pas renseigné de numéro WhatsApp.");
       return;
     }
 
-    // 1. Cherche conversation existante
-    const { data: existing } = await supabase
-      .from("conversations")
-      .select("id")
-      .eq("product_id", product.id)
-      .eq("buyer_id", user.id)
-      .single();
-
-    let conversationId = existing?.id;
-
-    // 2. Sinon créer
-    if (!conversationId) {
-      const { data: created, error } = await supabase
-        .from("conversations")
-        .insert({
-          product_id: product.id,
-          buyer_id: user.id,
-          seller_id: product.user_id,
-        })
-        .select("id")
-        .single();
-
-      if (error || !created) {
-        alert("Erreur lors de la création du chat");
-        return;
-      }
-
-      conversationId = created.id;
-
-      // 3. Premier message
-      await supabase.from("messages").insert({
-        conversation_id: conversationId,
-        content: buildInitialMessage(),
-      });
-    }
-
-    router.push(`/chat/${conversationId}`);
+    const message = buildWhatsAppMessage();
+    const encodedMsg = encodeURIComponent(message);
+    const url = `https://wa.me/${rawNumber}?text=${encodedMsg}`;
+    window.open(url, "_blank", "noopener,noreferrer");
   };
 
   /* ============================
      FORM STEPS
   ============================ */
-  const formSteps: any[] = [];
+  const formSteps: {
+    title: string;
+    icon: React.ReactNode;
+    content: React.ReactNode;
+  }[] = [];
 
   if (isClothing || isShoes) {
     formSteps.push({
@@ -176,17 +147,18 @@ Pouvez-vous me confirmer la disponibilité ?`;
         : "Choisissez votre pointure",
       icon: <Package className="w-5 h-5" />,
       content: (
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-2 py-2">
           {(isClothing ? taillesVetements : pointuresChaussures).map((v) => (
             <button
               key={v}
+              type="button"
               onClick={() =>
                 setCustomData({ ...customData, taillePointure: v })
               }
-              className={`px-4 py-3 rounded-xl border-2 ${
+              className={`px-4 py-3 rounded-xl border-2 font-medium transition-colors ${
                 customData.taillePointure === v
                   ? "bg-yellow-400 text-white border-yellow-400"
-                  : "border-gray-200"
+                  : "border-gray-200 hover:border-yellow-300"
               }`}
             >
               {v}
@@ -198,48 +170,56 @@ Pouvez-vous me confirmer la disponibilité ?`;
   }
 
   formSteps.push({
-    title: "Quantité",
+    title: "Quantité souhaitée",
     icon: <Hash className="w-5 h-5" />,
     content: (
-      <div className="flex items-center justify-center gap-6">
-        <button
-          onClick={() =>
-            customData.quantite > 1 &&
-            setCustomData({ ...customData, quantite: customData.quantite - 1 })
-          }
-          className="w-10 h-10 rounded-full bg-gray-100"
-        >
-          −
-        </button>
-        <div className="text-2xl font-bold">{customData.quantite}</div>
-        <button
-          onClick={() =>
-            setCustomData({ ...customData, quantite: customData.quantite + 1 })
-          }
-          className="w-10 h-10 rounded-full bg-gray-100"
-        >
-          +
-        </button>
+      <div className="flex flex-col items-center gap-4 py-4">
+        <div className="flex items-center gap-6">
+          <button
+            type="button"
+            onClick={() =>
+              customData.quantite > 1 &&
+              setCustomData({
+                ...customData,
+                quantite: customData.quantite - 1,
+              })
+            }
+            className="w-11 h-11 rounded-full bg-gray-100 hover:bg-gray-200 text-xl font-bold transition-colors"
+          >
+            −
+          </button>
+          <span className="text-3xl font-bold w-10 text-center">
+            {customData.quantite}
+          </span>
+          <button
+            type="button"
+            onClick={() =>
+              setCustomData({
+                ...customData,
+                quantite: customData.quantite + 1,
+              })
+            }
+            className="w-11 h-11 rounded-full bg-gray-100 hover:bg-gray-200 text-xl font-bold transition-colors"
+          >
+            +
+          </button>
+        </div>
+
+        {/* Prix total estimé */}
+        <div className="text-center mt-2">
+          <p className="text-sm text-gray-500">Total estimé</p>
+          <p className="text-2xl font-bold text-yellow-500">
+            {prixTotal.toLocaleString()} FCFA
+          </p>
+          {isWholesaleApplied && (
+            <p className="text-xs text-green-600 mt-1">
+              ✅ Prix grossiste appliqué
+            </p>
+          )}
+        </div>
       </div>
     ),
   });
-
-  if (!customerName) {
-    formSteps.push({
-      title: "Votre nom",
-      icon: <User className="w-5 h-5" />,
-      content: (
-        <input
-          value={customData.name}
-          onChange={(e) =>
-            setCustomData({ ...customData, name: e.target.value })
-          }
-          placeholder="Votre nom"
-          className="w-full px-4 py-3 border rounded-xl"
-        />
-      ),
-    });
-  }
 
   const currentStep = formSteps[step];
   const isLastStep = step === formSteps.length - 1;
@@ -254,26 +234,40 @@ Pouvez-vous me confirmer la disponibilité ?`;
           setStep(0);
           setIsPopupOpen(true);
         }}
-        className="w-full bg-yellow-500 text-white py-4 rounded-2xl font-bold"
+        className="w-full bg-yellow-500 hover:bg-yellow-400 text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2 transition-colors"
       >
+        {/* Icône WhatsApp inline SVG */}
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          className="w-5 h-5"
+        >
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+        </svg>
         Contacter le vendeur
       </button>
 
-      {/* FORM POPUP */}
+      {/* ── FORM POPUP ── */}
       <Dialog open={isPopupOpen} onOpenChange={setIsPopupOpen}>
         <DialogContent className="rounded-3xl">
           <DialogHeader>
-            <DialogTitle>{currentStep?.title}</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              {currentStep?.icon}
+              {currentStep?.title}
+            </DialogTitle>
           </DialogHeader>
 
           {currentStep?.content}
 
-          <DialogFooter className="flex justify-between">
+          <DialogFooter className="flex justify-between gap-2 pt-2">
             <Button
               variant="outline"
-              onClick={() => step > 0 && setStep(step - 1)}
+              onClick={() =>
+                step > 0 ? setStep(step - 1) : setIsPopupOpen(false)
+              }
             >
-              Précédent
+              {step === 0 ? "Annuler" : "Précédent"}
             </Button>
 
             {isLastStep ? (
@@ -282,43 +276,88 @@ Pouvez-vous me confirmer la disponibilité ?`;
                   setIsPopupOpen(false);
                   setIsConfirmOpen(true);
                 }}
-                className="bg-yellow-500 text-black"
+                className="bg-yellow-500 hover:bg-yellow-400 text-white"
               >
                 <ShoppingCart className="w-4 h-4 mr-2" />
                 Continuer
               </Button>
             ) : (
-              <Button onClick={() => setStep(step + 1)}>Suivant</Button>
+              <Button
+                onClick={() => setStep(step + 1)}
+                className="bg-yellow-500 hover:bg-yellow-400 text-white"
+              >
+                Suivant
+              </Button>
             )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* CONFIRMATION */}
+      {/* ── CONFIRMATION → WHATSAPP ── */}
       <Dialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
         <DialogContent className="rounded-3xl">
-          <h3 className="font-bold text-lg mb-4">
-            Confirmer la prise de contact
-          </h3>
+          <DialogHeader>
+            <DialogTitle>Récapitulatif de votre demande</DialogTitle>
+          </DialogHeader>
 
-          <p className="text-sm text-gray-600 mb-6 whitespace-pre-line">
-            {buildInitialMessage()}
-          </p>
+          {/* Aperçu produit */}
+          <div className="flex gap-3 items-center bg-gray-50 rounded-2xl p-3">
+            {mainImage && (
+              <img
+                src={mainImage}
+                alt={product.title}
+                className="w-16 h-16 object-cover rounded-xl flex-shrink-0"
+              />
+            )}
+            <div>
+              <p className="font-semibold text-sm">{product.title}</p>
+              {customData.taillePointure && (
+                <p className="text-xs text-gray-500">
+                  {isClothing ? "Taille" : "Pointure"} :{" "}
+                  {customData.taillePointure}
+                </p>
+              )}
+              <p className="text-xs text-gray-500">
+                Qté : {customData.quantite}
+              </p>
+              <p className="text-sm font-bold text-yellow-500 mt-1">
+                {prixTotal.toLocaleString()} FCFA
+                {isWholesaleApplied && (
+                  <span className="text-green-600 text-xs ml-1">
+                    (prix gros)
+                  </span>
+                )}
+              </p>
+            </div>
+          </div>
 
-          <div className="flex justify-between">
+          {/* Aperçu message */}
+          <div className="bg-[#ECF8ED] rounded-2xl px-4 py-3 text-sm text-gray-700 whitespace-pre-line leading-relaxed border border-green-100">
+            {buildWhatsAppMessage()}
+          </div>
+
+          <DialogFooter className="flex justify-between gap-2 pt-2">
             <Button variant="outline" onClick={() => setIsConfirmOpen(false)}>
-              Annuler
+              Retour
             </Button>
             <Button
-              onClick={async () => {
+              onClick={() => {
                 setIsConfirmOpen(false);
-                await openInternalChat();
+                openWhatsApp();
               }}
-              className="bg-yellow-500 text-black"
+              className="bg-[#25D366] hover:bg-[#1fb956] text-white font-semibold"
             >
-              Continuer
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="w-4 h-4 mr-2"
+              >
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+              </svg>
+              Ouvrir WhatsApp
             </Button>
-          </div>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
