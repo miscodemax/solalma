@@ -21,8 +21,8 @@ import { ProductCardSkeletonGrid } from "./skeletonComponents";
 import PopularProductsCarousel from "./popularProductsCaroussel";
 import PriceFilter from "./pricefilter";
 import ShareAllSocialButton from "./shareAllSocialButton";
+import FollowedSellersBar from "./Followedsellerbar";
 
-// ─── Localités ────────────────────────────────────────────────────────────────
 const SENEGAL_LOCATIONS = [
   { name: "Dakar", lat: 14.6928, lng: -17.4467 },
   { name: "Plateau", lat: 14.6708, lng: -17.4395 },
@@ -50,7 +50,6 @@ const SENEGAL_LOCATIONS = [
   { name: "Ziguinchor", lat: 12.5681, lng: -16.2717 },
 ];
 
-// ─── Types & constantes ───────────────────────────────────────────────────────
 interface UserSignals {
   likedCategories: Record<string, number>;
   likedSellerIds: Set<string>;
@@ -62,9 +61,8 @@ interface ScoredProduct {
   distance: number | null;
 }
 
-const PAGE_SIZE = 20; // produits affichés par tranche
+const PAGE_SIZE = 20;
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 function haversine(lat1: number, lng1: number, lat2: number, lng2: number) {
   const R = 6371;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
@@ -86,7 +84,6 @@ function scoreProduct(
 ): ScoredProduct {
   let score = 0,
     distance: number | null = null;
-
   if (userPos && product.latitude && product.longitude) {
     distance = haversine(
       userPos.lat,
@@ -103,7 +100,6 @@ function scoreProduct(
   } else {
     score += 5;
   }
-
   const cat = product.category;
   if (cat && signals.likedCategories[cat]) {
     const total = Object.values(signals.likedCategories).reduce(
@@ -114,39 +110,32 @@ function scoreProduct(
       total > 0 ? (signals.likedCategories[cat] / total) * 20 : 0,
     );
   }
-
   const sid = product.user_id;
   if (signals.followedSellerIds.has(sid)) score += 15;
   else if (signals.likedSellerIds.has(sid)) score += 8;
-
   const avg = sellerRatings[sid];
   if (avg != null) score += Math.round((avg / 5) * 10);
-
   const v = product.clicks ?? 0;
   if (v > 500) score += 10;
   else if (v > 200) score += 7;
   else if (v > 50) score += 4;
   else if (v > 10) score += 2;
-
   const lk = productLikeCounts[product.id] ?? 0;
   if (lk > 100) score += 10;
   else if (lk > 50) score += 7;
   else if (lk > 20) score += 5;
   else if (lk > 5) score += 3;
   else if (lk > 0) score += 1;
-
   if (product.created_at) {
     const h = (Date.now() - new Date(product.created_at).getTime()) / 3_600_000;
     if (h < 6) score += 5;
     else if (h < 24) score += 3;
     else if (h < 48) score += 1;
   }
-
   score += Math.random() * 4 - 2;
   return { product, score: Math.max(0, Math.min(100, score)), distance };
 }
 
-// ── Skeleton card inline ──────────────────────────────────────────────────────
 function ProductCardSkeleton() {
   return (
     <div className="rounded-3xl overflow-hidden bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 animate-pulse">
@@ -164,7 +153,6 @@ function ProductCardSkeleton() {
   );
 }
 
-// ─── Composant principal ──────────────────────────────────────────────────────
 export default function FilteredProducts({
   products = [],
   userId = "demo",
@@ -174,24 +162,16 @@ export default function FilteredProducts({
 }) {
   const supabase = createClient();
 
-  // Filtres
   const [priceRange, setPriceRange] = useState<[number, number] | null>(null);
   const [filterOpen, setFilterOpen] = useState(false);
   const [locationFilterOpen, setLocationFilterOpen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
-
-  // Pagination "Voir plus"
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  // Ref pour faire défiler jusqu'aux nouveaux produits après chargement
   const newBatchRef = useRef<HTMLDivElement>(null);
-
-  // UI
   const [loading, setLoading] = useState(true);
   const [scrollY, setScrollY] = useState(0);
-
-  // Géolocalisation
   const [userPosition, setUserPosition] = useState<{
     lat: number;
     lng: number;
@@ -200,8 +180,6 @@ export default function FilteredProducts({
   const [locationLoading, setLocationLoading] = useState(true);
   const [locationPermissionDenied, setLocationPermissionDenied] =
     useState(false);
-
-  // Signaux utilisateur
   const [signals, setSignals] = useState<UserSignals>({
     likedCategories: {},
     likedSellerIds: new Set(),
@@ -215,7 +193,6 @@ export default function FilteredProducts({
   >({});
   const [signalsLoaded, setSignalsLoaded] = useState(false);
 
-  // ── Signaux Supabase ────────────────────────────────────────────────────────
   useEffect(() => {
     if (!userId || userId === "demo") {
       setSignalsLoaded(true);
@@ -246,7 +223,6 @@ export default function FilteredProducts({
           likedSellerIds: ls,
           followedSellerIds: fs,
         });
-
         const { data: rt } = await supabase
           .from("seller_ratings")
           .select("seller_id, rating");
@@ -261,7 +237,6 @@ export default function FilteredProducts({
           ar[id] = sum / count;
         });
         setSellerRatings(ar);
-
         const { data: al } = await supabase
           .from("product_like")
           .select("product_id");
@@ -280,7 +255,6 @@ export default function FilteredProducts({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
-  // ── Géolocalisation ─────────────────────────────────────────────────────────
   const findNearest = useCallback((lat: number, lng: number) => {
     let n = "Dakar",
       m = Infinity;
@@ -324,7 +298,6 @@ export default function FilteredProducts({
     detectUserLocation();
   }, [detectUserLocation]);
 
-  // ── Feed scoré ──────────────────────────────────────────────────────────────
   const scoredFeed = useMemo<ScoredProduct[]>(() => {
     const filtered = products.filter((p) => {
       if (priceRange && (p.price < priceRange[0] || p.price > priceRange[1]))
@@ -357,7 +330,6 @@ export default function FilteredProducts({
     productLikeCounts,
   ]);
 
-  // Reset pagination quand les filtres changent
   useEffect(() => {
     setVisibleCount(PAGE_SIZE);
   }, [scoredFeed]);
@@ -369,15 +341,12 @@ export default function FilteredProducts({
   const hasMore = visibleCount < scoredFeed.length;
   const remaining = scoredFeed.length - visibleCount;
 
-  // ── Handler "Voir plus" ─────────────────────────────────────────────────────
   const handleLoadMore = useCallback(() => {
     if (isLoadingMore) return;
     setIsLoadingMore(true);
-    // Court délai pour afficher les skeletons — effet premium
     setTimeout(() => {
       setVisibleCount((prev) => Math.min(prev + PAGE_SIZE, scoredFeed.length));
       setIsLoadingMore(false);
-      // Scroll doux vers les nouveaux items après rendu
       setTimeout(() => {
         newBatchRef.current?.scrollIntoView({
           behavior: "smooth",
@@ -387,7 +356,6 @@ export default function FilteredProducts({
     }, 600);
   }, [isLoadingMore, scoredFeed.length]);
 
-  // ── Stats ───────────────────────────────────────────────────────────────────
   const nearbyCount = useMemo(() => {
     if (!userPosition) return 0;
     return products.filter(
@@ -433,7 +401,6 @@ export default function FilteredProducts({
     return () => window.removeEventListener("scroll", h);
   }, []);
 
-  // ── LocationFilter ──────────────────────────────────────────────────────────
   const LocationFilter = () => (
     <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-3xl max-h-[80vh] overflow-y-auto">
       <div className="flex items-center justify-between mb-4 sticky top-0 bg-white dark:bg-gray-800 pb-2">
@@ -447,7 +414,6 @@ export default function FilteredProducts({
           <X size={20} className="text-gray-500" />
         </button>
       </div>
-
       <button
         onClick={() => {
           setSelectedLocation(null);
@@ -463,7 +429,6 @@ export default function FilteredProducts({
           {products.length}
         </span>
       </button>
-
       {userPosition && !locationLoading && (
         <div className="mb-4">
           <p className="text-xs text-gray-500 mb-2 px-2 font-medium">
@@ -492,7 +457,6 @@ export default function FilteredProducts({
           </button>
         </div>
       )}
-
       <div className="space-y-2">
         <p className="text-xs text-gray-500 mb-2 px-2 font-medium">
           🏘️ Zones populaires
@@ -525,7 +489,6 @@ export default function FilteredProducts({
     </div>
   );
 
-  // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#F8F9FB] via-white to-[#F8F9FB] dark:from-[#111827] dark:via-[#1C2B49] dark:to-[#111827]">
       {/* Header sticky */}
@@ -534,7 +497,6 @@ export default function FilteredProducts({
         style={{ transform: `translateY(${Math.min(scrollY * 0.05, 10)}px)` }}
       >
         <div className="px-3 sm:px-4 py-3 sm:py-4 max-w-7xl mx-auto">
-          {/* Stats bar */}
           <div className="flex items-center justify-center gap-2 sm:gap-4 mb-3 text-xs text-gray-600 dark:text-gray-400">
             <div className="flex items-center gap-1">
               <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
@@ -563,8 +525,6 @@ export default function FilteredProducts({
               <span className="hidden sm:inline">Livraison rapide</span>
             </div>
           </div>
-
-          {/* Alerte GPS */}
           {locationPermissionDenied && (
             <div className="mb-3 p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 rounded-xl">
               <div className="flex items-center gap-2 text-xs sm:text-sm text-orange-700 dark:text-orange-300">
@@ -581,16 +541,10 @@ export default function FilteredProducts({
               </div>
             </div>
           )}
-
-          {/* Filtres */}
           <div className="flex items-center gap-2 sm:gap-3">
             <button
               onClick={() => setFilterOpen(true)}
-              className={`flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl border transition-all hover:scale-105 active:scale-95 shadow-sm touch-manipulation text-sm font-medium ${
-                priceRange
-                  ? "border-[#F6C445] bg-[#F6C445]/10 text-[#F6C445]"
-                  : "border-gray-200 dark:border-gray-600 bg-white/90 dark:bg-gray-800/90 text-gray-700 dark:text-gray-300"
-              }`}
+              className={`flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl border transition-all hover:scale-105 active:scale-95 shadow-sm touch-manipulation text-sm font-medium ${priceRange ? "border-[#F6C445] bg-[#F6C445]/10 text-[#F6C445]" : "border-gray-200 dark:border-gray-600 bg-white/90 dark:bg-gray-800/90 text-gray-700 dark:text-gray-300"}`}
             >
               <SlidersHorizontal size={16} />
               <span className="hidden sm:inline">Prix</span>
@@ -598,14 +552,9 @@ export default function FilteredProducts({
                 <div className="w-1.5 h-1.5 bg-[#F6C445] rounded-full animate-pulse" />
               )}
             </button>
-
             <button
               onClick={() => setLocationFilterOpen(true)}
-              className={`flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl border transition-all hover:scale-105 active:scale-95 shadow-sm touch-manipulation text-sm font-medium min-w-0 flex-1 ${
-                selectedLocation
-                  ? "border-[#F6C445] bg-[#F6C445]/10 text-[#F6C445]"
-                  : "border-gray-200 dark:border-gray-600 bg-white/90 dark:bg-gray-800/90 text-gray-700 dark:text-gray-300"
-              }`}
+              className={`flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl border transition-all hover:scale-105 active:scale-95 shadow-sm touch-manipulation text-sm font-medium min-w-0 flex-1 ${selectedLocation ? "border-[#F6C445] bg-[#F6C445]/10 text-[#F6C445]" : "border-gray-200 dark:border-gray-600 bg-white/90 dark:bg-gray-800/90 text-gray-700 dark:text-gray-300"}`}
             >
               <MapPin size={16} className="flex-shrink-0" />
               <span className="truncate">
@@ -616,7 +565,6 @@ export default function FilteredProducts({
                 <div className="w-1.5 h-1.5 bg-[#F6C445] rounded-full flex-shrink-0" />
               )}
             </button>
-
             <ShareAllSocialButton className="p-2 sm:p-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-white/90 dark:bg-gray-800/90 text-gray-700 dark:text-gray-300 transition-all hover:scale-105 active:scale-95 shadow-sm">
               <Heart size={16} />
             </ShareAllSocialButton>
@@ -624,7 +572,6 @@ export default function FilteredProducts({
         </div>
       </div>
 
-      {/* Contenu */}
       <div className="px-3 sm:px-4 max-w-7xl mx-auto pt-4 sm:pt-6">
         {loading || !signalsLoaded ? (
           <div className="space-y-6 sm:space-y-8">
@@ -633,11 +580,13 @@ export default function FilteredProducts({
           </div>
         ) : (
           <>
+            {/* ── Barre abonnements (stories) ── affichée uniquement si connecté */}
+            <FollowedSellersBar userId={userId} />
+
             <div className="mb-6">
               <PopularProductsCarousel products={products} />
             </div>
 
-            {/* Header résultats */}
             <div className="mb-4 sm:mb-6">
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0 flex-1">
@@ -686,7 +635,6 @@ export default function FilteredProducts({
                     )}
                   </div>
                 </div>
-
                 {(priceRange || selectedLocation) && (
                   <button
                     onClick={() => {
@@ -725,10 +673,8 @@ export default function FilteredProducts({
               </div>
             ) : (
               <>
-                {/* Grille produits */}
                 <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
                   {visibleItems.map(({ product, score, distance }, index) => {
-                    // Marqueur invisible pour scroller jusqu'au premier nouveau produit
                     const isFirstOfNewBatch =
                       index === visibleCount - PAGE_SIZE;
                     return (
@@ -763,18 +709,14 @@ export default function FilteredProducts({
                       </div>
                     );
                   })}
-
-                  {/* Skeletons pendant le faux délai de chargement */}
                   {isLoadingMore &&
                     Array.from({ length: Math.min(PAGE_SIZE, remaining) }).map(
                       (_, i) => <ProductCardSkeleton key={`sk-${i}`} />,
                     )}
                 </div>
 
-                {/* ── Bouton VOIR PLUS ─────────────────────────────────────── */}
                 {hasMore && !isLoadingMore && (
                   <div className="flex flex-col items-center gap-3 py-10">
-                    {/* Barre de progression */}
                     <div className="w-full max-w-sm">
                       <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-2">
                         <span className="font-medium">
@@ -791,7 +733,6 @@ export default function FilteredProducts({
                         />
                       </div>
                     </div>
-
                     <button
                       onClick={handleLoadMore}
                       className="group relative flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-[#F6C445] to-[#FFD700] text-[#1C2B49] font-bold rounded-2xl shadow-lg hover:shadow-xl hover:shadow-[#F6C445]/30 transition-all duration-300 hover:scale-105 active:scale-95 overflow-hidden touch-manipulation"
@@ -802,13 +743,11 @@ export default function FilteredProducts({
                       <span className="relative z-10 text-xs bg-[#1C2B49]/15 px-2 py-0.5 rounded-full font-semibold">
                         {remaining} restants
                       </span>
-                      {/* Shimmer */}
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
                     </button>
                   </div>
                 )}
 
-                {/* Loader skeleton pendant les 600ms */}
                 {isLoadingMore && (
                   <div className="flex justify-center py-6">
                     <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
@@ -818,7 +757,6 @@ export default function FilteredProducts({
                   </div>
                 )}
 
-                {/* Fin du feed */}
                 {!hasMore &&
                   !isLoadingMore &&
                   scoredFeed.length > PAGE_SIZE && (
@@ -859,7 +797,6 @@ export default function FilteredProducts({
           />
         </DialogContent>
       </Dialog>
-
       <Dialog open={locationFilterOpen} onOpenChange={setLocationFilterOpen}>
         <DialogContent className="w-[95vw] max-w-md mx-auto rounded-3xl p-0 overflow-hidden border-0 shadow-2xl max-h-[90vh]">
           <LocationFilter />

@@ -207,6 +207,11 @@ function ShareModal({
       </div>
 
       <style jsx>{`
+        @keyframes spin {
+          to {
+            transform: rotate(360deg);
+          }
+        }
         @keyframes slide-up {
           from {
             opacity: 0;
@@ -664,27 +669,63 @@ export default function AddProductForm({ userId }: Props) {
           </form>
         </div>
 
-        {/* Bouton fixe avec safe area */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] z-40">
-          <div className="max-w-4xl mx-auto">
-            <button
-              onClick={handleSubmit}
-              disabled={loading}
-              className="w-full px-6 py-3.5 rounded-lg bg-[#F4B400] hover:bg-[#E9961A] text-white font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              {loading ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>Publication...</span>
-                </>
-              ) : (
-                <>
-                  <Share2 size={18} />
-                  Publier mon article
-                </>
-              )}
-            </button>
-          </div>
+        {/* Bouton fixe — inline styles pour forcer le rendu mobile */}
+        <div
+          style={{
+            position: "fixed",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            zIndex: 9999,
+            background: "#fff",
+            borderTop: "1px solid #e5e7eb",
+            padding: "12px 16px",
+            paddingBottom: "calc(12px + env(safe-area-inset-bottom, 0px))",
+          }}
+        >
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={loading}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "8px",
+              width: "100%",
+              padding: "16px",
+              borderRadius: "12px",
+              background: loading ? "#ccc" : "#F4B400",
+              color: "#fff",
+              fontWeight: "700",
+              fontSize: "16px",
+              border: "none",
+              cursor: loading ? "not-allowed" : "pointer",
+              touchAction: "manipulation",
+              WebkitTapHighlightColor: "transparent",
+            }}
+          >
+            {loading ? (
+              <>
+                <div
+                  style={{
+                    width: 20,
+                    height: 20,
+                    border: "2px solid white",
+                    borderTopColor: "transparent",
+                    borderRadius: "50%",
+                    animation: "spin 0.7s linear infinite",
+                  }}
+                />
+                Publication...
+              </>
+            ) : (
+              <>
+                <Share2 size={18} />
+                Publier mon article
+              </>
+            )}
+          </button>
         </div>
       </div>
 
