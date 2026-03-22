@@ -101,7 +101,7 @@ export default async function FavoritesPage() {
   const { data: allRatings } =
     sellerIds.length > 0
       ? await supabase
-          .from("seller_ratings")
+          .from("ratings_sellers")
           .select("seller_id, rating")
           .in("seller_id", sellerIds)
       : { data: [] };

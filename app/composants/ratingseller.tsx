@@ -23,7 +23,6 @@ interface Review {
   comment: string | null;
   created_at: string;
   buyer_id: string;
-  product_id: number | null;
 }
 
 interface RatingSellerProps {
@@ -33,6 +32,7 @@ interface RatingSellerProps {
 }
 
 const REVIEWS_PER_PAGE = 5;
+const LABELS = ["", "Mauvais", "Passable", "Bien", "Très bien", "Excellent"];
 
 export default function RatingSeller({
   sellerId,
@@ -41,23 +41,13 @@ export default function RatingSeller({
 }: RatingSellerProps) {
   const supabase = createClient();
 
-  // ── Auth ────────────────────────────────────────────────────────────────────
   const [userId, setUserId] = useState<string | null>(null);
-
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setUserId(data.user?.id ?? null);
-    });
-  }, []);
-
-  // ── State avis ──────────────────────────────────────────────────────────────
   const [reviews, setReviews] = useState<Review[]>([]);
   const [avg, setAvg] = useState<number | null>(initialAverage);
   const [count, setCount] = useState(initialCount);
-  const [loadingReviews, setLoadingReviews] = useState(false);
+  const [loadingReviews, setLoadingReviews] = useState(true);
   const [showAll, setShowAll] = useState(false);
 
-  // ── State formulaire ────────────────────────────────────────────────────────
   const [hoverStar, setHoverStar] = useState(0);
   const [selectedStar, setSelectedStar] = useState(0);
   const [comment, setComment] = useState("");
@@ -66,24 +56,36 @@ export default function RatingSeller({
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
-  // ── Chargement des avis ─────────────────────────────────────────────────────
+  // ── Auth ────────────────────────────────────────────────────────────────────
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setUserId(data.user?.id ?? null);
+    });
+  }, []);
+
+  // ── Fetch avis ──────────────────────────────────────────────────────────────
   const fetchReviews = async () => {
     setLoadingReviews(true);
-    const { data } = await supabase
-      .from("seller_ratings")
-      .select("id, rating, comment, created_at, buyer_id, product_id")
+    const { data, error } = await supabase
+      .from("ratings_sellers")
+      .select("id, rating, comment, created_at, buyer_id")
       .eq("seller_id", sellerId)
       .order("created_at", { ascending: false });
 
-    if (data) {
-      setReviews(data);
-      setCount(data.length);
-      if (data.length > 0) {
-        const sum = data.reduce((acc, r) => acc + r.rating, 0);
-        setAvg(Math.round((sum / data.length) * 10) / 10);
-      } else {
-        setAvg(null);
-      }
+    if (error) {
+      console.error("fetchReviews error:", error.message);
+      setLoadingReviews(false);
+      return;
+    }
+
+    const list = data ?? [];
+    setReviews(list);
+    setCount(list.length);
+    if (list.length > 0) {
+      const sum = list.reduce((acc, r) => acc + r.rating, 0);
+      setAvg(Math.round((sum / list.length) * 10) / 10);
+    } else {
+      setAvg(null);
     }
     setLoadingReviews(false);
   };
@@ -97,36 +99,46 @@ export default function RatingSeller({
   const handleSubmit = () => {
     if (!userId) return;
     if (selectedStar === 0) {
-      setSubmitError("Choisissez une note.");
+      setSubmitError("Choisissez une note avant de publier.");
       return;
     }
     setSubmitError(null);
 
     startTransition(async () => {
-      const { error } = await supabase.from("seller_ratings").insert({
+      // INSERT classique — pas d'upsert, chaque avis est une nouvelle ligne
+      const { error } = await supabase.from("ratings_sellers").insert({
         seller_id: sellerId,
         buyer_id: userId,
         rating: selectedStar,
-        comment: comment.trim() || null,
+        // Envoie null si vide — la colonne est nullable
+        comment: comment.trim().length > 0 ? comment.trim() : null,
       });
 
       if (error) {
-        setSubmitError("Erreur lors de l'envoi. Réessayez.");
+        // Log pour debug
+        console.error(
+          "insert error:",
+          error.message,
+          error.code,
+          error.details,
+        );
+        setSubmitError(`Erreur : ${error.message}`);
         return;
       }
 
-      setSubmitSuccess(true);
+      // Reset form
       setSelectedStar(0);
       setComment("");
       setFormOpen(false);
-
-      await fetchReviews();
-
+      setSubmitSuccess(true);
       setTimeout(() => setSubmitSuccess(false), 3000);
+
+      // Recharger les avis
+      await fetchReviews();
     });
   };
 
-  // ── Affichage des étoiles (lecture) ────────────────────────────────────────
+  // ── Helpers ─────────────────────────────────────────────────────────────────
   const StarDisplay = ({
     rating,
     size = 16,
@@ -155,7 +167,7 @@ export default function RatingSeller({
 
   return (
     <div className="space-y-5">
-      {/* ── Résumé ─────────────────────────────────────────────────────────── */}
+      {/* ── Résumé note globale ──────────────────────────────────────────────── */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
           {avg !== null && count >= 5 ? (
@@ -174,31 +186,30 @@ export default function RatingSeller({
             <div className="flex items-center gap-2">
               <StarDisplay rating={0} size={16} />
               <span className="text-sm text-gray-500 dark:text-gray-400">
-                {count < 5
-                  ? count === 0
-                    ? "Aucun avis pour le moment"
-                    : `${count} avis — note visible dès 5 avis`
-                  : "Chargement…"}
+                {count === 0
+                  ? "Aucun avis pour le moment"
+                  : `${count} avis — note visible dès 5 avis`}
               </span>
             </div>
           )}
         </div>
 
-        {/* Bouton ouvrir formulaire */}
-        {userId && userId !== sellerId && (
+        {userId && userId !== sellerId ? (
           <button
-            onClick={() => setFormOpen((p) => !p)}
+            onClick={() => {
+              setFormOpen((p) => !p);
+              setSubmitError(null);
+            }}
             className="flex items-center gap-2 px-4 py-2 bg-[#F6C445] hover:bg-[#e5b339] text-[#1C2B49] text-sm font-bold rounded-xl transition-all hover:scale-105 active:scale-95 shadow-md"
           >
             <Star size={15} />
             {formOpen ? "Annuler" : "Laisser un avis"}
           </button>
-        )}
-        {!userId && (
+        ) : !userId ? (
           <span className="text-xs text-gray-400 dark:text-gray-500 italic">
             Connectez-vous pour laisser un avis
           </span>
-        )}
+        ) : null}
       </div>
 
       {/* ── Formulaire ─────────────────────────────────────────────────────── */}
@@ -209,7 +220,7 @@ export default function RatingSeller({
             Votre avis
           </h4>
 
-          {/* Étoiles interactives */}
+          {/* Étoiles */}
           <div>
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
               Note *
@@ -221,7 +232,10 @@ export default function RatingSeller({
                   type="button"
                   onMouseEnter={() => setHoverStar(s)}
                   onMouseLeave={() => setHoverStar(0)}
-                  onClick={() => setSelectedStar(s)}
+                  onClick={() => {
+                    setSelectedStar(s);
+                    setSubmitError(null);
+                  }}
                   className="transition-transform hover:scale-125 active:scale-110"
                   aria-label={`${s} étoile${s > 1 ? "s" : ""}`}
                 >
@@ -242,16 +256,7 @@ export default function RatingSeller({
               ))}
               {selectedStar > 0 && (
                 <span className="ml-2 text-sm font-semibold text-[#F6C445]">
-                  {
-                    [
-                      "",
-                      "Mauvais",
-                      "Passable",
-                      "Bien",
-                      "Très bien",
-                      "Excellent",
-                    ][selectedStar]
-                  }
+                  {LABELS[selectedStar]}
                 </span>
               )}
             </div>
@@ -260,7 +265,7 @@ export default function RatingSeller({
           {/* Commentaire */}
           <div>
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-              Commentaire <span className="text-gray-400">(optionnel)</span>
+              Commentaire <span className="opacity-60">(optionnel)</span>
             </p>
             <textarea
               value={comment}
@@ -275,10 +280,12 @@ export default function RatingSeller({
             </div>
           </div>
 
+          {/* Erreur */}
           {submitError && (
-            <p className="text-sm text-red-500 dark:text-red-400">
-              {submitError}
-            </p>
+            <div className="flex items-start gap-2 px-3 py-2.5 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-xs text-red-600 dark:text-red-400">
+              <span className="flex-shrink-0 mt-0.5">⚠️</span>
+              <span>{submitError}</span>
+            </div>
           )}
 
           <button
@@ -287,11 +294,14 @@ export default function RatingSeller({
             className="flex items-center justify-center gap-2 w-full py-3 bg-gradient-to-r from-[#F6C445] to-[#FFD700] text-[#1C2B49] font-bold rounded-xl transition-all hover:scale-[1.02] active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
           >
             {isPending ? (
-              <Loader2 size={16} className="animate-spin" />
+              <>
+                <Loader2 size={16} className="animate-spin" /> Envoi en cours…
+              </>
             ) : (
-              <Send size={16} />
+              <>
+                <Send size={16} /> Publier mon avis
+              </>
             )}
-            {isPending ? "Envoi…" : "Publier mon avis"}
           </button>
         </div>
       )}
@@ -299,11 +309,11 @@ export default function RatingSeller({
       {/* Succès */}
       {submitSuccess && (
         <div className="flex items-center gap-2 px-4 py-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl text-sm text-green-700 dark:text-green-300 font-medium animate-slide-down">
-          <span>✅</span> Avis publié, merci !
+          ✅ Avis publié, merci !
         </div>
       )}
 
-      {/* ── Liste des avis ──────────────────────────────────────────────────── */}
+      {/* ── Liste ──────────────────────────────────────────────────────────── */}
       {loadingReviews ? (
         <div className="flex justify-center py-6">
           <Loader2 className="w-5 h-5 animate-spin text-[#F6C445]" />
@@ -320,29 +330,23 @@ export default function RatingSeller({
               key={review.id}
               className="bg-gray-50 dark:bg-[#0f1729]/60 border border-gray-100 dark:border-gray-800 rounded-xl p-4 space-y-2 transition-all hover:border-[#F6C445]/30"
             >
-              {/* Header : étoiles + date */}
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <StarDisplay rating={review.rating} size={14} />
                 <span className="text-[11px] text-gray-400 dark:text-gray-500">
                   {dayjs(review.created_at).fromNow()}
                 </span>
               </div>
-
-              {/* Commentaire */}
               {review.comment && (
                 <p className="text-sm text-[#1C2B49] dark:text-gray-300 leading-relaxed">
                   {review.comment}
                 </p>
               )}
-
-              {/* ID acheteur anonymisé */}
               <p className="text-[10px] text-gray-400 dark:text-gray-600">
                 Acheteur vérifié · {review.buyer_id.slice(0, 8)}…
               </p>
             </div>
           ))}
 
-          {/* Voir plus / moins */}
           {reviews.length > REVIEWS_PER_PAGE && (
             <button
               onClick={() => setShowAll((p) => !p)}
