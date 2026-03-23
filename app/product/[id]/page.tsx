@@ -5,22 +5,14 @@ import { supabaseUrl, supabaseKey } from "../../../lib/supabase";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { FaClock, FaTags, FaFire, FaBolt } from "react-icons/fa";
+import { FaClock, FaFire } from "react-icons/fa";
 import dayjs from "dayjs";
 import RatingSeller from "@/app/composants/ratingseller";
 import ProductShareButton from "@/app/composants/productShare";
 import type { Metadata } from "next";
 import BackButton from "@/app/composants/back-button";
 import ProductContact from "../contact";
-import {
-  Eye,
-  Heart,
-  Store,
-  Package,
-  TrendingDown,
-  Users,
-  Clock,
-} from "lucide-react";
+import { Eye, Heart, Store, Package, TrendingDown, Users } from "lucide-react";
 import LikeButton from "@/app/composants/likeButton";
 import EnhancedProductCarousel from "@/app/composants/EnhancedProductCaroussel";
 import GlassCard from "@/app/composants/Glasscard";
@@ -38,14 +30,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     .select("*")
     .eq("id", Number(params.id))
     .single();
+
   if (!product) return { title: "Produit non trouvé" };
-  const imageUrl = product.image_url.startsWith("http")
+
+  const imageUrl = product.image_url?.startsWith("http")
     ? product.image_url
     : `https://sangse.shop${product.image_url}`;
+
   const productTitle = `${product.title} - ${product.price.toLocaleString()} FCFA | SangseShop`;
   const productDescription =
     product.description ||
     `Commandez ${product.title} maintenant sur SangseShop. Prix: ${product.price.toLocaleString()} FCFA.`;
+
   return {
     title: productTitle,
     description: productDescription,
@@ -99,6 +95,7 @@ export default async function ProductDetailPage({ params }: Props) {
     cookies: { get: (name) => cookieStore.get(name)?.value },
   });
 
+  // ── Auth ────────────────────────────────────────────────────────────────────
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -110,60 +107,82 @@ export default async function ProductDetailPage({ params }: Props) {
   }
 
   const productIdNumber = Number(params.id);
+
+  // ── Produit ────────────────────────────────────────────────────────────────
   const { data: product, error: productError } = await supabase
     .from("product")
     .select("*")
     .eq("id", productIdNumber)
     .single();
+
   if (productError || !product) notFound();
 
-  const currentClicks = product.clicks || 0;
+  // ── Incrémente les clics puis relit la vraie valeur ─────────────────────────
   await supabase
     .from("product")
-    .update({ clicks: currentClicks + 1 })
+    .update({ clicks: (product.clicks || 0) + 1 })
     .eq("id", productIdNumber);
 
+  const { data: freshProduct } = await supabase
+    .from("product")
+    .select("clicks")
+    .eq("id", productIdNumber)
+    .single();
+
+  const realClicks = freshProduct?.clicks ?? (product.clicks || 0) + 1;
+
+  // ── Likes réels ─────────────────────────────────────────────────────────────
   const { count: likeCount } = await supabase
     .from("product_like")
     .select("*", { count: "exact", head: true })
     .eq("product_id", productIdNumber);
+
+  // ── Images ──────────────────────────────────────────────────────────────────
   const { data: productImages } = await supabase
     .from("product_images")
     .select("image_url")
     .eq("product_id", productIdNumber);
+
   const allImages = [
     product.image_url,
     ...(productImages?.map((img) => img.image_url) || []),
   ].filter(Boolean);
-  const isNew =
-    product.created_at &&
-    dayjs(product.created_at).isAfter(dayjs().subtract(7, "day"));
+
+  // ── Produits similaires (avec promo_expiration) ─────────────────────────────
   const { data: similarProducts } = await supabase
     .from("product")
     .select(
-      "id, title, price, image_url, has_promo, promo_price, promo_percentage",
+      "id, title, price, image_url, has_promo, promo_price, promo_percentage, promo_expiration",
     )
     .eq("category", product.category)
     .neq("id", product.id)
     .limit(8);
+
+  // ── Ratings ─────────────────────────────────────────────────────────────────
   const { data: allRatings } = await supabase
     .from("seller_ratings")
     .select("rating")
     .eq("seller_id", product.user_id);
+
+  // ── Profil vendeur ───────────────────────────────────────────────────────────
   const { data: profile } = await supabase
     .from("profiles")
     .select("username, avatar_url, bio")
     .eq("id", product.user_id)
     .single();
 
+  // ── Calculs ─────────────────────────────────────────────────────────────────
   const averageRating =
     allRatings && allRatings.length > 0
       ? allRatings.reduce((a, b) => a + b.rating, 0) / allRatings.length
       : null;
   const ratingCount = allRatings?.length || 0;
   const sellerId = product.user_id;
+  const isNew =
+    product.created_at &&
+    dayjs(product.created_at).isAfter(dayjs().subtract(7, "day"));
 
-  // ── Promo ───────────────────────────────────────────────────────────────────
+  // Promo
   const hasPromo = !!product.has_promo && !!product.promo_price;
   const promoPrice = hasPromo ? Number(product.promo_price) : null;
   const originalPrice = Number(product.price);
@@ -179,7 +198,7 @@ export default async function ProductDetailPage({ params }: Props) {
     hasPromo && (!promoExpiration || promoExpiration > new Date());
   const displayPrice = promoActive && promoPrice ? promoPrice : originalPrice;
 
-  // ── Gros ────────────────────────────────────────────────────────────────────
+  // Gros
   const hasWholesale = !!product.has_wholesale;
   const wholesalePrice = hasWholesale
     ? (product.wholesale_price ?? null)
@@ -217,6 +236,7 @@ export default async function ProductDetailPage({ params }: Props) {
         }}
       />
 
+      {/* Blobs de fond */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-10 w-96 h-96 bg-[#F6C445]/20 rounded-full blur-3xl animate-pulse" />
         <div
@@ -234,6 +254,7 @@ export default async function ProductDetailPage({ params }: Props) {
       <div className="relative z-10 max-w-7xl mx-auto px-4 py-8">
         <BackButton />
 
+        {/* Breadcrumb */}
         <nav className="flex items-center space-x-2 text-sm mb-8">
           <Link
             href="/"
@@ -248,7 +269,7 @@ export default async function ProductDetailPage({ params }: Props) {
         </nav>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-          {/* ── COLONNE GAUCHE ── */}
+          {/* ── COLONNE GAUCHE : Images ── */}
           <div className="space-y-6">
             <div className="relative">
               <EnhancedProductCarousel
@@ -256,7 +277,6 @@ export default async function ProductDetailPage({ params }: Props) {
                 productTitle={product.title}
                 isNew={isNew}
               />
-              {/* Badge promo flottant sur l'image */}
               {promoActive && (
                 <div className="absolute top-4 left-4 z-20 flex flex-col gap-2">
                   <div className="flex items-center gap-1.5 bg-red-500 text-white px-3 py-1.5 rounded-xl font-black text-sm shadow-lg shadow-red-500/40 animate-pulse">
@@ -268,6 +288,7 @@ export default async function ProductDetailPage({ params }: Props) {
                 </div>
               )}
             </div>
+
             <ProductShareButton
               product={{
                 id: product.id,
@@ -281,7 +302,7 @@ export default async function ProductDetailPage({ params }: Props) {
             </ProductShareButton>
           </div>
 
-          {/* ── COLONNE DROITE ── */}
+          {/* ── COLONNE DROITE : Infos ── */}
           <div className="space-y-5">
             {/* Titre + Like */}
             <div className="flex justify-between items-start gap-4">
@@ -295,18 +316,18 @@ export default async function ProductDetailPage({ params }: Props) {
               )}
             </div>
 
-            {/* Badges stats */}
+            {/* Badges stats — données réelles */}
             <div className="flex flex-wrap gap-2">
               <span className="inline-flex items-center bg-[#F6C445]/20 text-[#1C2B49] dark:text-[#F6C445] px-3 py-1.5 rounded-full text-xs font-bold border border-[#F6C445]/40">
                 📁 {product.category || "—"}
               </span>
               <span className="inline-flex items-center gap-1.5 bg-gray-100 dark:bg-gray-700/50 px-3 py-1.5 rounded-full text-xs font-medium text-gray-600 dark:text-gray-300">
                 <Eye size={13} />
-                {currentClicks + 1} vues
+                {realClicks.toLocaleString()} vues
               </span>
               <span className="inline-flex items-center gap-1.5 bg-red-100 dark:bg-red-500/20 px-3 py-1.5 rounded-full text-xs font-medium text-red-600 dark:text-red-400">
                 <Heart size={13} />
-                {likeCount || 0} likes
+                {likeCount ?? 0} likes
               </span>
               {isNew && (
                 <span className="inline-flex items-center bg-gradient-to-r from-[#F6C445] to-orange-500 text-[#1C2B49] px-3 py-1.5 rounded-full text-xs font-bold shadow-md animate-pulse">
@@ -319,14 +340,11 @@ export default async function ProductDetailPage({ params }: Props) {
               </span>
             </div>
 
-            {/* ── BLOC PRIX PROMO ── */}
+            {/* ── PRIX PROMO ── */}
             {promoActive && promoPrice ? (
               <div className="relative overflow-hidden rounded-3xl border-2 border-red-400 dark:border-red-500 shadow-xl shadow-red-500/20">
-                {/* Bande animée */}
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-red-500 via-orange-400 to-red-500 bg-[length:200%_100%] animate-shimmer" />
-
                 <div className="bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-950/40 dark:to-orange-950/30 p-6">
-                  {/* Header promo */}
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-black shadow">
                       <FaFire className="text-orange-300" /> OFFRE LIMITÉE
@@ -338,7 +356,6 @@ export default async function ProductDetailPage({ params }: Props) {
                     )}
                   </div>
 
-                  {/* Prix barré + nouveau prix */}
                   <div className="flex items-end gap-4 mb-3">
                     <div>
                       <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">
@@ -360,7 +377,6 @@ export default async function ProductDetailPage({ params }: Props) {
                     </div>
                   </div>
 
-                  {/* Gains visuels */}
                   <div className="flex flex-wrap gap-2">
                     <div className="flex items-center gap-1.5 bg-red-500 text-white px-3 py-1.5 rounded-xl text-sm font-bold shadow">
                       <TrendingDown size={14} />-{promoPercent}% de réduction
@@ -370,7 +386,6 @@ export default async function ProductDetailPage({ params }: Props) {
                     </div>
                   </div>
 
-                  {/* Barre d'urgence */}
                   <div className="mt-4 flex items-center gap-2 text-xs text-red-600 dark:text-red-400 font-semibold">
                     <div className="w-2 h-2 bg-red-500 rounded-full animate-ping" />
                     Ne laisse pas passer cette offre — prix susceptible de
@@ -379,7 +394,7 @@ export default async function ProductDetailPage({ params }: Props) {
                 </div>
               </div>
             ) : (
-              /* ── BLOC PRIX NORMAL ── */
+              /* ── PRIX NORMAL ── */
               <GlassCard className="p-6 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-[#F6C445]/20 rounded-full blur-2xl" />
                 <div className="relative">
@@ -398,11 +413,10 @@ export default async function ProductDetailPage({ params }: Props) {
               </GlassCard>
             )}
 
-            {/* ── BLOC PRIX GROS ── */}
+            {/* ── PRIX GROS ── */}
             {hasWholesale && wholesalePrice && minWholesaleQty && (
               <div className="relative overflow-hidden rounded-3xl border-2 border-blue-300 dark:border-blue-700 shadow-lg shadow-blue-500/10">
                 <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/40 dark:to-indigo-950/30 p-5">
-                  {/* Header */}
                   <div className="flex items-center gap-2 mb-4">
                     <div className="flex items-center gap-1.5 bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-black shadow">
                       <Package size={12} /> PRIX GROSSISTE
@@ -412,7 +426,6 @@ export default async function ProductDetailPage({ params }: Props) {
                     </span>
                   </div>
 
-                  {/* Prix gros vs unitaire */}
                   <div className="flex items-center justify-between gap-4">
                     <div>
                       <div className="text-xs text-blue-600/70 dark:text-blue-400/70 font-medium mb-1">
@@ -430,7 +443,6 @@ export default async function ProductDetailPage({ params }: Props) {
                         Prix unitaire : {originalPrice.toLocaleString()} FCFA
                       </div>
                     </div>
-
                     <div className="flex flex-col items-end gap-2">
                       <div className="bg-blue-600 text-white px-3 py-1.5 rounded-xl text-sm font-black shadow">
                         -{wholesalePercent}%
@@ -482,7 +494,7 @@ export default async function ProductDetailPage({ params }: Props) {
                 />
                 <div className="flex-1">
                   <h3 className="font-bold text-xl text-[#1C2B49] dark:text-white">
-                    {profile?.username || "Vendeur vérifié"}
+                    {profile?.username || "Vendeur"}
                   </h3>
                   {sellerId && (
                     <p className="text-xs text-[#1C2B49]/70 dark:text-gray-400">
@@ -513,6 +525,7 @@ export default async function ProductDetailPage({ params }: Props) {
               )}
             </GlassCard>
 
+            {/* ── CONTACT ── */}
             <ProductContact
               product={{
                 id: product.id,
@@ -527,6 +540,7 @@ export default async function ProductDetailPage({ params }: Props) {
               customerName={firstName}
             />
 
+            {/* ── DESCRIPTION ── */}
             {product.description && (
               <GlassCard className="p-6">
                 <h3 className="font-black text-xl text-[#1C2B49] dark:text-[#F6C445] mb-4">
@@ -540,7 +554,7 @@ export default async function ProductDetailPage({ params }: Props) {
           </div>
         </div>
 
-        {/* Localisation */}
+        {/* ── LOCALISATION ── */}
         {product.latitude && product.longitude && (
           <div className="mt-12">
             <h3 className="font-black text-2xl text-[#1C2B49] dark:text-[#F6C445] mb-6">
@@ -557,7 +571,7 @@ export default async function ProductDetailPage({ params }: Props) {
           </div>
         )}
 
-        {/* Produits similaires */}
+        {/* ── PRODUITS SIMILAIRES ── */}
         {similarProducts && similarProducts.length > 0 && (
           <section className="mt-24">
             <h2 className="text-3xl font-black text-[#1C2B49] dark:text-white mb-8">
@@ -565,7 +579,12 @@ export default async function ProductDetailPage({ params }: Props) {
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
               {similarProducts.map((p) => {
-                const pHasPromo = !!p.has_promo && !!p.promo_price;
+                // Vérifie que la promo n'est pas expirée
+                const pHasPromo =
+                  !!p.has_promo &&
+                  !!p.promo_price &&
+                  (!p.promo_expiration ||
+                    new Date(p.promo_expiration) > new Date());
                 const pPromoPercent = pHasPromo
                   ? Math.round(
                       ((p.price - Number(p.promo_price)) / p.price) * 100,
@@ -596,11 +615,11 @@ export default async function ProductDetailPage({ params }: Props) {
                           {p.title}
                         </h3>
                         {pHasPromo ? (
-                          <div>
+                          <div className="flex items-baseline gap-2 flex-wrap">
                             <span className="text-red-500 font-black text-base">
                               {Number(p.promo_price).toLocaleString()} FCFA
                             </span>
-                            <span className="text-gray-400 text-xs line-through ml-2">
+                            <span className="text-gray-400 text-xs line-through">
                               {p.price.toLocaleString()}
                             </span>
                           </div>

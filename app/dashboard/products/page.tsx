@@ -51,7 +51,15 @@ type PromoModalProps = {
   onSavePromo: (data: any) => Promise<void>;
 };
 
-// Modal de gestion de promotion
+// ── Helpers ──────────────────────────────────────────────────────────────────
+/** Retourne une date ISO locale +Nh à partir de maintenant */
+function dateInNHours(n: number): string {
+  const d = new Date(Date.now() + n * 3_600_000);
+  // Format attendu par datetime-local : "YYYY-MM-DDTHH:mm"
+  const pad = (v: number) => String(v).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 function PromoModal({
   isOpen,
   onClose,
@@ -59,16 +67,18 @@ function PromoModal({
   onSavePromo,
 }: PromoModalProps) {
   const [promoPrice, setPromoPrice] = useState("");
-  const [promoExpiration, setPromoExpiration] = useState("");
+  // Par défaut : maintenant + 48h
+  const [promoExpiration, setPromoExpiration] = useState(dateInNHours(48));
   const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
     if (product && isOpen) {
       setPromoPrice(product.promo_price?.toString() || "");
+      // Si le produit a déjà une date d'expiration on la pré-remplit, sinon 48h par défaut
       setPromoExpiration(
         product.promo_expiration
           ? new Date(product.promo_expiration).toISOString().slice(0, 16)
-          : ""
+          : dateInNHours(48),
       );
     }
   }, [product, isOpen]);
@@ -84,7 +94,7 @@ function PromoModal({
   };
 
   const percentage = calculatePercentage();
-  const minPrice = originalPrice * 0.01; // Au moins 1% de réduction
+  const minPrice = originalPrice * 0.01;
   const isValidPromo =
     promoPrice &&
     parseFloat(promoPrice) < originalPrice &&
@@ -92,7 +102,6 @@ function PromoModal({
 
   const handleSave = async () => {
     if (!isValidPromo) return;
-
     setIsProcessing(true);
     try {
       await onSavePromo({
@@ -100,7 +109,8 @@ function PromoModal({
         has_promo: true,
         promo_price: parseFloat(promoPrice),
         promo_percentage: percentage,
-        promo_expiration: promoExpiration || null,
+        // ✅ Toujours stocker dans promo_expiration — jamais null sauf retrait manuel
+        promo_expiration: promoExpiration || dateInNHours(48),
       });
       onClose();
     } catch (error) {
@@ -127,6 +137,15 @@ function PromoModal({
       setIsProcessing(false);
     }
   };
+
+  // Raccourcis durée
+  const DURATIONS = [
+    { label: "2h", hours: 2 },
+    { label: "6h", hours: 6 },
+    { label: "24h", hours: 24 },
+    { label: "48h", hours: 48 },
+    { label: "7j", hours: 168 },
+  ];
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn">
@@ -158,7 +177,7 @@ function PromoModal({
         </div>
 
         {/* Body */}
-        <div className="p-6 space-y-6">
+        <div className="p-6 space-y-6 max-h-[75vh] overflow-y-auto">
           {/* Produit info */}
           <div className="bg-slate-50 dark:bg-[#0f0f0f] p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
             <div className="flex items-center gap-4">
@@ -231,7 +250,7 @@ function PromoModal({
                   </div>
                 </div>
                 <p className="text-xs text-slate-600 dark:text-slate-400 mt-2">
-                  💰 Économie:{" "}
+                  💰 Économie :{" "}
                   {(originalPrice - parseFloat(promoPrice)).toLocaleString()}{" "}
                   FCFA
                 </p>
@@ -240,11 +259,38 @@ function PromoModal({
           )}
 
           {/* Date expiration */}
-          <div className="space-y-2">
+          <div className="space-y-3">
             <label className="block text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Clock className="w-4 h-4 text-orange-500" />
-              Date d'expiration (Optionnel)
+              Durée de la promotion
+              <span className="text-xs font-normal text-slate-500 dark:text-slate-400 ml-1">
+                (défaut 48h)
+              </span>
             </label>
+
+            {/* Raccourcis rapides */}
+            <div className="flex flex-wrap gap-2">
+              {DURATIONS.map(({ label, hours }) => {
+                const val = dateInNHours(hours);
+                const isSelected = promoExpiration === val;
+                return (
+                  <button
+                    key={label}
+                    type="button"
+                    onClick={() => setPromoExpiration(val)}
+                    className={`px-4 py-2 rounded-xl text-sm font-bold border-2 transition-all ${
+                      isSelected
+                        ? "bg-orange-500 border-orange-500 text-white shadow-md"
+                        : "bg-white dark:bg-[#0f0f0f] border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-orange-400"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Champ datetime-local pour date précise */}
             <input
               type="datetime-local"
               value={promoExpiration}
@@ -252,10 +298,21 @@ function PromoModal({
               min={new Date().toISOString().slice(0, 16)}
               className="w-full px-4 py-3 bg-white dark:bg-[#0f0f0f] border-2 border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white font-semibold focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
             />
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Si vide, la promotion restera active jusqu'à désactivation
-              manuelle
-            </p>
+
+            {/* Résumé expiration */}
+            {promoExpiration && (
+              <p className="text-xs text-orange-600 dark:text-orange-400 font-semibold flex items-center gap-1">
+                <Clock size={11} />
+                Expire le{" "}
+                {new Date(promoExpiration).toLocaleDateString("fr-FR", {
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </p>
+            )}
           </div>
 
           {/* Boutons action */}
@@ -336,21 +393,17 @@ export default function ProductsPage() {
         data: { user },
         error: userError,
       } = await supabase.auth.getUser();
-
       if (!user || userError) {
         setUser(null);
         setLoading(false);
         return;
       }
-
       setUser(user);
-
       const { data: products, error: productsError } = await supabase
         .from("product")
         .select("*")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
-
       if (productsError) {
         setError(productsError.message);
       } else {
@@ -359,28 +412,25 @@ export default function ProductsPage() {
             ...p,
             in_stock: typeof p.in_stock === "boolean" ? p.in_stock : true,
             has_promo: p.has_promo || false,
-          }))
+          })),
         );
       }
-
       setLoading(false);
     };
-
     fetchData();
   }, [supabase]);
 
-  // Vérifier les promos expirées
+  // Désactive automatiquement les promos expirées
   useEffect(() => {
     const checkExpiredPromos = async () => {
       const now = new Date();
-      const expiredProducts = products.filter(
+      const expired = products.filter(
         (p) =>
           p.has_promo &&
           p.promo_expiration &&
-          new Date(p.promo_expiration) < now
+          new Date(p.promo_expiration) < now,
       );
-
-      for (const product of expiredProducts) {
+      for (const p of expired) {
         await supabase
           .from("product")
           .update({
@@ -389,28 +439,25 @@ export default function ProductsPage() {
             promo_percentage: null,
             promo_expiration: null,
           })
-          .eq("id", product.id);
+          .eq("id", p.id);
       }
-
-      if (expiredProducts.length > 0) {
+      if (expired.length > 0) {
         setProducts((prev) =>
-          prev.map((p) => {
-            if (expiredProducts.some((ep) => ep.id === p.id)) {
-              return {
-                ...p,
-                has_promo: false,
-                promo_price: undefined,
-                promo_percentage: undefined,
-                promo_expiration: undefined,
-              };
-            }
-            return p;
-          })
+          prev.map((p) =>
+            expired.some((ep) => ep.id === p.id)
+              ? {
+                  ...p,
+                  has_promo: false,
+                  promo_price: undefined,
+                  promo_percentage: undefined,
+                  promo_expiration: undefined,
+                }
+              : p,
+          ),
         );
       }
     };
-
-    const interval = setInterval(checkExpiredPromos, 60000); // Check every minute
+    const interval = setInterval(checkExpiredPromos, 60_000);
     checkExpiredPromos();
     return () => clearInterval(interval);
   }, [products, supabase]);
@@ -419,28 +466,25 @@ export default function ProductsPage() {
 
   const toggleInStock = async (
     productId: number,
-    currentValue: boolean | undefined
+    currentValue: boolean | undefined,
   ) => {
     const newValue = !currentValue;
     setProducts((prev) =>
-      prev.map((p) => (p.id === productId ? { ...p, in_stock: newValue } : p))
+      prev.map((p) => (p.id === productId ? { ...p, in_stock: newValue } : p)),
     );
     setUpdatingIds((prev) => [...prev, productId]);
-
     const { error: updateError } = await supabase
       .from("product")
       .update({ in_stock: newValue })
       .eq("id", productId);
-
     if (updateError) {
       setProducts((prev) =>
         prev.map((p) =>
-          p.id === productId ? { ...p, in_stock: !!currentValue } : p
-        )
+          p.id === productId ? { ...p, in_stock: !!currentValue } : p,
+        ),
       );
       setError(updateError.message);
     }
-
     setUpdatingIds((prev) => prev.filter((id) => id !== productId));
   };
 
@@ -456,15 +500,13 @@ export default function ProductsPage() {
         has_promo: data.has_promo,
         promo_price: data.promo_price,
         promo_percentage: data.promo_percentage,
-        promo_expiration: data.promo_expiration,
+        promo_expiration: data.promo_expiration, // ✅ bonne colonne
       })
       .eq("id", data.id);
-
     if (updateError) {
       setError(updateError.message);
       throw updateError;
     }
-
     setProducts((prev) =>
       prev.map((p) =>
         p.id === data.id
@@ -475,8 +517,8 @@ export default function ProductsPage() {
               promo_percentage: data.promo_percentage,
               promo_expiration: data.promo_expiration,
             }
-          : p
-      )
+          : p,
+      ),
     );
   };
 
@@ -493,48 +535,41 @@ export default function ProductsPage() {
     );
   }
 
-  if (!user) {
+  if (!user)
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#FAF9F6] dark:bg-black">
         <AuthModal />
       </div>
     );
-  }
-
-  if (error) {
+  if (error)
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#FAF9F6] dark:bg-black">
+      <div className="min-h-screen flex items-center justify-center">
         <p className="text-red-500">{error}</p>
       </div>
     );
-  }
 
   const totalProducts = products.length;
   const totalValue = products.reduce(
-    (sum, product) => sum + (parseFloat(product.price) || 0),
-    0
+    (sum, p) => sum + (parseFloat(p.price) || 0),
+    0,
   );
-  const recentProducts = products.filter((p) => {
-    const createdAt = new Date(p.created_at);
-    const lastWeek = new Date();
-    lastWeek.setDate(lastWeek.getDate() - 7);
-    return createdAt >= lastWeek;
-  }).length;
+  const recentProducts = products.filter(
+    (p) => new Date(p.created_at) >= new Date(Date.now() - 7 * 86_400_000),
+  ).length;
   const activePromos = products.filter((p) => p.has_promo).length;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#FAF9F6] via-[#F4C430]/5 to-[#FFD55A]/10 dark:from-[#0a0a0a] dark:via-[#111111] dark:to-[#0f0f0f] relative overflow-hidden">
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 opacity-30">
-        <div className="absolute top-20 left-10 w-32 h-32 bg-[#F4C430]/20 rounded-full blur-xl animate-pulse"></div>
+      <div className="absolute inset-0 opacity-30 pointer-events-none">
+        <div className="absolute top-20 left-10 w-32 h-32 bg-[#F4C430]/20 rounded-full blur-xl animate-pulse" />
         <div
           className="absolute top-40 right-20 w-48 h-48 bg-[#FFD55A]/20 rounded-full blur-xl animate-bounce"
           style={{ animationDuration: "6s" }}
-        ></div>
+        />
         <div
           className="absolute bottom-32 left-1/4 w-40 h-40 bg-[#E9961A]/10 rounded-full blur-2xl animate-ping"
           style={{ animationDuration: "4s" }}
-        ></div>
+        />
       </div>
 
       <PromoModal
@@ -548,12 +583,11 @@ export default function ProductsPage() {
         <div className="max-w-7xl mx-auto">
           <BackButton />
 
-          {/* Header Hero Section */}
+          {/* Header */}
           <div className="mb-12">
-            <div className="relative bg-gradient-to-r from-[#F4C430] to-[#E9961A] dark:from-[#F4C430] dark:to-[#E9961A] p-8 rounded-3xl shadow-2xl overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
-              <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-12 -translate-x-12"></div>
-
+            <div className="relative bg-gradient-to-r from-[#F4C430] to-[#E9961A] p-8 rounded-3xl shadow-2xl overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16" />
+              <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-12 -translate-x-12" />
               <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
                 <div className="flex items-center gap-6">
                   <div className="bg-[#1A1A1A]/20 backdrop-blur-sm p-4 rounded-2xl shadow-lg">
@@ -568,7 +602,6 @@ export default function ProductsPage() {
                     </p>
                   </div>
                 </div>
-
                 <div className="flex gap-4">
                   <div className="bg-[#1A1A1A]/20 backdrop-blur-sm p-4 rounded-xl text-center min-w-[80px]">
                     <div className="text-2xl font-bold text-[#1A1A1A]">
@@ -587,56 +620,52 @@ export default function ProductsPage() {
             </div>
           </div>
 
-          {/* Dashboard Stats */}
+          {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
-            <div className="bg-white/80 dark:bg-[#1a1a1a]/80 backdrop-blur-sm border border-[#F4C430]/20 dark:border-[#333]/50 rounded-2xl p-6 shadow-lg">
-              <div className="flex items-center gap-4">
-                <div className="bg-gradient-to-r from-[#F4C430] to-[#FFD55A] p-3 rounded-xl shadow-md">
-                  <Package className="w-6 h-6 text-[#1A1A1A]" />
-                </div>
-                <div>
-                  <p className="text-sm text-[#1A1A1A]/70 dark:text-[#aaa]">
-                    Total Produits
-                  </p>
-                  <p className="text-2xl font-bold text-[#1A1A1A] dark:text-white">
-                    {totalProducts}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white/80 dark:bg-[#1a1a1a]/80 backdrop-blur-sm border border-[#F4C430]/20 dark:border-[#333]/50 rounded-2xl p-6 shadow-lg">
-              <div className="flex items-center gap-4">
-                <div className="bg-gradient-to-r from-[#E9961A] to-[#F4C430] p-3 rounded-xl shadow-md">
-                  <TrendingUp className="w-6 h-6 text-[#1A1A1A]" />
-                </div>
-                <div>
-                  <p className="text-sm text-[#1A1A1A]/70 dark:text-[#aaa]">
-                    Nouveaux (7j)
-                  </p>
-                  <p className="text-2xl font-bold text-[#1A1A1A] dark:text-white">
-                    {recentProducts}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white/80 dark:bg-[#1a1a1a]/80 backdrop-blur-sm border border-[#F4C430]/20 dark:border-[#333]/50 rounded-2xl p-6 shadow-lg">
-              <div className="flex items-center gap-4">
-                <div className="bg-gradient-to-r from-[#FFD55A] to-[#E9961A] p-3 rounded-xl shadow-md">
-                  <Star className="w-6 h-6 text-[#1A1A1A]" />
-                </div>
-                <div>
-                  <p className="text-sm text-[#1A1A1A]/70 dark:text-[#aaa]">
-                    Valeur Totale
-                  </p>
-                  <p className="text-2xl font-bold text-[#1A1A1A] dark:text-white">
-                    {totalValue.toLocaleString()} FCFA
-                  </p>
+            {[
+              {
+                icon: Package,
+                label: "Total Produits",
+                value: totalProducts,
+                grad: "from-[#F4C430] to-[#FFD55A]",
+                dark: false,
+              },
+              {
+                icon: TrendingUp,
+                label: "Nouveaux (7j)",
+                value: recentProducts,
+                grad: "from-[#E9961A] to-[#F4C430]",
+                dark: false,
+              },
+              {
+                icon: Star,
+                label: "Valeur Totale",
+                value: `${totalValue.toLocaleString()} FCFA`,
+                grad: "from-[#FFD55A] to-[#E9961A]",
+                dark: false,
+              },
+            ].map(({ icon: Icon, label, value, grad }) => (
+              <div
+                key={label}
+                className="bg-white/80 dark:bg-[#1a1a1a]/80 backdrop-blur-sm border border-[#F4C430]/20 dark:border-[#333]/50 rounded-2xl p-6 shadow-lg"
+              >
+                <div className="flex items-center gap-4">
+                  <div
+                    className={`bg-gradient-to-r ${grad} p-3 rounded-xl shadow-md`}
+                  >
+                    <Icon className="w-6 h-6 text-[#1A1A1A]" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-[#1A1A1A]/70 dark:text-[#aaa]">
+                      {label}
+                    </p>
+                    <p className="text-2xl font-bold text-[#1A1A1A] dark:text-white">
+                      {value}
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
-
+            ))}
             <div className="bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 backdrop-blur-sm border border-red-200 dark:border-red-800 rounded-2xl p-6 shadow-lg">
               <div className="flex items-center gap-4">
                 <div className="bg-gradient-to-r from-red-500 to-pink-500 p-3 rounded-xl shadow-md">
@@ -678,8 +707,7 @@ export default function ProductsPage() {
                 href="/dashboard/add"
                 className="bg-gradient-to-r from-[#F4C430] to-[#E9961A] text-[#1A1A1A] px-6 py-3 rounded-xl shadow-lg font-semibold flex items-center justify-center gap-2 hover:shadow-xl transition-all"
               >
-                <Plus className="w-4 h-4" />
-                Créer un produit
+                <Plus className="w-4 h-4" /> Créer un produit
               </Link>
             </div>
           </div>
@@ -702,8 +730,7 @@ export default function ProductsPage() {
                   href="/dashboard/add"
                   className="inline-flex items-center gap-2 bg-gradient-to-r from-[#F4C430] to-[#E9961A] text-[#1A1A1A] px-8 py-4 rounded-xl shadow-lg font-semibold hover:shadow-2xl transition-all"
                 >
-                  <Plus className="w-5 h-5" />
-                  Ajouter mon premier produit
+                  <Plus className="w-5 h-5" /> Ajouter mon premier produit
                 </Link>
               </div>
             </div>
@@ -713,7 +740,7 @@ export default function ProductsPage() {
                 const outOfStock = product.in_stock === false;
                 const isNew =
                   new Date(product.created_at) >
-                  new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+                  new Date(Date.now() - 7 * 86_400_000);
                 const hasActivePromo =
                   product.has_promo &&
                   (!product.promo_expiration ||
@@ -727,24 +754,19 @@ export default function ProductsPage() {
                 return (
                   <div
                     key={product.id}
-                    className={`group relative bg-white dark:bg-[#1a1a1a] rounded-3xl overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-orange-500/10 hover:-translate-y-2 ${
-                      outOfStock ? "opacity-80" : ""
-                    }`}
+                    className={`group relative bg-white dark:bg-[#1a1a1a] rounded-3xl overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-orange-500/10 hover:-translate-y-2 ${outOfStock ? "opacity-80" : ""}`}
                     style={{
                       animation: `fadeInUp 0.6s ease-out ${index * 0.1}s both`,
                     }}
                   >
-                    {/* Effet de brillance au hover */}
                     <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/0 to-transparent group-hover:via-white/10 transition-all duration-700 -translate-x-full group-hover:translate-x-full pointer-events-none" />
 
-                    {/* Badge coin supérieur avec effet 3D */}
                     {isNew && !hasActivePromo && (
                       <div className="absolute top-4 -right-12 bg-gradient-to-r from-amber-400 via-orange-500 to-amber-400 text-white text-xs font-bold px-14 py-2 rotate-45 shadow-lg z-10 animate-pulse">
                         ✨ NOUVEAU
                       </div>
                     )}
 
-                    {/* Image container avec overlay gradient */}
                     <div className="relative h-64 overflow-hidden bg-gradient-to-b from-transparent to-black/5">
                       <ProductImage
                         src={product.image_url}
@@ -753,34 +775,23 @@ export default function ProductsPage() {
                         hasPromo={hasActivePromo}
                         promoPercentage={product.promo_percentage}
                       />
-
-                      {/* Overlay en rupture de stock */}
                       {outOfStock && (
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent backdrop-blur-[2px] flex items-center justify-center">
                           <div className="bg-red-500/90 backdrop-blur-md text-white px-6 py-2.5 rounded-full shadow-2xl font-bold text-sm border-2 border-white/20 flex items-center gap-2 animate-bounce">
-                            <Package size={16} />
-                            RUPTURE DE STOCK
+                            <Package size={16} /> RUPTURE DE STOCK
                           </div>
                         </div>
                       )}
-
-                      {/* Gradient overlay bottom */}
                       <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white dark:from-[#1a1a1a] to-transparent" />
                     </div>
 
-                    {/* Contenu de la carte */}
                     <div className="p-6 space-y-4">
-                      {/* Titre avec effet hover */}
                       <div className="space-y-2">
                         <h3
-                          className={`text-xl font-bold text-slate-900 dark:text-white transition-colors duration-300 group-hover:text-orange-500 ${
-                            outOfStock ? "line-through opacity-50" : ""
-                          }`}
+                          className={`text-xl font-bold text-slate-900 dark:text-white transition-colors duration-300 group-hover:text-orange-500 ${outOfStock ? "line-through opacity-50" : ""}`}
                         >
                           {product.title}
                         </h3>
-
-                        {/* Date avec icône */}
                         <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
                           <Calendar size={14} className="text-orange-400" />
                           <span>
@@ -791,22 +802,19 @@ export default function ProductsPage() {
                                 day: "numeric",
                                 month: "long",
                                 year: "numeric",
-                              }
+                              },
                             )}
                           </span>
                         </div>
                       </div>
 
-                      {/* Description */}
                       <p
-                        className={`text-sm text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed ${
-                          outOfStock ? "opacity-50" : ""
-                        }`}
+                        className={`text-sm text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed ${outOfStock ? "opacity-50" : ""}`}
                       >
                         {product.description}
                       </p>
 
-                      {/* Prix avec animation et promo */}
+                      {/* Prix */}
                       <div className="space-y-2">
                         {hasActivePromo ? (
                           <div className="space-y-1">
@@ -819,7 +827,7 @@ export default function ProductsPage() {
                               </div>
                             </div>
                             <div className="flex items-end gap-3">
-                              <div className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-pink-500 group-hover:from-red-600 group-hover:to-pink-600">
+                              <div className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-pink-500">
                                 {displayPrice.toLocaleString()}
                               </div>
                               <span className="text-lg font-bold pb-1 text-red-500">
@@ -831,28 +839,25 @@ export default function ProductsPage() {
                                 <Clock size={12} />
                                 Expire le{" "}
                                 {new Date(
-                                  product.promo_expiration
-                                ).toLocaleDateString("fr-FR")}
+                                  product.promo_expiration,
+                                ).toLocaleDateString("fr-FR", {
+                                  day: "numeric",
+                                  month: "short",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
                               </div>
                             )}
                           </div>
                         ) : (
                           <div className="flex items-end gap-3 pt-2">
                             <div
-                              className={`text-3xl font-black transition-all duration-300 ${
-                                outOfStock
-                                  ? "text-slate-300 dark:text-slate-600 line-through"
-                                  : "text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-500 group-hover:from-orange-600 group-hover:to-amber-600"
-                              }`}
+                              className={`text-3xl font-black transition-all duration-300 ${outOfStock ? "text-slate-300 dark:text-slate-600 line-through" : "text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-500"}`}
                             >
                               {originalPrice.toLocaleString()}
                             </div>
                             <span
-                              className={`text-lg font-bold pb-1 ${
-                                outOfStock
-                                  ? "text-slate-400"
-                                  : "text-orange-500"
-                              }`}
+                              className={`text-lg font-bold pb-1 ${outOfStock ? "text-slate-400" : "text-orange-500"}`}
                             >
                               FCFA
                             </span>
@@ -874,81 +879,61 @@ export default function ProductsPage() {
                               className="sr-only"
                             />
                             <div
-                              className={`w-14 h-7 rounded-full transition-all duration-300 ${
-                                product.in_stock
-                                  ? "bg-gradient-to-r from-emerald-400 to-green-500 shadow-lg shadow-emerald-500/30"
-                                  : "bg-slate-300 dark:bg-slate-700"
-                              }`}
+                              className={`w-14 h-7 rounded-full transition-all duration-300 ${product.in_stock ? "bg-gradient-to-r from-emerald-400 to-green-500 shadow-lg shadow-emerald-500/30" : "bg-slate-300 dark:bg-slate-700"}`}
                             />
                             <div
-                              className={`absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full shadow-md transform transition-all duration-300 flex items-center justify-center ${
-                                product.in_stock
-                                  ? "translate-x-7"
-                                  : "translate-x-0"
-                              }`}
+                              className={`absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full shadow-md transform transition-all duration-300 flex items-center justify-center ${product.in_stock ? "translate-x-7" : "translate-x-0"}`}
                             >
                               {isUpdating(product.id) ? (
                                 <div className="w-3 h-3 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
                               ) : (
                                 <div
-                                  className={`w-2 h-2 rounded-full ${
-                                    product.in_stock
-                                      ? "bg-emerald-500"
-                                      : "bg-slate-400"
-                                  }`}
+                                  className={`w-2 h-2 rounded-full ${product.in_stock ? "bg-emerald-500" : "bg-slate-400"}`}
                                 />
                               )}
                             </div>
                           </div>
                           <span
-                            className={`text-sm font-bold transition-colors ${
-                              product.in_stock
-                                ? "text-emerald-600 dark:text-emerald-400"
-                                : "text-red-600 dark:text-red-400"
-                            }`}
+                            className={`text-sm font-bold transition-colors ${product.in_stock ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}`}
                           >
                             {product.in_stock ? "✓ En Stock" : "✕ Rupture"}
                           </span>
                         </label>
                       </div>
 
-                      {/* Bouton promotion */}
+                      {/* Bouton promo */}
                       <button
                         onClick={() => openPromoModal(product)}
-                        className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold text-sm transition-all duration-300 ${
+                        className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold text-sm transition-all duration-300 hover:scale-[1.02] active:scale-95 ${
                           hasActivePromo
-                            ? "bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white shadow-lg shadow-red-500/30 hover:shadow-xl hover:shadow-red-500/40"
-                            : "bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white shadow-lg shadow-purple-500/30 hover:shadow-xl hover:shadow-purple-500/40"
-                        } hover:scale-[1.02] active:scale-95`}
+                            ? "bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white shadow-lg shadow-red-500/30"
+                            : "bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white shadow-lg shadow-purple-500/30"
+                        }`}
                       >
                         {hasActivePromo ? (
                           <>
-                            <Zap size={16} fill="currentColor" />
-                            Gérer la promo
+                            <Zap size={16} fill="currentColor" /> Gérer la promo
                           </>
                         ) : (
                           <>
-                            <Tag size={16} />
-                            Créer une promo
+                            <Tag size={16} /> Créer une promo
                           </>
                         )}
                       </button>
 
-                      {/* Boutons d'action */}
+                      {/* Boutons modifier / supprimer */}
                       <div className="flex gap-3">
                         <Link
                           href={`/dashboard/edit/${product.id}`}
                           className="flex-1"
                         >
-                          <button className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white px-4 py-3 rounded-xl font-bold text-sm transition-all duration-300 shadow-lg shadow-orange-500/30 hover:shadow-xl hover:shadow-orange-500/40 hover:scale-[1.02] active:scale-95">
-                            <Edit2 size={16} />
-                            Modifier
+                          <button className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white px-4 py-3 rounded-xl font-bold text-sm transition-all shadow-lg hover:scale-[1.02] active:scale-95">
+                            <Edit2 size={16} /> Modifier
                           </button>
                         </Link>
                         <DeleteButton id={product.id} />
                       </div>
 
-                      {/* Message rupture de stock */}
                       {outOfStock && (
                         <div className="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
                           <Package
@@ -956,14 +941,13 @@ export default function ProductsPage() {
                             className="text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0"
                           />
                           <p className="text-xs text-red-700 dark:text-red-300 font-medium leading-relaxed">
-                            Ce produit n'apparaîtra pas comme disponible pour
-                            les acheteurs jusqu'à ce qu'il soit remis en stock.
+                            Ce produit n'apparaîtra pas comme disponible jusqu'à
+                            remise en stock.
                           </p>
                         </div>
                       )}
                     </div>
 
-                    {/* Bordure animée au hover */}
                     <div className="absolute inset-0 border-2 border-transparent group-hover:border-orange-500/20 rounded-3xl transition-all duration-500 pointer-events-none" />
                   </div>
                 );
