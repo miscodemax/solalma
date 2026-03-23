@@ -583,9 +583,9 @@ export default function FilteredProducts({
             {/* ── Barre abonnements (stories) ── affichée uniquement si connecté */}
             <FollowedSellersBar userId={userId} />
 
-            <div className="mb-6">
+            {/* <div className="mb-6">
               <PopularProductsCarousel products={products} />
-            </div>
+            </div> */}
 
             <div className="mb-4 sm:mb-6">
               <div className="flex items-start justify-between gap-4">
