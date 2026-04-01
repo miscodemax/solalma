@@ -160,7 +160,7 @@ export default async function ProductDetailPage({ params }: Props) {
 
   // ── Ratings ─────────────────────────────────────────────────────────────────
   const { data: allRatings } = await supabase
-    .from("seller_ratings")
+    .from("ratings_sellers")
     .select("rating")
     .eq("seller_id", product.user_id);
 

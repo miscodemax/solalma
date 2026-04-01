@@ -106,14 +106,17 @@ export default function RatingSeller({
 
     startTransition(async () => {
       // INSERT classique — pas d'upsert, chaque avis est une nouvelle ligne
-      const { error } = await supabase.from("ratings_sellers").insert({
-        seller_id: sellerId,
-        buyer_id: userId,
-        rating: selectedStar,
-        // Envoie null si vide — la colonne est nullable
-        comment: comment.trim().length > 0 ? comment.trim() : null,
-      });
-
+      const { error } = await supabase.from("ratings_sellers").upsert(
+        {
+          seller_id: sellerId,
+          buyer_id: userId,
+          rating: selectedStar,
+          comment: comment.trim().length > 0 ? comment.trim() : null,
+        },
+        {
+          onConflict: "seller_id,buyer_id",
+        },
+      );
       if (error) {
         // Log pour debug
         console.error(
